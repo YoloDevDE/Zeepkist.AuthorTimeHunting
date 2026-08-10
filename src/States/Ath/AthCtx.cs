@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using AuthorTimeHunting.Entities;
 using AuthorTimeHunting.Gamemodes;
+using AuthorTimeHunting.Service;
 
 namespace AuthorTimeHunting.States.Ath;
 
@@ -92,7 +93,7 @@ public class AthCtx
 	public TimeSpan GetRemainingTime()
 	{
 		return TimeSpan.FromMilliseconds(Duration -
-		                                 (GetTotalLevelPlayDuration().TotalMilliseconds + GetAccumulatedPenaltyTime()));
+										 (GetTotalLevelPlayDuration().TotalMilliseconds + GetAccumulatedPenaltyTime()));
 	}
 
 	public TimeSpan GetRemainingTimeWithoutPunishments()
@@ -128,6 +129,20 @@ public class AthCtx
 		LastRunMedalWasNew = false;
 
 		CurrentLevel.Start();
+
+		SeedSplits(level);
+	}
+
+	/// <summary>
+	///     A level the player has driven before comes with its own splits, off the game's replay
+	///     file. It is the only reference a hunt can have on the first attempt - everything else it
+	///     knows about a level, it learns by driving it - and on a level nobody has driven it is
+	///     empty, which is what an empty reference column already means.
+	/// </summary>
+	private static void SeedSplits(Level level)
+	{
+		level.TrackSplits(GameStateObserver.ReplaySplits(level.LevelUid));
+		level.SealAttempt();
 	}
 
 	public void ResetRetries()

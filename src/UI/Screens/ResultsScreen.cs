@@ -141,7 +141,7 @@ public class ResultsScreen : IZeepGUIDrawer
 			Color.Zeepkist.Medal.Author);
 		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, medals, 1, 3), _medals.Gold, report.GoldMedals,
 			Color.Zeepkist.Medal.Gold);
-		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, medals, 2, 3), _medals.YouTried, report.Penalties,
+		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, medals, 2, 3), _medals.OhNo, report.Penalties,
 			Color.Style.Status.Penalty);
 
 		gui.AddSpacing();
@@ -315,7 +315,7 @@ public class ResultsScreen : IZeepGUIDrawer
 		}
 
 		if (UiWidgets.IconButton(gui, UiMetrics.ButtonRow(gui), UiIcon.Restart, "Back to the history",
-			    Color.Style.Action.Restart))
+				Color.Style.Action.Restart))
 		{
 			_run = null;
 			return;

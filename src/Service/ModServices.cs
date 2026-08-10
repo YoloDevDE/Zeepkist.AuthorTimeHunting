@@ -1,4 +1,4 @@
-﻿using AuthorTimeHunting.Gamemodes;
+using AuthorTimeHunting.Gamemodes;
 using AuthorTimeHunting.States.Ath.StateMachine;
 using AuthorTimeHunting.UI.Hud;
 using AuthorTimeHunting.UI.Screens;
@@ -30,7 +30,7 @@ public class ModServices
 		Toolbar = new AthToolbar(this);
 		DebugToolbar = new AthDebugToolbar(this);
 		Health = new HealthService(GraphQL);
-		RunOverlay = new RunOverlay(Control, Thumbnail, Medals);
+		RunOverlay = new RunOverlay(Control, Medals);
 		Results = new ResultsScreen(Medals);
 		Loading = new LoadingOverlay(Thumbnail);
 		Menu = new AthMenu(MenuBackground);

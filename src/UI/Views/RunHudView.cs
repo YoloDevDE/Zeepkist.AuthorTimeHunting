@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AuthorTimeHunting.Entities;
 using AuthorTimeHunting.States.Ath;
 using AuthorTimeHunting.States.Ath.StateMachine;
+using AuthorTimeHunting.UI.Toolkit;
 using AuthorTimeHunting.Util;
 using UnityEngine;
 
@@ -22,6 +24,10 @@ namespace AuthorTimeHunting.UI.Views;
 /// </summary>
 public class RunHudView
 {
+	private const string _noTime = "--:--.---";
+
+	private const string _free = "0";
+
 	private static int _frame = -1;
 
 	private static AthController _run;
@@ -91,11 +97,35 @@ public class RunHudView
 			TimeLostToPenalties = TimeSpan.FromMilliseconds(ctx.GetAccumulatedPenaltyTime()).ToFormattedString(),
 			SkipType = SkipTypeLabel(ctx),
 			SkipColour = SkipTypeColour(ctx),
+			SkipCost = SkipCostLabel(ctx),
+			SkipCostColour = SkipTypeColour(ctx),
 			LevelName = level.Name,
 			Author = level.Author,
 			AuthorTime = TimeFormatter.FormatTime(level.AuthorTime),
-			GoldTime = TimeFormatter.FormatTime(level.GoldTime)
+			GoldTime = TimeFormatter.FormatTime(level.GoldTime),
+			GoldOwned = level.GoldMedalAcquired,
+			LevelTime = TimeFormatter.FormatDuration((int)level.GetPlayDuration().TotalMilliseconds),
+			Attempts = UiNumbers.Text(level.Attempt),
+			PersonalBest = level.PersonalBestTime < 0f ? _noTime : TimeFormatter.FormatTime(level.PersonalBestTime),
+			LevelsPlayed = UiNumbers.Text(ctx.Levels.Count),
+			TotalAttempts = UiNumbers.Text(ctx.Levels.Sum(played => played.Attempt))
 		};
+	}
+
+	/// <summary>
+	///     What leaving this level right now would take off the clock. It is the other half of
+	///     <see cref="SkipType" /> and the half that decides: "Penalty Skip" is a name, five minutes
+	///     is a reason to drive the level again. A skip that costs nothing says so as a plain zero
+	///     rather than as an empty space, because an empty space reads as a number not loaded yet.
+	/// </summary>
+	private static string SkipCostLabel(AthCtx ctx)
+	{
+		if (ctx.CurrentLevel.GoldMedalAcquired || ctx.AvaiableFreeSkips > 0)
+		{
+			return _free;
+		}
+
+		return "-" + TimeFormatter.FormatDuration(ctx.PenaltyTimeInMilliseconds);
 	}
 
 	/// <summary>
@@ -244,6 +274,28 @@ public class RunHudView
 
 	public string AuthorTime { get; private set; }
 	public string GoldTime { get; private set; }
+
+	/// <summary>Whether the gold time is already in the bag, which is what stops it being a target.</summary>
+	public bool GoldOwned { get; private set; }
+
+	/// <summary>How long this level has had of the hour, which is the other clock a hunt is spent by.</summary>
+	public string LevelTime { get; private set; }
+
+	public string Attempts { get; private set; }
+
+	public string PersonalBest { get; private set; }
+
+	public string SkipCost { get; private set; }
+
+	public Color32 SkipCostColour { get; private set; }
+
+	#endregion
+
+	#region Run detail
+
+	public string LevelsPlayed { get; private set; }
+
+	public string TotalAttempts { get; private set; }
 
 	#endregion
 }

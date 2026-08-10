@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace AuthorTimeHunting.Entities;
@@ -36,5 +37,47 @@ public class SplitSet
 	public double SpeedAt(int index)
 	{
 		return index >= 0 && index < Speeds.Count ? Speeds[index] : -1d;
+	}
+
+	/// <summary>
+	///     The better of the two at every checkpoint, each with the speed it was driven at.
+	///     Not the better of the two runs: a reference that only ever came from one attempt is one
+	///     the player has to finish to get, and the whole point of a split is that it is worth
+	///     something on its own. A checkpoint reached faster is a faster checkpoint whatever the
+	///     attempt around it did afterwards, which is also what makes the reference survive the
+	///     respawn that follows a mistake.
+	/// </summary>
+	public SplitSet Best(SplitSet other)
+	{
+		if (other == null || other.Count == 0)
+		{
+			return this;
+		}
+
+		int count = Math.Max(Count, other.Count);
+
+		List<double> times = [];
+		List<double> speeds = [];
+
+		for (int index = 0; index < count; index++)
+		{
+			bool mine = Faster(TimeAt(index), other.TimeAt(index));
+
+			times.Add(mine ? TimeAt(index) : other.TimeAt(index));
+			speeds.Add(mine ? SpeedAt(index) : other.SpeedAt(index));
+		}
+
+		return new SplitSet(times, speeds);
+	}
+
+	/// <summary>Whether <paramref name="mine" /> is the one to keep. A time nobody drove never is.</summary>
+	private static bool Faster(double mine, double theirs)
+	{
+		if (mine < 0d)
+		{
+			return false;
+		}
+
+		return theirs < 0d || mine <= theirs;
 	}
 }

@@ -5,5 +5,5 @@ public enum UiMedal
 {
 	Author,
 	Gold,
-	YouTried
+	OhNo
 }

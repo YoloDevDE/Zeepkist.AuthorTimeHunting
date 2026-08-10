@@ -1,6 +1,6 @@
 using System;
-using AuthorTimeHunting.States.Ath.States;
 using AuthorTimeHunting.States.Ath.StateMachine;
+using AuthorTimeHunting.States.Ath.States;
 using AuthorTimeHunting.UI.Hud;
 using AuthorTimeHunting.UI.Toolkit;
 using AuthorTimeHunting.UI.Views;
@@ -15,8 +15,8 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The hunt as a broadcast bar: a band across the top of the screen with the mod's crest in
-///     the middle of it, the hour on the left of the crest and the level on the right, and the
+///     The hunt as a broadcast bar: a band across the top of the screen with the hour on a tile in
+///     the middle of it, the hunt on the left of that tile and the level on the right, and the
 ///     controls in a drawer underneath.
 ///     It was a window in the middle of the top of the screen and it kept growing, until it was
 ///     eleven rows tall and sat exactly where a player looks on a jump. Flattening it to one line
@@ -24,9 +24,10 @@ namespace AuthorTimeHunting.UI.Screens;
 ///     letterbox bar, and on an ultrawide it put the clock and the medals a monitor's width
 ///     apart. So the band is a fraction of the screen and centred, which is what a bar over a
 ///     game looks like everywhere else it is done.
-///     The crest is the middle of it because that is what the middle is for. Neither wing carries
-///     a number worth putting under the eye - the countdown a player actually drives to is the
-///     ticker at the bottom of the screen, and this is the hour, which is read between attempts.
+///     The hour is the middle of it because that is what the middle is for: it is the number the
+///     whole mode is made of, and everything on either side of it is what that hour has been spent
+///     on. The mod's crest had the tile before it, which is a picture that never changes in the one
+///     place the eye keeps going back to.
 ///     Nothing here is drawn before there is a level under the wheels. The bar used to come up
 ///     with the run, which meant it hung over the whole of the lobby setup with nothing in it but
 ///     dashes - and over the loading screen that exists to hide exactly that.
@@ -59,6 +60,9 @@ public class RunOverlay : IZeepGUIDrawer
 	/// <summary>The same, with the hunt's own numbers taken out of it - see <see cref="Stage" />.</summary>
 	private const float _minimalRows = 1.9f;
 
+	/// <summary>What one side coming open adds to the band. One row, because one row is what it says.</summary>
+	private const float _detailRows = 1.1f;
+
 	/// <summary>
 	///     How long the full bar stays up once the zeepkists are released. A restart is two seconds
 	///     of somebody's life and there are a lot of them in a hunt; a bar that folded on every one
@@ -82,28 +86,31 @@ public class RunOverlay : IZeepGUIDrawer
 	private const float _pennantWidthFraction = 0.34f;
 	private const float _pennantRows = 0.55f;
 
-	private const float _clockShare = 0.55f;
-	private const float _clockSize = 1.3f;
+	/// <summary>How big the hour is on the tile in the middle, as a multiple of the theme's text.</summary>
+	private const float _clockSize = 1.6f;
 
 	/// <summary>
 	///     How wide each block of a wing actually is, in rows.
 	///     A wing is as wide as the band leaves it, which is far wider than anything standing in
 	///     one. Spread to fill, three medal counts land a hand's width apart and stop reading as
-	///     three medal counts, and the live dot ends up nearer the crest than the clock it belongs
-	///     to. So every block takes what it needs off its own edge and leaves the rest empty.
+	///     three medal counts, and one of them ends up nearer the crest than the row it belongs to.
+	///     So every block takes what it needs off its own edge and leaves the rest empty.
 	/// </summary>
-	private const float _clockColumns = 6.4f;
-
 	private const float _medalColumns = 7.4f;
 
 	private const float _skipColumns = 9.4f;
 
-	private const float _levelTimeColumns = 11.4f;
-
-	/// <summary>How much of the wing the title line takes, the two medal times getting the rest.</summary>
-	private const float _titleShare = 0.5f;
+	private const float _levelTimeColumns = 9.4f;
 
 	private const string _by = " by ";
+
+	private const string _attempts = " attempts";
+
+	private const string _best = "best ";
+
+	private const int _left = 0;
+
+	private const int _right = 1;
 
 	/// <summary>Open or shut in a fifth of a second: too fast to wait for, too slow to be a jump cut.</summary>
 	private const float _slideSeconds = 0.2f;
@@ -129,11 +136,14 @@ public class RunOverlay : IZeepGUIDrawer
 
 	private static readonly Vector2[] _pennantPoints = new Vector2[5];
 
+	private static readonly Vector2[] _strokePoints = new Vector2[4];
+
+	/// <summary>How far each half of the band has come open, 0 shut and 1 out. See <see cref="Side" />.</summary>
+	private readonly float[] _sides = new float[2];
+
 	private readonly ControlPanel _controls;
 
 	private readonly MedalArt _medals;
-
-	private readonly AthImage _thumbnail;
 
 	/// <summary>How much of the bar is showing, 0 minimal and 1 full. Its height and its contents follow.</summary>
 	private float _full = 1f;
@@ -152,10 +162,12 @@ public class RunOverlay : IZeepGUIDrawer
 
 	private bool _wasDriving;
 
-	public RunOverlay(ControlPanel controls, AthImage thumbnail, MedalArt medals)
+	/// <summary>The attempt the bar last saw, so it can tell a respawn from a frame.</summary>
+	private int _attempt;
+
+	public RunOverlay(ControlPanel controls, MedalArt medals)
 	{
 		_controls = controls;
-		_thumbnail = thumbnail;
 		_medals = medals;
 	}
 
@@ -220,7 +232,8 @@ public class RunOverlay : IZeepGUIDrawer
 		float row = gui.GetRowHeight();
 		float pad = UiMetrics.Margin(gui) * 0.5f;
 		float rule = Mathf.Max(3f, row * _ruleFraction) * stage;
-		float band = row * Mathf.Lerp(_minimalRows, _contentRows, stage) + pad * 2f + rule;
+		float band = row * Mathf.Lerp(_minimalRows, _contentRows, stage) + pad * 2f + rule +
+					 row * _detailRows * Mathf.Max(_sides[_left], _sides[_right]);
 
 		float full = _controls.Height(gui);
 		float drawer = full * Advance(stirred);
@@ -229,6 +242,8 @@ public class RunOverlay : IZeepGUIDrawer
 		ImRect screen = gui.Canvas.SafeScreenRect;
 		float width = UiMetrics.Width(gui, _widthFraction, _minWidth, _maxWidth);
 		ImRect rect = new(screen.X + (screen.W - width) * 0.5f, screen.Top - band - below, width, band + below);
+
+		Sides(gui, new ImRect(rect.X, rect.Top - band, rect.W, band));
 
 		ImStyleWindow previous = gui.Style.Window;
 
@@ -319,14 +334,18 @@ public class RunOverlay : IZeepGUIDrawer
 		bool full = stage >= _swapAt;
 
 		ImRect inner = strip.WithPadding(pad + cut, pad + cut, pad, rule + pad);
-		float badgeWidth = inner.H * _badgeAspect;
-		ImRect badge = new(inner.Center.x - badgeWidth * 0.5f, inner.Y, badgeWidth, inner.H);
-		float wing = (inner.W - badgeWidth) * 0.5f - pad;
 
-		DrawPennant(gui, strip, badgeWidth * _pennantWidthFraction, gui.GetRowHeight() * _pennantRows);
-		DrawBadge(gui, badge);
-		DrawHunt(gui, new ImRect(inner.X, inner.Y, wing, inner.H), view, full);
-		DrawLevel(gui, new ImRect(inner.Right - wing, inner.Y, wing, inner.H), view);
+		// The tile is the two rows the band always has, never the ones a side has opened. Sized off
+		// the whole band it grew with every detail row, and what it grew into was the wings.
+		float tileHeight = Mathf.Min(inner.H, gui.GetRowHeight() * _minimalRows);
+		float tileWidth = tileHeight * _badgeAspect;
+		ImRect tile = new(inner.Center.x - tileWidth * 0.5f, inner.Top - tileHeight, tileWidth, tileHeight);
+		float wing = (inner.W - tileWidth) * 0.5f - pad;
+
+		DrawPennant(gui, strip, tileWidth * _pennantWidthFraction, gui.GetRowHeight() * _pennantRows);
+		DrawRunTime(gui, tile, view);
+		DrawHunt(gui, new ImRect(inner.X, inner.Y, wing, inner.H), view);
+		DrawLevel(gui, new ImRect(inner.Right - wing, inner.Y, wing, inner.H), view, full);
 
 		if (!full)
 		{
@@ -356,69 +375,75 @@ public class RunOverlay : IZeepGUIDrawer
 		gui.Canvas.ConvexFill(_pennantPoints, Color.Zeepkist.Medal.Gold);
 	}
 
-	/// <summary>The mod's own crest, or its initials where the plugin was built without the picture.</summary>
-	private void DrawBadge(ImGui gui, ImRect rect)
+	/// <summary>
+	///     The hour, in the middle, on the tile the mod's crest used to sit on.
+	///     The crest was the right thing there for as long as the bar was being learned and the
+	///     wrong thing for every hunt after: it is the one part of the band that never changed, in
+	///     the one place the eye goes back to. The hour is the number the whole mode is - everything
+	///     else on the bar is what that hour has been spent on - so it takes the middle, and the
+	///     light that says it is running goes with it.
+	/// </summary>
+	private static void DrawRunTime(ImGui gui, ImRect rect, RunHudView view)
 	{
 		float radius = rect.H * 0.14f;
-		Texture2D logo = _thumbnail.Texture;
 
 		gui.Canvas.Rect(rect, Color.Style.Surface.Tile, radius);
 		gui.Canvas.RectOutline(rect, Color.Zeepkist.Medal.Gold, Mathf.Max(1f, rect.H * 0.045f), radius);
 
-		if (logo == null)
-		{
-			UiText.Centre(gui, "ATH", Color.Zeepkist.Medal.Gold, rect, gui.Style.Layout.TextSize);
+		ImRect inner = rect.WithPadding(Mathf.Max(2f, rect.H * 0.12f));
+		float light = inner.H * 0.32f;
+		ImRect column = inner.TakeRight(light, gui.Style.Layout.InnerSpacing, out ImRect clock);
 
-			return;
-		}
-
-		gui.Image(logo, rect.WithPadding(Mathf.Max(2f, rect.H * 0.09f)), true);
+		UiText.Centre(gui, view.TimeLeft, view.TimeColour, clock, gui.Style.Layout.TextSize * _clockSize);
+		DrawLive(gui, new ImRect(column.X, column.Center.y - light * 0.5f, light, light), view.Running);
 	}
 
 	/// <summary>
-	///     The left wing: the hour, whether it is being spent, and under it the one line that
-	///     changes with the stage. What has been bought with the hour is the hunt's score, which is
-	///     read between attempts; what leaving the level would cost is read while driving, because
-	///     that is when it is being decided.
+	///     The left wing: what the hour has bought, and what the next skip would cost it.
+	///     Both are the hunt rather than the level, which is what puts them on the same side of the
+	///     crest. The score is read between attempts and the price while driving, but neither is
+	///     worth taking away for the other - they are two numbers, and a wing holds two rows.
+	///     A third row comes down when the pointer is over this half: the same hunt in more detail,
+	///     for the moments somebody has stopped to look at it. See <see cref="Side" />.
 	/// </summary>
-	private void DrawHunt(ImGui gui, ImRect rect, RunHudView view, bool full)
+	private void DrawHunt(ImGui gui, ImRect rect, RunHudView view)
 	{
 		float row = gui.GetRowHeight();
-		ImRect clock = rect.TakeTop(rect.H * _clockShare, out ImRect below);
+		ImRect detail = rect.TakeBottom(Detail(gui, _left), out ImRect main);
+		ImRect medals = main.TakeTop(main.H * 0.5f, out ImRect price);
 
-		DrawClock(gui, clock.TakeLeft(Mathf.Min(clock.W, row * _clockColumns)), view);
-
-		if (!full)
-		{
-			DrawSkip(gui, below.TakeLeft(Mathf.Min(below.W, row * _skipColumns)), view);
-
-			return;
-		}
-
-		DrawMedals(gui, below.TakeLeft(Mathf.Min(below.W, row * _medalColumns)), view);
+		DrawMedals(gui, medals.TakeLeft(Mathf.Min(medals.W, row * _medalColumns)), view);
+		DrawSkipPrice(gui, price.TakeLeft(Mathf.Min(price.W, row * _skipColumns)), view);
+		DrawRunDetail(gui, detail, view);
 	}
 
 	/// <summary>What leaving this level right now would cost, in the colour of what it would cost.</summary>
-	private static void DrawSkip(ImGui gui, ImRect rect, RunHudView view)
+	private static void DrawSkipPrice(ImGui gui, ImRect rect, RunHudView view)
 	{
 		float icon = rect.H * 0.7f;
 		ImRect glyph = rect.TakeLeft(icon, gui.Style.Layout.InnerSpacing, out ImRect label);
 
-		UiIcons.Draw(gui, glyph, UiIcon.Skip, view.SkipColour);
-		UiText.Draw(gui, view.SkipType, view.SkipColour, label, gui.Style.Layout.TextSize * 0.9f, 0f);
+		UiIcons.Draw(gui, glyph, UiIcon.Skip, view.SkipCostColour);
+		UiText.Draw(gui, view.SkipCost, view.SkipCostColour, label, gui.Style.Layout.TextSize * 1.1f, 0f);
 	}
 
-	private static void DrawClock(ImGui gui, ImRect rect, RunHudView view)
+	/// <summary>
+	///     The hunt as a whole, for somebody who has stopped to read it: how many levels it has
+	///     been through, how many attempts that took, and how much of the hour went on penalties
+	///     rather than on driving.
+	/// </summary>
+	private static void DrawRunDetail(ImGui gui, ImRect rect, RunHudView view)
 	{
-		float icon = rect.H * 0.8f;
-		float gap = gui.Style.Layout.InnerSpacing;
+		if (rect.H <= 0f)
+		{
+			return;
+		}
 
-		ImRect watch = rect.TakeLeft(icon, gap, out ImRect rest);
-		ImRect light = rest.TakeRight(icon, gap, out ImRect clock);
+		float size = gui.Style.Layout.TextSize * 0.85f;
 
-		UiIcons.Draw(gui, watch, UiIcon.Stopwatch, view.TimeColour);
-		UiText.Draw(gui, view.TimeLeft, view.TimeColour, clock, gui.Style.Layout.TextSize * _clockSize, 0f);
-		DrawLive(gui, light, view.Running);
+		UiText.Draw(gui,
+			$"{view.LevelsPlayed} levels   {view.TotalAttempts} attempts   {view.TimeLostToPenalties} lost",
+			Color.Style.Text.Muted, rect, size, 0f);
 	}
 
 	/// <summary>
@@ -451,22 +476,56 @@ public class RunOverlay : IZeepGUIDrawer
 			Color.Zeepkist.Medal.Author);
 		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, rect, 1, 3), _medals.Gold, view.GoldMedals,
 			Color.Zeepkist.Medal.Gold);
-		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, rect, 2, 3), _medals.YouTried, view.Penalties,
+		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, rect, 2, 3), _medals.OhNo, view.Penalties,
 			Color.Style.Status.Penalty);
 	}
 
 	/// <summary>
-	///     The right wing: what is being driven, whose it is, and the two times to beat. These four
-	///     lines have been a window of their own, then a block in the middle of the view, then a
-	///     card in the corner. Beside the crest is where they stop moving - they are the other half
-	///     of what the bar is about, and a hunt with no level in front of it is not on screen.
+	///     The right wing: the level being driven and what it is costing.
+	///     Whose level it is, and what it is called, is not on it while it is being driven. That was
+	///     the last thing on the bar a player could not act on - the name of a level you are looking
+	///     at out of the windscreen - and it took the row the level's own clock now has. It comes
+	///     back the moment the driving stops, which is when a name is worth reading.
 	/// </summary>
-	private void DrawLevel(ImGui gui, ImRect rect, RunHudView view)
+	private void DrawLevel(ImGui gui, ImRect rect, RunHudView view, bool full)
 	{
-		ImRect title = rect.TakeTop(rect.H * _titleShare, out ImRect times);
+		ImRect detail = rect.TakeBottom(Detail(gui, _right), out ImRect main);
 
-		DrawTitle(gui, title, view, gui.Style.Layout.TextSize * 1.05f);
-		DrawTimes(gui, Times(gui, times), view);
+		if (full)
+		{
+			ImRect title = main.TakeTop(main.H / 3f, out main);
+
+			DrawTitle(gui, title, view, gui.Style.Layout.TextSize);
+		}
+
+		ImRect top = main.TakeTop(main.H * 0.5f, out ImRect bottom);
+		ImRect times = top.TakeRight(Mathf.Min(top.W, gui.GetRowHeight() * _levelTimeColumns), out ImRect skip);
+
+		DrawSkipType(gui, skip, view);
+		DrawTimes(gui, times, view);
+		UiText.Draw(gui, view.Attempts + _attempts, Color.Style.Text.Muted, bottom,
+			gui.Style.Layout.TextSize * 0.9f, 0f);
+		UiText.Right(gui, view.LevelTime, Color.Style.Text.Muted, bottom, gui.Style.Layout.TextSize * 0.9f);
+		DrawLevelDetail(gui, detail, view);
+	}
+
+	/// <summary>Which kind of skip is on offer here, said in words - the price is on the other wing.</summary>
+	private static void DrawSkipType(ImGui gui, ImRect rect, RunHudView view)
+	{
+		UiText.Draw(gui, view.SkipType, view.SkipColour, rect, gui.Style.Layout.TextSize * 0.9f, 0f);
+	}
+
+	private static void DrawLevelDetail(ImGui gui, ImRect rect, RunHudView view)
+	{
+		if (rect.H <= 0f)
+		{
+			return;
+		}
+
+		float size = gui.Style.Layout.TextSize * 0.85f;
+
+		UiText.Draw(gui, view.LevelName + _by + view.Author, Color.Style.Text.Muted, rect, size, 0f);
+		UiText.Right(gui, _best + view.PersonalBest, Color.Style.Text.Muted, rect, size);
 	}
 
 	/// <summary>
@@ -496,17 +555,21 @@ public class RunOverlay : IZeepGUIDrawer
 		return new ImRect(rect.X, rect.Y, Mathf.Max(0f, rect.W - taken), rect.H);
 	}
 
-	private static ImRect Times(ImGui gui, ImRect rect)
-	{
-		return rect.TakeRight(Mathf.Min(rect.W, gui.GetRowHeight() * _levelTimeColumns));
-	}
-
 	private void DrawTimes(ImGui gui, ImRect rect, RunHudView view)
 	{
 		DrawMedalTime(gui, UiWidgets.Column(gui, rect, 0, 2), _medals.Author, view.AuthorTime,
 			Color.Zeepkist.Medal.Author);
-		DrawMedalTime(gui, UiWidgets.Column(gui, rect, 1, 2), _medals.Gold, view.GoldTime,
-			Color.Zeepkist.Medal.Gold);
+
+		ImRect gold = UiWidgets.Column(gui, rect, 1, 2);
+
+		if (!view.GoldOwned)
+		{
+			DrawMedalTime(gui, gold, _medals.Gold, view.GoldTime, Color.Zeepkist.Medal.Gold);
+
+			return;
+		}
+
+		DrawMedalDone(gui, gold, _medals.Gold);
 	}
 
 	private static void DrawMedalTime(ImGui gui, ImRect cell, Texture2D medal, string time, Color32 colour)
@@ -515,6 +578,49 @@ public class RunOverlay : IZeepGUIDrawer
 
 		UiWidgets.Medal(gui, icon, medal, colour);
 		UiText.Draw(gui, time, colour, text, gui.Style.Layout.TextSize * 0.9f, 0f);
+	}
+
+	/// <summary>
+	///     A medal that has been taken, with a tick where its time was. The time is what you drive
+	///     at while it is still a target; once it is won it is a number that cannot change and one
+	///     more thing on the bar to read past.
+	/// </summary>
+	private static void DrawMedalDone(ImGui gui, ImRect cell, Texture2D medal)
+	{
+		ImRect icon = cell.TakeLeft(cell.H, gui.Style.Layout.InnerSpacing, out ImRect rest);
+
+		UiWidgets.Medal(gui, icon, medal, Color.Zeepkist.Medal.Gold);
+		DrawTick(gui, rest.TakeLeft(rest.H), Color.Style.Status.Positive);
+	}
+
+	/// <summary>
+	///     A tick, as its two strokes. There is no tick in the icon strip and no glyph for one in
+	///     the theme's font, and this is two quads - which is less than it would cost to teach
+	///     either of them about a shape used in exactly one place.
+	/// </summary>
+	private static void DrawTick(ImGui gui, ImRect rect, Color32 colour)
+	{
+		float size = Mathf.Min(rect.W, rect.H);
+		float thickness = Mathf.Max(2f, size * 0.16f);
+
+		Vector2 low = new(rect.X + size * 0.42f, rect.Y + size * 0.28f);
+
+		Stroke(gui, new Vector2(rect.X + size * 0.15f, rect.Y + size * 0.55f), low, thickness, colour);
+		Stroke(gui, low, new Vector2(rect.X + size * 0.85f, rect.Y + size * 0.8f), thickness, colour);
+	}
+
+	/// <summary>One straight stroke of a given thickness, as the quad it is.</summary>
+	private static void Stroke(ImGui gui, Vector2 from, Vector2 to, float thickness, Color32 colour)
+	{
+		Vector2 along = (to - from).normalized;
+		Vector2 across = new Vector2(-along.y, along.x) * (thickness * 0.5f);
+
+		_strokePoints[0] = from - across;
+		_strokePoints[1] = to - across;
+		_strokePoints[2] = to + across;
+		_strokePoints[3] = from + across;
+
+		gui.Canvas.ConvexFill(_strokePoints, colour);
 	}
 
 	/// <summary>
@@ -563,7 +669,7 @@ public class RunOverlay : IZeepGUIDrawer
 	{
 		bool driving = !stirred && run?.CurrentLeafState is StateAthWaitingForFinish;
 
-		if (driving != _wasDriving)
+		if (driving != _wasDriving || Respawned(run))
 		{
 			_wasDriving = driving;
 			_shrinkAt = Time.unscaledTime + _settleSeconds;
@@ -586,6 +692,59 @@ public class RunOverlay : IZeepGUIDrawer
 		_full = Mathf.Clamp01(_full - step);
 
 		return _full;
+	}
+
+	/// <summary>
+	///     How far each half of the band is open, and what opens it: the pointer being over that
+	///     half of it.
+	///     A hunt is driven with the hands on the keys and the mouse untouched, so a pointer that
+	///     has arrived somewhere is somebody looking rather than somebody steering - the same signal
+	///     the drawer opens on. Which half it is over is the question being asked: the left of the
+	///     crest is the hunt and the right of it is the level, and reaching for one of them is
+	///     asking for more of that one.
+	/// </summary>
+	private void Sides(ImGui gui, ImRect band)
+	{
+		Vector2 pointer = gui.Input.MousePosition;
+		bool inside = band.Contains(pointer);
+
+		Open(_left, inside && pointer.x < band.Center.x);
+		Open(_right, inside && pointer.x >= band.Center.x);
+	}
+
+	private void Open(int side, bool wanted)
+	{
+		float step = Time.unscaledDeltaTime / _slideSeconds;
+
+		_sides[side] = Mathf.Clamp01(_sides[side] + (wanted ? step : -step));
+	}
+
+	/// <summary>How much room this side's extra row has right now, which is none until it opens.</summary>
+	private float Detail(ImGui gui, int side)
+	{
+		return gui.GetRowHeight() * _detailRows * _sides[side];
+	}
+
+	/// <summary>
+	///     Whether a new attempt has begun since the last frame, which is what a respawn is from
+	///     out here. A respawn is the one moment in a hunt when the player has decided the run is
+	///     over and has not yet started the next one - the one moment the bar's own numbers are
+	///     both readable and worth reading - so it comes back up for them, and then folds away
+	///     again on its own once the driving resumes.
+	/// </summary>
+	private bool Respawned(AthController run)
+	{
+		int attempt = run?.Ctx.CurrentLevel?.Attempt ?? 0;
+
+		if (attempt == _attempt)
+		{
+			return false;
+		}
+
+		_attempt = attempt;
+		_full = 1f;
+
+		return true;
 	}
 
 	private float Advance(bool stirred)

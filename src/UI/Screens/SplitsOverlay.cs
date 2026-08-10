@@ -38,10 +38,10 @@ namespace AuthorTimeHunting.UI.Screens;
 ///     corners cut, and an arrival from off the edge it is docked to. Those are not decorations
 ///     copied across - they are what makes two panels on two edges of the screen read as one mod
 ///     rather than as two overlays that happened to install together.
-///     What it is measured against is the best attempt of this hunt on this level, recorded by
-///     <see cref="Level.RecordRun" />. Not the game's own reference: that one is switched by a
-///     game setting and stored on the network player, so it can quietly be somebody else's idea
-///     of a personal best.
+///     What it is measured against is the best each checkpoint has been driven - see
+///     <see cref="Level.BestSplits" /> - starting from the player's own replay of the level where
+///     there is one. Not the game's live reference: that one is switched by a game setting and
+///     stored on the network player, so it can quietly be somebody else's idea of a personal best.
 /// </summary>
 public class SplitsOverlay : IZeepGUIDrawer
 {
@@ -121,7 +121,8 @@ public class SplitsOverlay : IZeepGUIDrawer
 		Level level = ctx.CurrentLevel;
 
 		IReadOnlyList<SplitRow> rows = SplitsTable.Build(GameStateObserver.CheckpointCount,
-			GameStateObserver.CurrentSplits, level.BestSplits, FinishTime(ctx), level.PersonalBestTime);
+			GameStateObserver.CurrentSplits, level.BestSplits, GameStateObserver.RunTime, FinishTime(ctx),
+			level.PersonalBestTime);
 
 		float line = Line(gui, rows.Count);
 		float pad = UiMetrics.Margin(gui) * 0.5f;

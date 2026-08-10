@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ZeepkistClient;
@@ -42,7 +42,8 @@ public class PlaylistService
 		return QueueServerPlaylistUpdate();
 	}
 
-	public void AddLevelToCurrentPlaylist(OnlineZeeplevel level)
+	/// <summary>The returned task carries the same promise as <see cref="StartNewPlaylist" />'s.</summary>
+	public Task AddLevelToCurrentPlaylist(OnlineZeeplevel level)
 	{
 		WarnIfUnplayable(level);
 		PlaylistItem playlistItem = new(level.UID, level.WorkshopID, level.Name, level.Author);
@@ -50,7 +51,8 @@ public class PlaylistService
 		Logger.LogInfo(
 			$"PlaylistService: Added {Describe(level)} to the playlist. Playlist count is now {CurrentLobbyPlaylist.Count}, current index {CurrentPlaylistIndex}.");
 		_workshopDownloads.EnsureDownloaded(level);
-		QueueServerPlaylistUpdate();
+
+		return QueueServerPlaylistUpdate();
 	}
 
 	private static string Describe(OnlineZeeplevel level)
@@ -79,14 +81,16 @@ public class PlaylistService
 			$"PlaylistService: {Describe(level)} has no workshop id - the server cannot serve it and the lobby will skip it.");
 	}
 
-	public void ReplaceLevelInCurrentPlaylist(OnlineZeeplevel oldLevel, OnlineZeeplevel newLevel)
+	/// <summary>The returned task carries the same promise as <see cref="StartNewPlaylist" />'s.</summary>
+	public Task ReplaceLevelInCurrentPlaylist(OnlineZeeplevel oldLevel, OnlineZeeplevel newLevel)
 	{
 		int index = CurrentLobbyPlaylist.FindIndex(old => old.UID == oldLevel.UID);
 
 		if (index == -1)
 		{
 			Logger.LogWarning($"PlaylistService: Could not find level with UID {oldLevel.UID} in playlist");
-			return;
+
+			return Task.CompletedTask;
 		}
 
 		WarnIfUnplayable(newLevel);
@@ -94,7 +98,8 @@ public class PlaylistService
 		Logger.LogInfo(
 			$"PlaylistService: Replaced '{oldLevel.Name}' with {Describe(newLevel)} at index {index}, current index {CurrentPlaylistIndex}.");
 		_workshopDownloads.EnsureDownloaded(newLevel);
-		QueueServerPlaylistUpdate();
+
+		return QueueServerPlaylistUpdate();
 	}
 
 	#region ServerPlaylistUpdateQueue

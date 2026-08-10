@@ -38,18 +38,18 @@ public static class FrogNotification
 		Tinted(message, Color.Style.Status.Bad, duration);
 	}
 
-	public static void Author(string message, float duration = 2.5f)
-	{
-		Tinted(message, Color.Zeepkist.Medal.Author, duration);
-	}
-
 	public static void Gold(string message, float duration = 2.5f)
 	{
 		Tinted(message, Color.Zeepkist.Medal.Gold, duration);
 	}
 
-	private static void Tinted(string message, Color32 textColor, float duration)
+	/// <summary>
+	///     The colour goes on the toast, not on its words: a tinted panel with plain text on it reads
+	///     at a glance and from the corner of the eye, which is the only way a toast is ever read
+	///     while driving. Coloured words on a dark panel had to be looked at to be told apart.
+	/// </summary>
+	private static void Tinted(string message, Color32 tint, float duration)
 	{
-		_tagged?.LogCustomColors(message, textColor, Color.Style.Surface.Panel, duration);
+		_tagged?.LogCustomColors(message, Color.Style.Surface.Panel, tint, duration);
 	}
 }

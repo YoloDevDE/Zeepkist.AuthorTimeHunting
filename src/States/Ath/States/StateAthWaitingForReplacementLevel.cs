@@ -29,8 +29,8 @@ public class StateAthWaitingForReplacementLevel(AthPreparingController phase) : 
 		try
 		{
 			OnlineZeeplevel newLevel = await RandomLevels.DrawRandomLevelAsync();
-			PlaylistService.ReplaceLevelInCurrentPlaylist(brokenLevel, newLevel);
 
+			await PlaylistService.ReplaceLevelInCurrentPlaylist(brokenLevel, newLevel);
 			await AthController.Services.WorkshopDownloads.WaitUntilReadyAsync(newLevel);
 
 			if (Controller.CurrentState != this)

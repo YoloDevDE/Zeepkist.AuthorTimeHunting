@@ -346,6 +346,10 @@ public class RaceTimeDisplay : IDisposable
 	///     Whether gold is already owned is read here rather than off the level while driving,
 	///     because the attempt that claims it sets it the moment it finishes - and a row that
 	///     disappeared on the finish line would take the good news with it.
+	///     The last verdict goes back here too, and unconditionally. It is written to a label the
+	///     game only touches at a finish, so nothing else was going to take it down: the hunt held
+	///     an author time across a respawn and the panel went on saying so through the next attempt.
+	///     The countdown is the moment there is a new attempt to say nothing about yet.
 	/// </summary>
 	private void Rearm(float physicsTime)
 	{
@@ -354,6 +358,7 @@ public class RaceTimeDisplay : IDisposable
 			return;
 		}
 
+		_verdict.Restore();
 		_lastPace = _paceSafe;
 		_missedAuthor = false;
 		_goldOwned = ActiveRun?.Ctx.CurrentLevel?.GoldMedalAcquired == true;
@@ -391,7 +396,7 @@ public class RaceTimeDisplay : IDisposable
 			return;
 		}
 
-		_verdict.Draw(label, ActiveRun.Ctx);
+		_verdict.Draw(label, ActiveRun.Ctx, _medals);
 	}
 
 	private double Elapsed(ReadyToReset player)
@@ -418,9 +423,9 @@ public class RaceTimeDisplay : IDisposable
 		bool gone = !countingDown && last > 0d && run >= last;
 
 		return Mono(AttemptRow(countingDown)
-		            + "\n" + _lampRows[stage]
-		            + "\n" + ClockRow(countingDown, countingDown ? -physicsTime : run, gone)
-		            + "\n" + MedalRows(countingDown, Finished, run, goldTime, authorTime));
+					+ "\n" + _lampRows[stage]
+					+ "\n" + ClockRow(countingDown, countingDown ? -physicsTime : run, gone)
+					+ "\n" + MedalRows(countingDown, Finished, run, goldTime, authorTime));
 	}
 
 	private static int Stage(float physicsTime, double authorTime)
@@ -721,7 +726,7 @@ public class RaceTimeDisplay : IDisposable
 
 	private static string Hex(Color32 colour)
 	{
-		return $"#{colour.r:X2}{colour.g:X2}{colour.b:X2}";
+		return Color.ToHex(colour);
 	}
 
 	/// <summary>

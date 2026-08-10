@@ -1,5 +1,4 @@
-﻿using System;
-using System.Globalization;
+using System;
 
 namespace AuthorTimeHunting.Util;
 
@@ -38,25 +37,17 @@ public abstract class TimeFormatter
 			$"{span.Minutes:D2}:{span.Seconds:D2}.{span.Milliseconds:D3}";
 	}
 
+	/// <summary>
+	///     How far apart two times are, written as a signed clock: <c>-00:01.749</c>.
+	///     The splits used to write their gaps as bare seconds, on the grounds that a split is
+	///     behind by tenths rather than by minutes. It is - but it is read in a column under a run
+	///     time, and two columns of numbers that count in different units is a column you have to
+	///     stop and parse. The same shape for both is worth the three characters.
+	/// </summary>
 	public static string FormatDelta(double seconds)
 	{
 		string sign = seconds <= 0 ? "-" : "+";
 
 		return sign + FormatTime(Math.Abs(seconds));
-	}
-
-	/// <summary>
-	///     A gap read at a glance: signed seconds to the millisecond, without the minutes.
-	///     <see cref="FormatDelta" /> writes a full clock, which is right beside a run time and
-	///     three times too wide in a column of them - and a split is behind by tenths, not by
-	///     minutes. A gap that does run to minutes still says so, it just says it as seconds.
-	///     The invariant culture, because the decimal point has to be a point: this is read next
-	///     to times the game writes, and a comma in one of the two columns is a typo on screen.
-	/// </summary>
-	public static string FormatGap(double seconds)
-	{
-		string sign = seconds < 0 ? "-" : "+";
-
-		return sign + Math.Abs(seconds).ToString("F3", CultureInfo.InvariantCulture);
 	}
 }

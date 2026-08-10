@@ -120,6 +120,75 @@ public class GameStateObserver
 		}
 	}
 
+	/// <summary>
+	///     How long the attempt being driven has been running, or -1 when none is. This is the same
+	///     clock the game puts on screen, so a split measured against it is measured against the
+	///     number the player is already watching.
+	/// </summary>
+	public static double RunTime
+	{
+		get
+		{
+			GameMaster master = Master;
+
+			if (master == null || master.currentLevelPhysicsTime < 0f || master.PlayersReady == null ||
+				master.PlayersReady.Count == 0)
+			{
+				return -1d;
+			}
+
+			ReadyToReset player = master.PlayersReady[0];
+
+			return player?.ticker == null ? -1d : player.ticker.GetTicker();
+		}
+	}
+
+	/// <summary>
+	///     The checkpoints of the player's own best run on a level, as the game has them on disk.
+	///     The game keeps one replay per level in <c>Replays.json</c> and only ever replaces it with
+	///     a faster run, so this is a personal best that outlives the session - which is the one
+	///     thing a hunt cannot produce for itself: it sees each level once, for a few minutes, and
+	///     a level it has never finished has nothing to compare against at all.
+	///     Empty where the player has never set a time here, which on a random level is the usual
+	///     answer.
+	/// </summary>
+	public static SplitSet ReplaySplits(string levelUid)
+	{
+		if (string.IsNullOrEmpty(levelUid) || ReplayManager.Instance == null)
+		{
+			return SplitSet.Empty;
+		}
+
+		ReplayManager.ReplayInfo replay = ReplayManager.Instance.GetReplay(levelUid);
+
+		if (replay?.Splits == null)
+		{
+			return SplitSet.Empty;
+		}
+
+		double[] times = new double[replay.Splits.Count];
+		double[] speeds = new double[replay.Splits.Count];
+
+		for (int i = 0; i < replay.Splits.Count; i++)
+		{
+			times[i] = replay.Splits[i];
+			speeds[i] = Velocity(replay, i);
+		}
+
+		return new SplitSet(times, speeds);
+	}
+
+	/// <summary>Older replays were written without the speeds, so a missing one is an ordinary answer.</summary>
+	private static double Velocity(ReplayManager.ReplayInfo replay, int index)
+	{
+		if (replay.velocities == null || index >= replay.velocities.Count)
+		{
+			return -1d;
+		}
+
+		return replay.velocities[index];
+	}
+
 	private static GameMaster Master => PlayerManager.Instance == null ? null : PlayerManager.Instance.currentMaster;
 
 	/// <summary>The local player's splits, or null when there is no race to read them off.</summary>

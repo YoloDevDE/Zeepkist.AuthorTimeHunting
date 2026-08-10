@@ -34,7 +34,8 @@ public class StateAthWaitingForFirstRun(AthPlayingController phase) : AthState(p
 		{
 			Logger.LogInfo("Adding Random Level");
 			OnlineZeeplevel level = await RandomLevels.DrawRandomLevelAsync();
-			PlaylistService.AddLevelToCurrentPlaylist(level);
+
+			await PlaylistService.AddLevelToCurrentPlaylist(level);
 		}
 		catch (Exception e)
 		{

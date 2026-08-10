@@ -28,6 +28,8 @@ public class MedalSpriteAsset : IDisposable
 
 	public const int Gold = 1;
 
+	public const int OhNo = 2;
+
 	/// <summary>
 	///     The side of one cell in the strip. Medals are drawn a few dozen pixels tall in a HUD and
 	///     this is the next power of two up from that, which is all the resolution the strip can
@@ -91,6 +93,17 @@ public class MedalSpriteAsset : IDisposable
 		return $"<sprite index={medal} tint=1 color={hex}>";
 	}
 
+	/// <summary>
+	///     Whether <paramref name="medal" /> is a picture this asset actually has. Only the two
+	///     medals are certain: they come with the game the mod is standing in. The emoji is off a
+	///     sprite asset that is found rather than loaded - see <see cref="EmojiSprites" /> - so a
+	///     caller that writes it has to be ready to write words instead.
+	/// </summary>
+	public bool Has(int medal)
+	{
+		return Asset() != null && medal < _asset.spriteCharacterTable.Count;
+	}
+
 	private TMP_SpriteAsset Asset()
 	{
 		if (_built)
@@ -107,16 +120,33 @@ public class MedalSpriteAsset : IDisposable
 		}
 
 		_built = true;
-		_asset = Build(author, gold);
+		_asset = Build(Sprites(author, gold));
 
 		return _asset;
 	}
 
-	private static TMP_SpriteAsset Build(Sprite author, Sprite gold)
+	/// <summary>
+	///     The sprites in the order their indices name them, cut short at the first one the game has
+	///     not got. Nothing after a gap could be addressed anyway - an index is a position in the
+	///     strip - and the medals are worth having on their own.
+	/// </summary>
+	private static Sprite[] Sprites(Sprite author, Sprite gold)
+	{
+		Sprite ohNo = EmojiSprites.OhNo;
+
+		if (ohNo == null)
+		{
+			return [author, gold];
+		}
+
+		return [author, gold, ohNo];
+	}
+
+	private static TMP_SpriteAsset Build(Sprite[] sprites)
 	{
 		try
 		{
-			return Assemble(author, gold);
+			return Assemble(sprites);
 		}
 		catch (Exception e)
 		{
@@ -141,23 +171,23 @@ public class MedalSpriteAsset : IDisposable
 	///     <c>if (lookup == null)</c> and never runs again, which is what makes handing the material
 	///     over afterwards safe.
 	/// </summary>
-	private static TMP_SpriteAsset Assemble(Sprite author, Sprite gold)
+	private static TMP_SpriteAsset Assemble(Sprite[] sprites)
 	{
-		Texture2D strip = Strip(author, gold);
-
-		TMP_SpriteGlyph authorGlyph = Glyph(Author);
-		TMP_SpriteGlyph goldGlyph = Glyph(Gold);
+		Texture2D strip = Strip(sprites);
 
 		TMP_SpriteAsset asset = ScriptableObject.CreateInstance<TMP_SpriteAsset>();
 
 		asset.name = "ATH Medals";
 		asset.hideFlags = HideFlags.HideAndDontSave;
 		asset.spriteSheet = strip;
-		asset.spriteGlyphTable.Add(authorGlyph);
-		asset.spriteGlyphTable.Add(goldGlyph);
 
-		asset.spriteCharacterTable.Add(Character(authorGlyph, "author"));
-		asset.spriteCharacterTable.Add(Character(goldGlyph, "gold"));
+		for (int index = 0; index < sprites.Length; index++)
+		{
+			TMP_SpriteGlyph glyph = Glyph(index);
+
+			asset.spriteGlyphTable.Add(glyph);
+			asset.spriteCharacterTable.Add(Character(glyph, Name(index)));
+		}
 
 		asset.UpdateLookupTables();
 
@@ -166,13 +196,26 @@ public class MedalSpriteAsset : IDisposable
 		return asset;
 	}
 
-	/// <summary>One row of cells, the medals left to right in the order their indices name them.</summary>
-	private static Texture2D Strip(Sprite author, Sprite gold)
+	private static string Name(int medal)
 	{
-		Texture2D strip = new(_cell * 2, _cell, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
+		return medal switch
+		{
+			Author => "author",
+			Gold => "gold",
+			_ => "ohno"
+		};
+	}
 
-		Paint(strip, author, Author);
-		Paint(strip, gold, Gold);
+	/// <summary>One row of cells, the sprites left to right in the order their indices name them.</summary>
+	private static Texture2D Strip(Sprite[] sprites)
+	{
+		Texture2D strip = new(_cell * sprites.Length, _cell, TextureFormat.RGBA32, false)
+		{ hideFlags = HideFlags.HideAndDontSave };
+
+		for (int index = 0; index < sprites.Length; index++)
+		{
+			Paint(strip, sprites[index], index);
+		}
 
 		strip.Apply();
 

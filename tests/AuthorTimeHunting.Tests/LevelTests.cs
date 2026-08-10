@@ -126,31 +126,47 @@ public class LevelTests
 	}
 
 	/// <summary>
-	///     The splits are what the split list measures every later attempt against, so they have to
-	///     belong to the run the personal best belongs to. A slower attempt keeps its own time out
-	///     of the record and must keep its checkpoints out too.
+	///     Every attempt leaves its checkpoints behind, whether or not it was the fastest and
+	///     whether or not it finished at all. A hunt resets out of a level far more often than it
+	///     finishes one, and a reference that only came from finishes was empty exactly while it
+	///     was being looked at.
 	/// </summary>
 	[Fact]
-	public void OnlyTheBestRunLeavesItsCheckpointsBehind()
+	public void EveryAttemptLeavesItsCheckpointsBehind()
 	{
 		Level level = Fresh();
 
-		level.RecordRun(30f, new SplitSet([10d, 20d], [60d, 70d]));
-		level.RecordRun(22f, new SplitSet([8d, 15d], [66d, 78d]));
-		level.RecordRun(24f, new SplitSet([9d, 17d], [61d, 71d]));
+		level.TrackSplits(new SplitSet([10d, 20d], [60d, 70d]));
+		level.SealAttempt();
 
-		Assert.Equal(22f, level.PersonalBestTime);
-		Assert.Equal([8d, 15d], level.BestSplits.Times);
-		Assert.Equal([66d, 78d], level.BestSplits.Speeds);
+		level.TrackSplits(new SplitSet([8d], [66d]));
+		level.SealAttempt();
+
+		Assert.Equal([8d, 20d], level.BestSplits.Times);
+		Assert.Equal([66d, 70d], level.BestSplits.Speeds);
 	}
 
-	/// <summary>A level nobody has finished has nothing to measure against, and says so as an empty set.</summary>
+	/// <summary>
+	///     The attempt being driven is what the reference is being compared against, so it is not
+	///     part of it until it is over.
+	/// </summary>
 	[Fact]
-	public void ALevelWithoutAFinishHasNoSplits()
+	public void TheAttemptBeingDrivenIsNotTheReferenceYet()
 	{
 		Level level = Fresh();
 
-		level.RecordRun(-1f, new SplitSet([10d], [60d]));
+		level.TrackSplits(new SplitSet([10d], [60d]));
+
+		Assert.Equal(0, level.BestSplits.Count);
+	}
+
+	/// <summary>A level nobody has driven has nothing to measure against, and says so as an empty set.</summary>
+	[Fact]
+	public void ALevelWithoutAnAttemptHasNoSplits()
+	{
+		Level level = Fresh();
+
+		level.SealAttempt();
 
 		Assert.Equal(0, level.BestSplits.Count);
 		Assert.Equal(-1d, level.BestSplits.TimeAt(0));

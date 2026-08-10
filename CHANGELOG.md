@@ -71,19 +71,32 @@ This one stops trying. ATH now draws its own game.
 - **Fuller sounds.** Every tone is built from a stack of harmonics with a short room reverb behind it, instead of the
   bare sine it used to be - it sits in the game rather than on top of it.
 - **Medals instead of initials.** The rows are labelled with the game's own author and gold medal art.
-- **The finish tells you what happened.** Where the game printed your time again, it now says what the run was worth:
-  *author time*, *gold unlocked*, *gold*, or *no medal*.
+- **The finish tells you what happened.** Where the game printed your time again, it now shows the medal you took and
+  the one thing it changes: *gold acquired - you can now skip without a penalty*, *author acquired - respawn to
+  continue*, or the face this mode makes when you miss, with how far off the author time you were. The medals are the
+  game's own art rather than the words for them, and nothing is announced twice: the toasts that used to say the same
+  thing in the opposite corner, while the finish panel was coming up, are gone.
 - **A broadcast bar, not a panel.** Everything ATH has to say while you drive is one band across the top of the screen,
-  with the mod's crest in the middle of it: the hour on the left, the level on the right. It is a fraction of the screen
-  wide and centred, so it is over your game the way an overlay is - not stretched corner to corner, and never in the
-  middle of your view.
+  with the hour on a tile in the middle of it: the hunt on the left, the level on the right. It is a fraction of the
+  screen wide and centred, so it is over your game the way an overlay is - not stretched corner to corner, and never in
+  the middle of your view.
 - **It waits for the green light.** The bar does not appear until you are actually on a level. It used to come up with
   the run and hang there through the whole lobby setup with nothing in it.
 - **The bar gets out of the way.** Three seconds after the lights go out it folds down to what matters at speed: the
-  hour, the level, and what leaving it right now would cost you. Cross the line - or reset - and it is back to full
-  immediately, medal tally and all, because that is the moment you want to see it. The three seconds are there so that
-  restarting twenty times does not turn the top of your screen into an animation. Reach for the mouse and it comes back
-  out too - the same movement that opens the drawer, and for the same reason.
+  hour, your medals, what a skip would cost, the level's own times and how long you have been on it. Cross the line -
+  or respawn - and it is back to full immediately, timeline and level name and all, because that is the moment you want
+  to see it. The three seconds are there so that restarting twenty times does not turn the top of your screen into an
+  animation. Reach for the mouse and it comes back out too - the same movement that opens the drawer, and for the same
+  reason.
+- **Both halves open.** Put the pointer over the left of the bar and a row comes down with the hunt in detail: levels
+  played, attempts driven, and how much of the hour went on penalties rather than on driving. Over the right, and you
+  get the level in detail: what it is called, whose it is, and your best time on it. Take the pointer away and they
+  fold back up.
+- **The hour is the middle of the bar.** It used to be the mod's crest - a picture that never changed, in the one place
+  your eye keeps going back to. The clock is there now, with the live dot beside it, and everything on either side of
+  it is what that hour has been spent on.
+- **A gold you own stops being a target.** Once the gold medal is in the bag, its time comes off the bar and a tick
+  takes its place. The number cannot change any more; the author time is the only thing left to drive at.
 - **Your splits, and they stay put.** Every checkpoint of the level is listed down the left of the screen: when you got
   there, how far ahead or behind your best run on it you were, and how fast you went through. The game already tells
   you this - for one second, in a popup that is gone before the next corner. One checkpoint lost is a mistake; three in
@@ -91,6 +104,14 @@ This one stops trying. ATH now draws its own game.
   start, so nothing shifts under your eyes while you are reading it. It is built like the bar - same panel, same cut
   corners - and slides in from off the edge of the screen rather than appearing there. Off in the settings if you would
   rather not have it.
+- **The checkpoint you are driving at counts up.** The row you are heading for runs live against your best, and freezes
+  on the time you actually went through with - so the answer arrives at the checkpoint rather than a row later.
+- **Splits that survive a respawn.** What you are measured against is the best each checkpoint has ever been driven,
+  not the splits of a run you managed to finish - so a level you have never finished still has a reference, and
+  resetting out of a bad run no longer takes the whole column with it. If you have driven the level before on this
+  machine, your saved replay is the starting reference, so the first attempt of a hunt already has one.
+- **Gaps read like times.** A split is behind by `+00:00.042` now, not by `+0.042` - the same shape as the clock in the
+  column beside it.
 - **A dot that says it is live.** Beside the clock, blinking once a second the way a recording light does, so a running
   hour looks different from a stopped one at a glance. Pause, and it becomes a stop symbol.
 - **The bar shows where the hour went.** Not a fill any more but a run of blocks along the bottom edge, one per level,
@@ -120,7 +141,13 @@ This one stops trying. ATH now draws its own game.
 
 ### Fixed
 
-- The finish verdict no longer stays on screen through the next attempt after you respawn.
+- The finish verdict no longer stays on screen through the next attempt after you respawn. It goes with the countdown
+  of the attempt after it, whatever the last one did - claiming an author time and respawning used to leave it up.
+- **A restarted run no longer loads the level you just left.** Swapping a broken level out, or adding one to the
+  playlist, told the lobby to move on before the server had the new playlist - so it moved on to the old one. The skip
+  now waits for the playlist to land.
+- **Toasts read at a glance.** The colour is on the toast rather than on its words, which is the only way one gets read
+  from the corner of your eye at speed.
 - The setup screen no longer disappears halfway through the podium.
 - **The medals stay medals.** From the second level of a hunt onwards, every medal in the bar turned into a plain
   coloured dot and stayed that way for the rest of the run. The mod now keeps its own copy of the game's medal art, so

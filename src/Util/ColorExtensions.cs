@@ -43,6 +43,16 @@ public static class ColorExtensions
 
 			return parsed;
 		}
+
+		/// <summary>
+		///     The other direction, in the form a TextMeshPro tag wants: <c>#RRGGBB</c>. The alpha is
+		///     left off because a tag that carries one is a tag that can hide its own text, and every
+		///     hidden thing the mod writes says so with a colour of its own.
+		/// </summary>
+		public static string ToHex(Color32 colour)
+		{
+			return $"#{colour.r:X2}{colour.g:X2}{colour.b:X2}";
+		}
 	}
 
 	/// <summary>The mod's own palette.</summary>

@@ -29,13 +29,11 @@ CHAMFER_FRACTION = 0.45
 BADGE_ASPECT = 16.0 / 9.0
 PENNANT_WIDTH_FRACTION = 0.34
 PENNANT_ROWS = 0.55
-CLOCK_SHARE = 0.55
-CLOCK_SIZE = 1.3
-TITLE_SHARE = 0.5
-CLOCK_COLUMNS = 6.4
+CLOCK_SIZE = 1.6
+DETAIL_ROWS = 1.1
 MEDAL_COLUMNS = 7.4
 SKIP_COLUMNS = 9.4
-LEVEL_TIME_COLUMNS = 11.4
+LEVEL_TIME_COLUMNS = 9.4
 
 # SplitsOverlay.cs
 SPLITS_FRACTION, SPLITS_MIN_W, SPLITS_MAX_W = 0.18, 240.0, 380.0
@@ -162,6 +160,21 @@ def take_right(rect, amount, gap=0.0):
     return (x + w - amount, y, amount, h), (x, y, w - amount - gap, h)
 
 
+def take_bottom(rect, amount, gap=0.0):
+    x, y, w, h = rect
+    return (x, y + h - amount, w, amount), (x, y, w, h - amount - gap)
+
+
+def tick(d, rect, colour):
+    """UiWidgets-free: the two strokes RunOverlay.DrawTick fills."""
+    x, y, w, h = rect
+    size = min(w, h)
+    t = max(2.0, size * 0.16)
+    low = (x + size * 0.42, y + size * 0.72)
+    d.line([x + size * 0.15, y + size * 0.45, low[0], low[1]], fill=colour, width=int(round(t)))
+    d.line([low[0], low[1], x + size * 0.85, y + size * 0.2], fill=colour, width=int(round(t)))
+
+
 def take_top(rect, amount, gap=0.0):
     x, y, w, h = rect
     return (x, y, w, amount), (x, y + amount + gap, w, h - amount - gap)
@@ -187,14 +200,15 @@ def background(img):
         d.rectangle([955 - k * 1.6, yy, 965 + k * 1.6, yy + 6 + k], fill=(240, 240, 240))
 
 
-def draw_bar(img, open_amount, stage=1.0):
+def draw_bar(img, open_amount, stage=1.0, left=0.0, right=0.0):
     layer = Image.new("RGBA", img.size, (0, 0, 0, 0))
     d = ImageDraw.Draw(layer)
 
     wide = stage >= SWAP_AT
     pad = SPACING
     rule = max(3.0, ROW * RULE_FRACTION) * stage
-    band_h = ROW * (MINIMAL_ROWS + (CONTENT_ROWS - MINIMAL_ROWS) * stage) + pad * 2 + rule
+    detail = ROW * DETAIL_ROWS * max(left, right)
+    band_h = ROW * (MINIMAL_ROWS + (CONTENT_ROWS - MINIMAL_ROWS) * stage) + pad * 2 + rule + detail
     width = min(max(SCREEN_W * WIDTH_FRACTION, MIN_W), MAX_W)
     bx = (SCREEN_W - width) / 2
     cut = min(band_h * CHAMFER_FRACTION, width * 0.03)
@@ -244,77 +258,85 @@ def draw_bar(img, open_amount, stage=1.0):
     iw = width - (pad + cut) * 2
     ih = band_h - pad - (rule + pad)
 
-    badge_w = ih * BADGE_ASPECT
-    badge = ((bx + width / 2) - badge_w / 2, iy, badge_w, ih)
-    wing = (iw - badge_w) / 2 - pad
+    tile_h = min(ih, ROW * MINIMAL_ROWS)
+    tile_w = tile_h * BADGE_ASPECT
+    tile = ((bx + width / 2) - tile_w / 2, iy, tile_w, tile_h)
+    wing = (iw - tile_w) / 2 - pad
 
     # pennant
-    pw = badge_w * PENNANT_WIDTH_FRACTION
+    pw = tile_w * PENNANT_WIDTH_FRACTION
     cx = bx + width / 2
     d.polygon([(cx - pw / 2, band_h), (cx - pw / 2, band_h + pennant_h * 0.45),
                (cx, band_h + pennant_h), (cx + pw / 2, band_h + pennant_h * 0.45),
                (cx + pw / 2, band_h)], fill=MEDAL_GOLD)
 
-    # badge
-    rounded(d, badge, TILE, badge[3] * 0.14, outline=MEDAL_GOLD, width=max(1, int(badge[3] * 0.045)))
-    logo_path = os.path.join(REPO, "assets", "thumbnail", "ATH_16-9.png")
-    if os.path.exists(logo_path):
-        p = max(2.0, badge[3] * 0.09)
-        box_w, box_h = badge[2] - p * 2, badge[3] - p * 2
-        logo = Image.open(logo_path).convert("RGBA")
-        scale = min(box_w / logo.width, box_h / logo.height)
-        logo = logo.resize((max(1, int(logo.width * scale)), max(1, int(logo.height * scale))), Image.LANCZOS)
-        layer.paste(logo, (int(badge[0] + p + (box_w - logo.width) / 2),
-                           int(badge[1] + p + (box_h - logo.height) / 2)), logo)
-        d = ImageDraw.Draw(layer)
+    # the hour, on the tile in the middle
+    rounded(d, tile, TILE, tile[3] * 0.14, outline=MEDAL_GOLD, width=max(1, int(tile[3] * 0.045)))
+    tp = max(2.0, tile[3] * 0.12)
+    inner = (tile[0] + tp, tile[1] + tp, tile[2] - tp * 2, tile[3] - tp * 2)
+    light_w = inner[3] * 0.32
+    dot_col, clock_r = take_right(inner, light_w, INNER)
+    text(d, clock_r, "41:07", GOOD, TEXT_SIZE * CLOCK_SIZE, "center")
+    lr = light_w * 0.25
+    dcx, dcy = dot_col[0] + light_w / 2, dot_col[1] + dot_col[3] / 2
+    d.ellipse([dcx - lr, dcy - lr, dcx + lr, dcy + lr], fill=ALERT)
 
-    # left wing
+    # ---- left wing: what the hour bought, and what a skip would cost ----
     hunt = (ix, iy, wing, ih)
-    clock_r, below_r = take_top(hunt, ih * CLOCK_SHARE)
-    clock_r, _ = take_left(clock_r, min(clock_r[2], ROW * CLOCK_COLUMNS))
-    medals_r, _ = take_left(below_r, min(below_r[2], ROW * MEDAL_COLUMNS))
-    skip_r, _ = take_left(below_r, min(below_r[2], ROW * SKIP_COLUMNS))
-    icon = clock_r[3] * 0.8
-    watch, rest = take_left(clock_r, icon, INNER)
-    light, clock = take_right(rest, icon, INNER)
-    stopwatch(d, watch, GOOD)
-    text(d, clock, "41:07", GOOD, TEXT_SIZE * CLOCK_SIZE, "left")
-    lr = light[3] * 0.25
-    d.ellipse([light[0] + light[2] / 2 - lr, light[1] + light[3] / 2 - lr,
-               light[0] + light[2] / 2 + lr, light[1] + light[3] / 2 + lr], fill=ALERT)
-    if wide:
-        for i, (col, n) in enumerate([(MEDAL_AUTHOR, "3"), (MEDAL_GOLD, "5"), (PENALTY, "1")]):
-            cell = column(medals_r, i, 3)
-            isz = min(cell[3], cell[2] * 0.5)
-            ic, restc = take_left(cell, isz, INNER)
-            medal(d, ic, col)
-            text(d, restc, n, col, TEXT_SIZE * 1.5, "left")
-    else:
-        gi = skip_r[3] * 0.7
-        gr, lr_ = take_left(skip_r, gi, INNER)
-        glyph(layer, gr, "Skip", FREE_SKIP)
-        d = ImageDraw.Draw(layer)
-        text(d, lr_, "Free Skip (2x)", FREE_SKIP, TEXT_SIZE * 0.9, "left")
+    hunt_detail, hunt_main = take_bottom(hunt, ROW * DETAIL_ROWS * left)
+    medals_row, price_row = take_top(hunt_main, hunt_main[3] * 0.5)
+    medals_r, _ = take_left(medals_row, min(medals_row[2], ROW * MEDAL_COLUMNS))
+    price_r, _ = take_left(price_row, min(price_row[2], ROW * SKIP_COLUMNS))
 
-    # right wing
-    lvl = (ix + iw - wing, iy, wing, ih)
-    title_r, times_r = take_top(lvl, ih * TITLE_SHARE)
-
-    # One line, measured from the right: author, then " by ", then the level name.
-    size = TEXT_SIZE * 1.05
-    f = font(size)
-    aw = d.textlength("Maki", font=f)
-    bw = d.textlength(" by ", font=f)
-    text(d, title_r, "Maki", WHITE, size, "right")
-    text(d, (title_r[0], title_r[1], title_r[2] - aw, title_r[3]), " by ", JOINER, size, "right")
-    text(d, (title_r[0], title_r[1], title_r[2] - aw - bw, title_r[3]), "Skyline Sprint", WHITE, size, "right")
-
-    times_r, _ = take_right(times_r, min(times_r[2], ROW * LEVEL_TIME_COLUMNS))
-    for i, (col, tm) in enumerate([(MEDAL_AUTHOR, "00:24.148"), (MEDAL_GOLD, "00:27.600")]):
-        cell = column(times_r, i, 2)
-        ic, restc = take_left(cell, cell[3], INNER)
+    for i, (col, n) in enumerate([(MEDAL_AUTHOR, "3"), (MEDAL_GOLD, "5"), (PENALTY, "1")]):
+        cellr = column(medals_r, i, 3)
+        isz = min(cellr[3], cellr[2] * 0.5)
+        ic, restc = take_left(cellr, isz, INNER)
         medal(d, ic, col)
-        text(d, restc, tm, col, TEXT_SIZE * 0.9, "left")
+        text(d, restc, n, col, TEXT_SIZE * 1.5, "left")
+
+    gi = price_r[3] * 0.7
+    gr, lr_ = take_left(price_r, gi, INNER)
+    glyph(layer, gr, "Skip", PENALTY)
+    d = ImageDraw.Draw(layer)
+    text(d, lr_, "-05:00", PENALTY, TEXT_SIZE * 1.1, "left")
+
+    if left > 0.0:
+        text(d, hunt_detail, "9 levels   34 attempts   00:05:00 lost", MUTED, TEXT_SIZE * 0.85, "left")
+
+    # ---- right wing: the level and what it is costing -------------------
+    lvl = (ix + iw - wing, iy, wing, ih)
+    lvl_detail, lvl_main = take_bottom(lvl, ROW * DETAIL_ROWS * right)
+
+    if wide:
+        title_r, lvl_main = take_top(lvl_main, lvl_main[3] / 3)
+        size = TEXT_SIZE
+        f = font(size)
+        aw = d.textlength("Maki", font=f)
+        bw = d.textlength(" by ", font=f)
+        text(d, title_r, "Maki", WHITE, size, "right")
+        text(d, (title_r[0], title_r[1], title_r[2] - aw, title_r[3]), " by ", JOINER, size, "right")
+        text(d, (title_r[0], title_r[1], title_r[2] - aw - bw, title_r[3]), "Skyline Sprint", WHITE, size, "right")
+
+    top_r, bottom_r = take_top(lvl_main, lvl_main[3] * 0.5)
+
+    times_r, skip_r2 = take_right(top_r, min(top_r[2], ROW * LEVEL_TIME_COLUMNS))
+    text(d, skip_r2, "Penalty Skip", PENALTY, TEXT_SIZE * 0.9, "left")
+    cellr = column(times_r, 0, 2)
+    ic, restc = take_left(cellr, cellr[3], INNER)
+    medal(d, ic, MEDAL_AUTHOR)
+    text(d, restc, "00:24.148", MEDAL_AUTHOR, TEXT_SIZE * 0.9, "left")
+    cellr = column(times_r, 1, 2)
+    ic, restc = take_left(cellr, cellr[3], INNER)
+    medal(d, ic, MEDAL_GOLD)
+    tick(d, (restc[0], restc[1], restc[3], restc[3]), POSITIVE)
+
+    text(d, bottom_r, "7 attempts", MUTED, TEXT_SIZE * 0.9, "left")
+    text(d, bottom_r, "02:41", MUTED, TEXT_SIZE * 0.9, "right")
+
+    if right > 0.0:
+        text(d, lvl_detail, "Skyline Sprint by Maki", MUTED, TEXT_SIZE * 0.85, "left")
+        text(d, lvl_detail, "best 00:25.902", MUTED, TEXT_SIZE * 0.85, "right")
 
     # timeline rule
     if wide:
@@ -332,10 +354,10 @@ def draw_bar(img, open_amount, stage=1.0):
 
 # SplitsOverlay.cs: the list down the left edge, one row per checkpoint plus the finish.
 SPLIT_ROWS = [
-    ("1", "00:04.221", "-0.113", POSITIVE, "78", POSITIVE),
-    ("2", "00:09.874", "+0.042", BAD, "64", BAD),
-    ("3", "00:14.500", "-0.006", POSITIVE, "71", POSITIVE),
-    ("4", "--:--.---", "", MUTED, "", MUTED),
+    ("1", "00:04.221", "-00:00.113", POSITIVE, "78", POSITIVE),
+    ("2", "00:09.874", "+00:00.042", BAD, "64", BAD),
+    ("3", "00:14.500", "-00:00.006", POSITIVE, "71", POSITIVE),
+    ("4", "00:17.902", "-00:00.418", POSITIVE, "", MUTED),
     ("5", "--:--.---", "", MUTED, "", MUTED),
     ("F", "--:--.---", "", MUTED, "", MUTED),
 ]
@@ -396,10 +418,10 @@ def draw_splits(img, slide=1.0):
     return Image.alpha_composite(img.convert("RGBA"), layer)
 
 
-def render(open_amount, name, stage=1.0, splits=False, slide=1.0):
+def render(open_amount, name, stage=1.0, splits=False, slide=1.0, left=0.0, right=0.0):
     img = Image.new("RGB", (SCREEN_W, SCREEN_H))
     background(img)
-    out = draw_bar(img, open_amount, stage)
+    out = draw_bar(img, open_amount, stage, left, right)
     if splits:
         out = draw_splits(out, slide)
     out.convert("RGB").save(os.path.join(OUT, name + "_full.png"))
@@ -412,4 +434,6 @@ render(0.0, "driving", stage=0.0, splits=True)
 render(0.0, "between", stage=1.0, splits=True)
 render(0.0, "arriving", stage=0.0, splits=True, slide=0.45)
 render(1.0, "mouse", stage=1.0, splits=True)
+render(0.0, "hunt-detail", stage=1.0, splits=True, left=1.0)
+render(0.0, "level-detail", stage=1.0, splits=True, right=1.0)
 print("ok")

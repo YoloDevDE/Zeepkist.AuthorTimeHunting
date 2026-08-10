@@ -43,7 +43,13 @@ public class MedalArt : IDisposable
 
 	public Texture2D Gold => Copy(UiMedal.Gold, GameSprites.GoldMedal);
 
-	public Texture2D YouTried => Copy(UiMedal.YouTried, GameSprites.YouTriedMedal);
+	/// <summary>
+	///     What a penalty is counted in. The game's "you tried" medal was the obvious picture for it
+	///     and the wrong one: it is a medal, so a row of three medal counts read as three medals won,
+	///     and the one that cost time looked like the one that was earned. The chat's own dismayed
+	///     face is not a medal at all, and falls back to the medal where the emoji cannot be found.
+	/// </summary>
+	public Texture2D OhNo => Copy(UiMedal.OhNo, EmojiSprites.OhNo ?? GameSprites.YouTriedMedal);
 
 	public void Dispose()
 	{

@@ -18,7 +18,7 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 {
 	public override void Enter()
 	{
-		AthController.Ctx.CurrentLevel.Attempt++;
+		BeginAttempt();
 
 		if (!AthController.Ctx.IsPaused)
 		{
@@ -61,14 +61,12 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 
 		LevelStatus previousStatus = currentLevel.Status;
 
-		currentLevel.RecordRun(currentResult.Time, GameStateObserver.CurrentSplits);
+		currentLevel.RecordRun(currentResult.Time);
 		LevelStatus runMedalStatus = ResolveRunMedalStatus(currentResult.Time, currentLevel);
 
 		AthController.Ctx.LastRunTime = currentResult.Time;
 		AthController.Ctx.LastRunMedalStatus = runMedalStatus;
 		AthController.Ctx.LastRunMedalWasNew = GetMedalRank(runMedalStatus) > GetMedalRank(previousStatus);
-
-		bool wasGoldMedalAcquiredBeforeRun = GetMedalRank(previousStatus) >= GetMedalRank(LevelStatus.Gold);
 
 		if (currentLevel.Status == LevelStatus.Author)
 		{
@@ -76,22 +74,31 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 			return;
 		}
 
-		if (runMedalStatus == LevelStatus.Gold && !wasGoldMedalAcquiredBeforeRun)
-		{
-			FrogNotification.Gold("Gold medal claimed!<br>You can now skip without penalty");
-		}
-
 		Controller.TransitionTo(new StateAthWaitingForNextRun(phase));
 	}
 
 	public override void OnRoundStarted()
 	{
-		AthController.Ctx.CurrentLevel.Attempt++;
+		BeginAttempt();
 		Update();
+	}
+
+	/// <summary>
+	///     One attempt ends where the next one begins, which is here whichever way the last one
+	///     went - finished, reset, or crashed out. The checkpoints it drove are folded into the
+	///     level's reference first, because from now on the game's own split list belongs to the
+	///     attempt that is starting.
+	/// </summary>
+	private void BeginAttempt()
+	{
+		AthController.Ctx.CurrentLevel.SealAttempt();
+		AthController.Ctx.CurrentLevel.Attempt++;
 	}
 
 	public override void Update()
 	{
+		AthController.Ctx.CurrentLevel.TrackSplits(GameStateObserver.CurrentSplits);
+
 		if (AthController.Ctx.IsTimeOver())
 		{
 			phase.Fail();
@@ -108,7 +115,9 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 	{
 		return status switch
 		{
-			LevelStatus.Author => 2, LevelStatus.Gold => 1, _ => 0
+			LevelStatus.Author => 2,
+			LevelStatus.Gold => 1,
+			_ => 0
 		};
 	}
 

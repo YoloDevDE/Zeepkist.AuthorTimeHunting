@@ -31,8 +31,8 @@ public static class SplitsTable
 
 	private const string _finishLabel = "F";
 
-	public static IReadOnlyList<SplitRow> Build(int checkpoints, SplitSet run, SplitSet best, double finishTime,
-		double bestTime)
+	public static IReadOnlyList<SplitRow> Build(int checkpoints, SplitSet run, SplitSet best, double running,
+		double finishTime, double bestTime)
 	{
 		SplitSet driven = run ?? SplitSet.Empty;
 		SplitSet reference = best ?? SplitSet.Empty;
@@ -41,7 +41,7 @@ public static class SplitsTable
 
 		for (int i = 0; i < checkpoints; i++)
 		{
-			rows.Add(Checkpoint(i, driven, reference));
+			rows.Add(Checkpoint(i, driven, reference, running));
 		}
 
 		rows.Add(Finish(finishTime, bestTime));
@@ -49,17 +49,31 @@ public static class SplitsTable
 		return rows;
 	}
 
-	private static SplitRow Checkpoint(int index, SplitSet run, SplitSet best)
+	/// <summary>
+	///     A checkpoint that has been driven says what it cost, for good: the row freezes the moment
+	///     the car goes through and the next one takes over. Before that, the one being driven at
+	///     counts up against its own reference, which is the same question the ticker asks about the
+	///     medal and the same answer a row further down would be too late to give.
+	/// </summary>
+	private static SplitRow Checkpoint(int index, SplitSet run, SplitSet best, double running)
 	{
 		double time = run.TimeAt(index);
 
-		if (time < 0d)
+		if (time >= 0d)
+		{
+			return Row(index, time, run.SpeedAt(index), best);
+		}
+
+		if (index != run.Count || running < 0d)
 		{
 			return Waiting(UiNumbers.Text(index + 1));
 		}
 
-		double speed = run.SpeedAt(index);
+		return Row(index, running, -1d, best);
+	}
 
+	private static SplitRow Row(int index, double time, double speed, SplitSet best)
+	{
 		return new SplitRow(UiNumbers.Text(index + 1), TimeFormatter.FormatTime(time), Gap(time, best.TimeAt(index)),
 			Pace(time, best.TimeAt(index)), Speed(speed), SpeedPace(speed, best.SpeedAt(index)));
 	}
@@ -86,7 +100,7 @@ public static class SplitsTable
 
 	private static string Gap(double time, double reference)
 	{
-		return reference <= 0d ? "" : TimeFormatter.FormatGap(time - reference);
+		return reference <= 0d ? "" : TimeFormatter.FormatDelta(time - reference);
 	}
 
 	/// <summary>A time: less of it is better.</summary>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace AuthorTimeHunting.Entities;
@@ -87,8 +87,22 @@ public class Level
 		}
 	} = -1f;
 
-	/// <summary>What the best attempt so far did at each checkpoint. The run everything is measured against.</summary>
+	/// <summary>
+	///     The best each checkpoint has been driven, which is what an attempt is measured against.
+	///     It used to be the splits of the best finished run, and that made it worth nothing for
+	///     most of a hunt: a level is respawned out of far more often than it is finished, and until
+	///     the first clean run there was no reference at all - so the column the panel exists for
+	///     was empty exactly while it was being needed. Kept per checkpoint it survives every
+	///     respawn, and <see cref="SplitSet.Best" /> says what "better" means.
+	/// </summary>
 	public SplitSet BestSplits { get; private set; } = SplitSet.Empty;
+
+	/// <summary>
+	///     What the attempt being driven has done so far. It is not part of the reference yet - it
+	///     is the thing being compared to it, and a checkpoint that was its own best would show
+	///     every split dead even.
+	/// </summary>
+	private SplitSet AttemptSplits { get; set; } = SplitSet.Empty;
 
 	public TimeSpan TimeWasted =>
 		LevelBroken ? TimeSpan.Zero
@@ -101,8 +115,10 @@ public class Level
 		{
 			return Status switch
 			{
-				LevelStatus.Author => "Completed", LevelStatus.Gold => "Gold-Skipped",
-				LevelStatus.Free => "Free-Skipped", LevelStatus.Broken => "Broken",
+				LevelStatus.Author => "Completed",
+				LevelStatus.Gold => "Gold-Skipped",
+				LevelStatus.Free => "Free-Skipped",
+				LevelStatus.Broken => "Broken",
 				LevelStatus.Failed => "Failed",
 				_ => "Unknown"
 			};
@@ -138,24 +154,30 @@ public class Level
 	}
 
 	/// <summary>
-	///     A finished attempt and the checkpoints it went through. The splits are the ones the
-	///     later runs are measured against, so they are only kept when this attempt is the new
-	///     best - and whether it is, is what <see cref="PersonalBestTime" /> answers by either
-	///     taking the time or leaving it. Asking the setter rather than repeating its rule here
-	///     is what keeps the time and the splits describing the same run.
+	///     A finished attempt. Whether it is the new best is what <see cref="PersonalBestTime" />
+	///     answers by either taking the time or leaving it; the checkpoints it went through are
+	///     <see cref="TrackSplits" />'s business either way.
 	/// </summary>
-	public void RecordRun(float time, SplitSet splits)
+	public void RecordRun(float time)
 	{
-		float previous = PersonalBestTime;
-
 		PersonalBestTime = time;
+	}
 
-		if (PersonalBestTime == previous)
-		{
-			return;
-		}
+	/// <summary>Where the attempt being driven has got to, as the game last reported it.</summary>
+	public void TrackSplits(SplitSet splits)
+	{
+		AttemptSplits = splits ?? SplitSet.Empty;
+	}
 
-		BestSplits = splits ?? SplitSet.Empty;
+	/// <summary>
+	///     The attempt is over, however it ended: what it drove becomes part of what the next one
+	///     is measured against. A run the player reset out of has still been past three checkpoints,
+	///     and those three are the only reference there is until somebody finishes.
+	/// </summary>
+	public void SealAttempt()
+	{
+		BestSplits = BestSplits.Best(AttemptSplits);
+		AttemptSplits = SplitSet.Empty;
 	}
 
 	public void RegisterCrash()

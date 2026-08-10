@@ -26,7 +26,14 @@ public class StateAthWaitingForExtraLevel(AthPreparingController phase) : AthSta
 		try
 		{
 			OnlineZeeplevel newLevel = await RandomLevels.DrawRandomLevelAsync();
-			PlaylistService.AddLevelToCurrentPlaylist(newLevel);
+
+			await PlaylistService.AddLevelToCurrentPlaylist(newLevel);
+
+			if (Controller.CurrentState != this)
+			{
+				return;
+			}
+
 			PlaylistService.SkipToNextLevel();
 		}
 		catch (Exception ex)
