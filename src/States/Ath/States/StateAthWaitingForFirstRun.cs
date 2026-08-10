@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using AuthorTimeHunting.States.Ath.StateMachine;
 using AuthorTimeHunting.Util;
@@ -7,7 +7,7 @@ using ZeepSDK.Level;
 
 namespace AuthorTimeHunting.States.Ath.States;
 
-public class StateAthWaitingForFirstRun(AthController controller) : AthState(controller)
+public class StateAthWaitingForFirstRun(AthPlayingController phase) : AthState(phase, phase.Ath)
 {
 	public override void Enter()
 	{
@@ -19,7 +19,7 @@ public class StateAthWaitingForFirstRun(AthController controller) : AthState(con
 		{
 			Logger.LogError(
 				$"StateAthWaitingForFirstRun: Failed to start level: {e.Message}\nStack trace: {e.StackTrace}");
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 		}
 	}
 
@@ -46,6 +46,6 @@ public class StateAthWaitingForFirstRun(AthController controller) : AthState(con
 	public override void OnRoundStarted()
 	{
 		_ = AddLevelAsync();
-		Controller.TransitionTo(new StateAthWaitingForFinish(AthController));
+		Controller.TransitionTo(new StateAthWaitingForFinish(phase));
 	}
 }

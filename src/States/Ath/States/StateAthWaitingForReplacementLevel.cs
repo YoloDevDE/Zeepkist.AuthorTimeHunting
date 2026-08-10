@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using AuthorTimeHunting.States.Ath.StateMachine;
 using AuthorTimeHunting.Util;
 using ZeepkistClient;
@@ -7,7 +7,7 @@ using Logger = AuthorTimeHunting.Util.Logger;
 
 namespace AuthorTimeHunting.States.Ath.States;
 
-public class StateAthWaitingForReplacementLevel(AthController controller) : AthState(controller)
+public class StateAthWaitingForReplacementLevel(AthPreparingController phase) : AthState(phase, phase.Ath)
 {
 	public override async void Enter()
 	{
@@ -22,7 +22,7 @@ public class StateAthWaitingForReplacementLevel(AthController controller) : AthS
 		{
 			Logger.LogError(
 				$"StateAthWaitingForReplacementLevel: Could not read the broken playlist entry: {ex.Message}");
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 			return;
 		}
 
@@ -44,12 +44,13 @@ public class StateAthWaitingForReplacementLevel(AthController controller) : AthS
 		{
 			Logger.LogError($"StateAthWaitingForReplacementLevel: Could not draw a replacement level: {ex.Message}");
 			FrogNotification.Error("Could not find a replacement for the broken level");
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 		}
 	}
 
 	public override void OnLevelLoaded()
 	{
-		Controller.TransitionTo(new StateAthWaitingForLevelData(AthController));
+		Controller.TransitionTo(new StateAthWaitingForLevelData(phase));
 	}
+
 }

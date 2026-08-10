@@ -1,4 +1,4 @@
-﻿using AuthorTimeHunting.Entities;
+using AuthorTimeHunting.Entities;
 using AuthorTimeHunting.Service;
 using AuthorTimeHunting.States.Ath.StateMachine;
 using AuthorTimeHunting.Util;
@@ -14,7 +14,7 @@ namespace AuthorTimeHunting.States.Ath.States;
 ///     having reached the finish at all: the level's clock keeps running and the player gets
 ///     another attempt.
 /// </summary>
-public class StateAthWaitingForFinish(AthController controller) : AthState(controller)
+public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(phase, phase.Ath)
 {
 	public override void Enter()
 	{
@@ -35,7 +35,7 @@ public class StateAthWaitingForFinish(AthController controller) : AthState(contr
 
 	public override void OnRoundEnded()
 	{
-		Controller.TransitionTo(new StateAthSkippingLevel(AthController));
+		phase.Skip();
 	}
 
 	public override void OnCrossedFinishLine(float time)
@@ -55,7 +55,7 @@ public class StateAthWaitingForFinish(AthController controller) : AthState(contr
 
 		if (currentResult == null)
 		{
-			Controller.TransitionTo(new StateAthWaitingForNextRun(AthController));
+			Controller.TransitionTo(new StateAthWaitingForNextRun(phase));
 			return;
 		}
 
@@ -72,7 +72,7 @@ public class StateAthWaitingForFinish(AthController controller) : AthState(contr
 
 		if (currentLevel.Status == LevelStatus.Author)
 		{
-			Controller.TransitionTo(new StateAthWaitingForRespawn(AthController));
+			Controller.TransitionTo(new StateAthWaitingForRespawn(phase));
 			return;
 		}
 
@@ -81,7 +81,7 @@ public class StateAthWaitingForFinish(AthController controller) : AthState(contr
 			FrogNotification.Gold("Gold medal claimed!<br>You can now skip without penalty");
 		}
 
-		Controller.TransitionTo(new StateAthWaitingForNextRun(AthController));
+		Controller.TransitionTo(new StateAthWaitingForNextRun(phase));
 	}
 
 	public override void OnRoundStarted()
@@ -94,7 +94,7 @@ public class StateAthWaitingForFinish(AthController controller) : AthState(contr
 	{
 		if (AthController.Ctx.IsTimeOver())
 		{
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 			return;
 		}
 

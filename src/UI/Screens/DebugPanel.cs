@@ -135,7 +135,7 @@ public class DebugPanel : IZeepGUIDrawer
 
 		AthCtx ctx = run.Ctx;
 
-		Line(gui, "State", run.CurrentState?.GetType().Name ?? "none");
+		Line(gui, "State", run.CurrentLeafState?.GetType().Name ?? "none");
 		Line(gui, "Gamemode", run.Gamemode.DisplayName);
 		Line(gui, "Paused", ctx.IsPaused.ToString());
 		Line(gui, "Clock", ctx.CurrentLevel is { IsTiming: true } ? "running" : "stopped");

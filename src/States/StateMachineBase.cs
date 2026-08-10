@@ -14,6 +14,25 @@ public abstract class StateMachineBase
 {
 	public StateBase CurrentState { get; private set; }
 
+	/// <summary>
+	///     The innermost running state: the current state of the deepest sub-machine that is
+	///     active. Anything outside the machine asking "what is the run doing right now" wants
+	///     this rather than <see cref="CurrentState" />, which only names the phase.
+	/// </summary>
+	public StateBase CurrentLeafState => Leaf(CurrentState);
+
+	private static StateBase Leaf(StateBase state)
+	{
+		StateBase sub = state?.SubStateMachine?.CurrentState;
+
+		if (sub == null)
+		{
+			return state;
+		}
+
+		return Leaf(sub);
+	}
+
 	public abstract StateBase InitialState { get; }
 
 	public abstract StateBase FinalState { get; }
@@ -84,13 +103,7 @@ public abstract class StateMachineBase
 				return;
 			}
 
-			string currentStateName = CurrentState.GetType().Name;
-			string finalStateName = FinalState.GetType().Name;
-
-			Logger.LogDebug(
-				$"StateMachine: Checking if current state ({currentStateName}) matches final state ({finalStateName})");
-
-			LogAndTransitionToFinalState(currentStateName, finalStateName);
+			TransitionToFinalState();
 
 			Logger.LogDebug($"StateMachine: Exiting current state {CurrentState.GetType().Name} during disposal");
 			CurrentState.Exit();
@@ -105,16 +118,17 @@ public abstract class StateMachineBase
 		}
 	}
 
-	private void LogAndTransitionToFinalState(string currentStateName, string finalStateName)
+	private void TransitionToFinalState()
 	{
-		if (currentStateName == finalStateName)
+		if (CurrentState == FinalState)
 		{
-			Logger.LogInfo($"StateMachine: Already in final state ({finalStateName}), skipping transition");
+			Logger.LogInfo(
+				$"StateMachine: Already in final state ({FinalState.GetType().Name}), skipping transition");
 
 			return;
 		}
 
-		Logger.LogInfo($"StateMachine: Transitioning to final state {finalStateName} during disposal");
+		Logger.LogInfo($"StateMachine: Transitioning to final state {FinalState.GetType().Name} during disposal");
 		TransitionTo(FinalState);
 	}
 

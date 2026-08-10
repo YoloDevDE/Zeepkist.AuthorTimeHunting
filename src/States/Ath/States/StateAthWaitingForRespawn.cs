@@ -1,41 +1,19 @@
-﻿using AuthorTimeHunting.States.Ath.StateMachine;
+using AuthorTimeHunting.States.Ath.StateMachine;
 using AuthorTimeHunting.Util;
-using ZeepkistClient;
 
 namespace AuthorTimeHunting.States.Ath.States;
 
-public class StateAthWaitingForRespawn(AthController controller) : AthState(controller)
+public class StateAthWaitingForRespawn(AthPlayingController phase) : AthState(phase, phase.Ath)
 {
-	private bool _hasShownAuthorMedal;
-
 	public override void Enter()
 	{
-		_hasShownAuthorMedal = false;
-
 		AthController.Ctx.CurrentLevel.Stop();
-
-		if (!_hasShownAuthorMedal)
-		{
-			FrogNotification.Author("Author time claimed!<br>[Respawn to continue]");
-
-			double lastRunTime = AthController.Ctx.LastRunTime;
-
-			if (lastRunTime < 0)
-			{
-				lastRunTime = ZeepkistNetwork.LocalPlayer?.CurrentResult?.Time ?? -1;
-			}
-
-			if (lastRunTime >= 0)
-			{
-			}
-
-			_hasShownAuthorMedal = true;
-		}
+		FrogNotification.Author("Author time claimed!<br>[Respawn to continue]");
 	}
 
 	public override void OnRoundEnded()
 	{
-		Controller.TransitionTo(new StateAthLevelSummary(AthController));
+		Controller.InvokeFinish();
 	}
 
 	public override void OnPlayerSpawned()

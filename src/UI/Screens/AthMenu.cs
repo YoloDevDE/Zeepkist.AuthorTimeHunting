@@ -116,7 +116,7 @@ public class AthMenu : IZeepGUIDrawer
 
 		if (Input.GetKeyDown(KeyCode.Escape))
 		{
-			Plugin.Instance.Services.HideUi();
+			Visible = false;
 
 			return;
 		}
@@ -378,9 +378,10 @@ public class AthMenu : IZeepGUIDrawer
 		}
 
 		if (UiWidgets.Card(gui, Tile(gui, second, 1), "Quit",
-			    "Puts every ATH window away. A hunt that is on keeps running.", Color.Style.Action.Stop, true))
+			    "Closes this menu. Every other ATH window stays, and a hunt that is on keeps running.",
+			    Color.Style.Action.Stop, true))
 		{
-			Plugin.Instance.Services.HideUi();
+			Visible = false;
 		}
 	}
 

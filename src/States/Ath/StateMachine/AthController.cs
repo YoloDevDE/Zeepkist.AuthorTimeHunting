@@ -53,7 +53,7 @@ public class AthController : StateMachineBase
 	public override StateBase FinalState { get; }
 
 	public bool IsBetweenAttempts =>
-		Ctx.CurrentLevel != null && CurrentState is StateAthWaitingForNextRun or StateAthWaitingForRespawn;
+		Ctx.CurrentLevel != null && CurrentLeafState is StateAthWaitingForNextRun or StateAthWaitingForRespawn;
 
 	private AthState Current => CurrentState as AthState;
 
@@ -78,7 +78,7 @@ public class AthController : StateMachineBase
 
 		Ctx.IsPaused = false;
 
-		if (CurrentState is StateAthWaitingForFinish)
+		if (CurrentLeafState is StateAthWaitingForFinish)
 		{
 			Ctx.CurrentLevel?.ResumeTiming();
 		}

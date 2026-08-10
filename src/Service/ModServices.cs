@@ -115,17 +115,14 @@ public class ModServices
 	}
 
 	/// <summary>
-	///     What the menu's Quit does: every window ATH owns goes away, the run itself is left
-	///     alone. A player who wants the screen back has /ath, and one who wants the hunt over
-	///     has the Stop button.
+	///     Clears the screen before a loading screen takes it over. Only the windows a player
+	///     opened themselves are closed - the run's own overlays stay with the run, because
+	///     nothing switches them back on once they are off.
 	/// </summary>
-	public void HideUi()
+	public void CloseMenus()
 	{
 		Menu.Visible = false;
 		Status.Visible = false;
-		RunOverlay.Visible = false;
-		Leaderboard.Visible = false;
-		Splits.Visible = false;
 		Welcome.Visible = false;
 		Help.Visible = false;
 		Debug.Visible = false;

@@ -8,6 +8,6 @@ public class StateAthLevelSummary(AthController controller) : AthState(controlle
 	{
 		AthController.Services.LevelSummary.Show(AthController.Ctx);
 
-		Controller.TransitionTo(new StateAthLoadingLevel(AthController));
+		Controller.TransitionTo(new StateAthPreparingLevel(AthController));
 	}
 }

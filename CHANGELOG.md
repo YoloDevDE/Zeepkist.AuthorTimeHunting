@@ -27,7 +27,8 @@ This one stops trying. ATH now draws its own game.
   behind them, and they light up and sink under the pointer like buttons in a game should.
 - **The menu knows a hunt is on.** Open it mid-run and Quickstart and Play - the two things you cannot do while a hunt
   is running - are replaced by the five things you can: Skip, Broken, Pause, Restart and End Run, without going through
-  the drawer on the run bar. Quit and Escape still only put the windows away; End Run is the one that ends the hour.
+  the drawer on the run bar. Quit and Escape only close the menu itself - the run bar, leaderboard and splits stay
+  where they were; End Run is the one that ends the hour.
 - **Three commands, for when your hands are on the wheel.** `/ath start` opens a classic hunt without opening a menu
   first, `/ath stop` ends it, and `/ath broken` writes off a level that cannot be finished and moves on. The last two
   only exist while a hunt is on, and `/ath broken` only while you are actually on a level - so there is no command in
@@ -132,6 +133,8 @@ This one stops trying. ATH now draws its own game.
   same thing again, and left you watching the same level load forever. It now recognises the level it asked for.
 - **The medals on the clock stay medals.** From the second level of a hunt onwards the author and gold rows lost their
   art. They keep it now, on every level.
+- **A hunt that cannot find its first level ends instead of hanging.** When the random playlist failed to come together,
+  the mod kept waiting for a level it never had. It now tells you and stops the run.
 
 ### Also
 

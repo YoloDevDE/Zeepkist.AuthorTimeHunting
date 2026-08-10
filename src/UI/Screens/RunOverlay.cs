@@ -561,7 +561,7 @@ public class RunOverlay : IZeepGUIDrawer
 	/// </summary>
 	private float Stage(AthController run, bool stirred)
 	{
-		bool driving = !stirred && run?.CurrentState is StateAthWaitingForFinish;
+		bool driving = !stirred && run?.CurrentLeafState is StateAthWaitingForFinish;
 
 		if (driving != _wasDriving)
 		{

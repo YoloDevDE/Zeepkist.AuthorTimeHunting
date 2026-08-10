@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using AuthorTimeHunting.States.Ath.StateMachine;
 using AuthorTimeHunting.Util;
 using ZeepkistNetworking;
@@ -6,7 +6,7 @@ using Logger = AuthorTimeHunting.Util.Logger;
 
 namespace AuthorTimeHunting.States.Ath.States;
 
-public class StateAthWaitingForExtraLevel(AthController controller) : AthState(controller)
+public class StateAthWaitingForExtraLevel(AthPreparingController phase) : AthState(phase, phase.Ath)
 {
 	private const int _maxConsecutiveDuplicates = 3;
 
@@ -19,7 +19,7 @@ public class StateAthWaitingForExtraLevel(AthController controller) : AthState(c
 			int retries = AthController.Ctx.ConsecutiveDuplicateCount;
 			Logger.LogWarning(
 				$"StateAthWaitingForExtraLevel: Duplicate limit reached after {retries} retries. Ending run.");
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 			return;
 		}
 
@@ -33,12 +33,13 @@ public class StateAthWaitingForExtraLevel(AthController controller) : AthState(c
 		{
 			Logger.LogError($"StateAthWaitingForExtraLevel: Could not draw a replacement level: {ex.Message}");
 			FrogNotification.Error("Could not find another level to play");
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 		}
 	}
 
 	public override void OnLevelLoaded()
 	{
-		Controller.TransitionTo(new StateAthWaitingForLevelData(AthController));
+		Controller.TransitionTo(new StateAthWaitingForLevelData(phase));
 	}
+
 }

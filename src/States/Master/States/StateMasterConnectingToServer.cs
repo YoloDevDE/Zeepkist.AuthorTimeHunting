@@ -49,7 +49,7 @@ public class StateMasterConnectingToServer : StateBase
 		AthRequests.StopRequested += Cancel;
 		ZeepkistNetwork.ConnectedToMasterServer += OnConnected;
 
-		AthMaster.Services.HideUi();
+		AthMaster.Services.CloseMenus();
 		AthMaster.Services.Loading.Show("Leaving the lobby");
 
 		try

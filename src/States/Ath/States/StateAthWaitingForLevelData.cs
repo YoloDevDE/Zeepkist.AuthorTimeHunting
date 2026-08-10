@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AuthorTimeHunting.Entities;
@@ -10,7 +10,7 @@ using ZeepSDK.Level;
 
 namespace AuthorTimeHunting.States.Ath.States;
 
-public class StateAthWaitingForLevelData(AthController controller) : AthState(controller)
+public class StateAthWaitingForLevelData(AthPreparingController phase) : AthState(phase, phase.Ath)
 {
 	private const int _maxConsecutiveBrokenLevels = 5;
 
@@ -23,7 +23,7 @@ public class StateAthWaitingForLevelData(AthController controller) : AthState(co
 			if (IsNull(LevelApi.CurrentLevel))
 			{
 				await Task.Delay(100);
-				Controller.TransitionTo(new StateAthWaitingForLevelData(AthController));
+				Controller.TransitionTo(new StateAthWaitingForLevelData(phase));
 				return;
 			}
 
@@ -31,38 +31,43 @@ public class StateAthWaitingForLevelData(AthController controller) : AthState(co
 
 			if (IsBrokenLevel(currentLevel))
 			{
-				AthController.Ctx.ConsecutiveBrokenCount++;
-
-				if (AthController.Ctx.ConsecutiveBrokenCount >= _maxConsecutiveBrokenLevels)
-				{
-					Logger.LogError(
-						$"StateAthWaitingForLevelData: {_maxConsecutiveBrokenLevels} levels in a row failed to load, stopping the run.");
-					FrogNotification.Error("Levels keep failing to load - the hunt was stopped");
-					Controller.TransitionTo(new StateAthStopping(AthController));
-					return;
-				}
-
-				Controller.TransitionTo(new StateAthWaitingForReplacementLevel(AthController));
+				HandleBrokenLevel();
 				return;
 			}
 
 			if (IsDuplicateLevel(currentLevel))
 			{
-				Controller.TransitionTo(new StateAthWaitingForExtraLevel(AthController));
+				Controller.TransitionTo(new StateAthWaitingForExtraLevel(phase));
 				return;
 			}
 
 			AthController.Ctx.ConsecutiveDuplicateCount = 0;
 			AthController.Ctx.ConsecutiveBrokenCount = 0;
-			Controller.TransitionTo(new StateAthWaitingForFirstRun(AthController));
+			Controller.InvokeFinish();
 		}
 		catch (Exception ex)
 		{
 			Logger.LogError(
 				$"StateAthWaitingForLevelData: Unhandled exception, ending the run: {ex.Message}\nStack trace: {ex.StackTrace}");
 			FrogNotification.Error("Could not process the level - the hunt was stopped");
-			Controller.TransitionTo(new StateAthStopping(AthController));
+			phase.Fail();
 		}
+	}
+
+	private void HandleBrokenLevel()
+	{
+		AthController.Ctx.ConsecutiveBrokenCount++;
+
+		if (AthController.Ctx.ConsecutiveBrokenCount >= _maxConsecutiveBrokenLevels)
+		{
+			Logger.LogError(
+				$"StateAthWaitingForLevelData: {_maxConsecutiveBrokenLevels} levels in a row failed to load, stopping the run.");
+			FrogNotification.Error("Levels keep failing to load - the hunt was stopped");
+			phase.Fail();
+			return;
+		}
+
+		Controller.TransitionTo(new StateAthWaitingForReplacementLevel(phase));
 	}
 
 	/// <summary>
@@ -120,4 +125,5 @@ public class StateAthWaitingForLevelData(AthController controller) : AthState(co
 	{
 		return AthController.Ctx.Settings.RejectDuplicateLevels && AthController.Ctx.Levels.Contains(level);
 	}
+
 }
