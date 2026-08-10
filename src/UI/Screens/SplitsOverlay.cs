@@ -45,7 +45,6 @@ namespace AuthorTimeHunting.UI.Screens;
 /// </summary>
 public class SplitsOverlay : IZeepGUIDrawer
 {
-
 	private const string _heading = "SPLITS";
 
 
@@ -204,7 +203,9 @@ public class SplitsOverlay : IZeepGUIDrawer
 
 	/// <summary>
 	///     A line of text on the bare canvas. <see cref="UiText" /> writes through the window it is
-	///     inside and there is no window here, so this is the same job done one layer down.
+	///     inside and there is no window here, so this is the same job done one layer down - down to
+	///     shrinking rather than cutting what does not fit, because a split with its milliseconds
+	///     trimmed off is a split that says nothing.
 	/// </summary>
 	private static void Text(ImGui gui, string text, Color32 colour, ImRect rect, float size, float alignX)
 	{
@@ -213,7 +214,8 @@ public class SplitsOverlay : IZeepGUIDrawer
 			return;
 		}
 
-		ImTextSettings settings = new(size, alignX, 0.5f, false, ImTextOverflow.Ellipsis);
+		ImTextSettings settings = new(UiText.Fit(gui, text, size, rect.W), alignX, 0.5f, false,
+			ImTextOverflow.Ellipsis);
 
 		gui.Canvas.Text(text.AsSpan(), colour, rect, in settings);
 	}

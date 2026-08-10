@@ -23,6 +23,12 @@ namespace AuthorTimeHunting.UI.Toolkit;
 /// </summary>
 public static class UiText
 {
+	/// <summary>The point below which shrinking has stopped being a way of showing the text.</summary>
+	private const float _smallestSize = 9f;
+
+	/// <summary>One step back for the rounding, where the exact guess lands a fraction over.</summary>
+	private const float _nudge = 0.97f;
+
 	public static void Left(ImGui gui, string text, Color32 colour, ImRect rect)
 	{
 		Draw(gui, text, colour, rect, gui.Style.Layout.TextSize, 0f);
@@ -67,8 +73,41 @@ public static class UiText
 			return;
 		}
 
-		ImTextSettings settings = new(size, alignX, 0.5f, false, ImTextOverflow.Ellipsis);
-		gui.Text(text.AsSpan(), in settings, colour, Fits(gui, rect, size));
+		float fitted = Fit(gui, text, size, rect.W);
+
+		ImTextSettings settings = new(fitted, alignX, 0.5f, false, ImTextOverflow.Ellipsis);
+		gui.Text(text.AsSpan(), in settings, colour, Fits(gui, rect, fitted));
+	}
+
+	/// <summary>
+	///     The largest size at or under <paramref name="size" /> that fits <paramref name="text" />
+	///     into <paramref name="width" />.
+	///     Text that does not fit used to lose its tail to an ellipsis, and a level called
+	///     "Skyline Sprint Revisit…" is a level you cannot look up, ask about or remember. Nothing on
+	///     this HUD is long enough for shrinking to cost more than cutting does - these are names and
+	///     clocks, not paragraphs - so the rule is that whatever is written is written in full.
+	///     A glyph's advance is proportional to the font size, so the first guess is exact to within
+	///     rounding, and the second measure is what catches the rounding. Below
+	///     <see cref="_smallestSize" /> the text would be there without being readable, and an
+	///     ellipsis is the more honest answer.
+	/// </summary>
+	public static float Fit(ImGui gui, string text, float size, float width)
+	{
+		if (width <= 0f || string.IsNullOrEmpty(text))
+		{
+			return size;
+		}
+
+		float natural = Width(gui, text, size);
+
+		if (natural <= width)
+		{
+			return size;
+		}
+
+		float scaled = Mathf.Max(_smallestSize, size * width / natural);
+
+		return Width(gui, text, scaled) <= width ? scaled : Mathf.Max(_smallestSize, scaled * _nudge);
 	}
 
 	/// <summary>How tall a rect has to be before Imui will put a line of this size in it at all.</summary>
@@ -89,7 +128,7 @@ public static class UiText
 			return 0f;
 		}
 
-		ImTextSettings settings = new(size, 0f, 0.5f, false, ImTextOverflow.Overflow);
+		ImTextSettings settings = new(size, 0f, 0.5f);
 
 		return gui.MeasureTextSize(text.AsSpan(), in settings).x;
 	}

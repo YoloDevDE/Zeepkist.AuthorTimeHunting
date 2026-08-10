@@ -108,6 +108,8 @@ public class RunOverlay : IZeepGUIDrawer
 
 	private const string _best = "best ";
 
+	private const string _gold = "gold ";
+
 	private const int _left = 0;
 
 	private const int _right = 1;
@@ -138,12 +140,15 @@ public class RunOverlay : IZeepGUIDrawer
 
 	private static readonly Vector2[] _strokePoints = new Vector2[4];
 
-	/// <summary>How far each half of the band has come open, 0 shut and 1 out. See <see cref="Side" />.</summary>
-	private readonly float[] _sides = new float[2];
-
 	private readonly ControlPanel _controls;
 
 	private readonly MedalArt _medals;
+
+	/// <summary>How far each half of the band has come open, 0 shut and 1 out. See <see cref="Side" />.</summary>
+	private readonly float[] _sides = new float[2];
+
+	/// <summary>The attempt the bar last saw, so it can tell a respawn from a frame.</summary>
+	private int _attempt;
 
 	/// <summary>How much of the bar is showing, 0 minimal and 1 full. Its height and its contents follow.</summary>
 	private float _full = 1f;
@@ -161,9 +166,6 @@ public class RunOverlay : IZeepGUIDrawer
 	private float _stirred;
 
 	private bool _wasDriving;
-
-	/// <summary>The attempt the bar last saw, so it can tell a respawn from a frame.</summary>
-	private int _attempt;
 
 	public RunOverlay(ControlPanel controls, MedalArt medals)
 	{
@@ -233,7 +235,7 @@ public class RunOverlay : IZeepGUIDrawer
 		float pad = UiMetrics.Margin(gui) * 0.5f;
 		float rule = Mathf.Max(3f, row * _ruleFraction) * stage;
 		float band = row * Mathf.Lerp(_minimalRows, _contentRows, stage) + pad * 2f + rule +
-					 row * _detailRows * Mathf.Max(_sides[_left], _sides[_right]);
+		             row * _detailRows * Mathf.Max(_sides[_left], _sides[_right]);
 
 		float full = _controls.Height(gui);
 		float drawer = full * Advance(stirred);
@@ -501,11 +503,14 @@ public class RunOverlay : IZeepGUIDrawer
 		ImRect top = main.TakeTop(main.H * 0.5f, out ImRect bottom);
 		ImRect times = top.TakeRight(Mathf.Min(top.W, gui.GetRowHeight() * _levelTimeColumns), out ImRect skip);
 
+		float size = gui.Style.Layout.TextSize * 0.9f;
+		ImRect spent = bottom.TakeRight(UiText.Width(gui, view.LevelTime, size), gui.Style.Layout.InnerSpacing,
+			out ImRect attempts);
+
 		DrawSkipType(gui, skip, view);
 		DrawTimes(gui, times, view);
-		UiText.Draw(gui, view.Attempts + _attempts, Color.Style.Text.Muted, bottom,
-			gui.Style.Layout.TextSize * 0.9f, 0f);
-		UiText.Right(gui, view.LevelTime, Color.Style.Text.Muted, bottom, gui.Style.Layout.TextSize * 0.9f);
+		UiText.Draw(gui, view.Attempts + _attempts, Color.Style.Text.Muted, attempts, size, 0f);
+		UiText.Right(gui, view.LevelTime, Color.Style.Text.Muted, spent, size);
 		DrawLevelDetail(gui, detail, view);
 	}
 
@@ -515,6 +520,10 @@ public class RunOverlay : IZeepGUIDrawer
 		UiText.Draw(gui, view.SkipType, view.SkipColour, rect, gui.Style.Layout.TextSize * 0.9f, 0f);
 	}
 
+	/// <summary>
+	///     The level in detail: your best on it, and the gold time - which is off the row above the
+	///     moment it is won, and is still the thing you would be driving at if you had not.
+	/// </summary>
 	private static void DrawLevelDetail(ImGui gui, ImRect rect, RunHudView view)
 	{
 		if (rect.H <= 0f)
@@ -523,9 +532,11 @@ public class RunOverlay : IZeepGUIDrawer
 		}
 
 		float size = gui.Style.Layout.TextSize * 0.85f;
+		string best = _best + view.PersonalBest;
+		ImRect right = rect.TakeRight(UiText.Width(gui, best, size), gui.Style.Layout.InnerSpacing, out ImRect left);
 
-		UiText.Draw(gui, view.LevelName + _by + view.Author, Color.Style.Text.Muted, rect, size, 0f);
-		UiText.Right(gui, _best + view.PersonalBest, Color.Style.Text.Muted, rect, size);
+		UiText.Draw(gui, _gold + view.GoldTime, Color.Style.Text.Muted, left, size, 0f);
+		UiText.Right(gui, best, Color.Style.Text.Muted, right, size);
 	}
 
 	/// <summary>
@@ -536,17 +547,21 @@ public class RunOverlay : IZeepGUIDrawer
 	///     one colour makes them a title, and the joining word is the only thing that has to be
 	///     told apart from a name.
 	///     Imui draws one colour per call, so the line is measured from the right and each run gets
-	///     the rect it ends in. A level with a long name loses its tail rather than the author's -
-	///     the name is the half you can already see out of the windscreen.
+	///     the rect it ends in. The size is settled for the whole line before any of it is measured:
+	///     three runs left to shrink themselves would each shrink by what their own piece needed and
+	///     the line would come out in three different sizes.
 	/// </summary>
 	private static void DrawTitle(ImGui gui, ImRect rect, RunHudView view, float size)
 	{
-		float author = UiText.Width(gui, view.Author, size);
-		float by = UiText.Width(gui, _by, size);
+		string line = view.LevelName + _by + view.Author;
+		float fitted = UiText.Fit(gui, line, size, rect.W);
 
-		UiText.Right(gui, view.Author, Color.Style.Surface.White, rect, size);
-		UiText.Right(gui, _by, Color.Style.Text.Joiner, Ending(rect, author), size);
-		UiText.Right(gui, view.LevelName, Color.Style.Surface.White, Ending(rect, author + by), size);
+		float author = UiText.Width(gui, view.Author, fitted);
+		float by = UiText.Width(gui, _by, fitted);
+
+		UiText.Right(gui, view.Author, Color.Style.Surface.White, rect, fitted);
+		UiText.Right(gui, _by, Color.Style.Text.Joiner, Ending(rect, author), fitted);
+		UiText.Right(gui, view.LevelName, Color.Style.Surface.White, Ending(rect, author + by), fitted);
 	}
 
 	/// <summary>The same rect with its right edge pulled in, so the run before it ends where this one starts.</summary>

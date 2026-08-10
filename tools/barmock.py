@@ -90,9 +90,23 @@ def font(size, bold=True):
     return ImageFont.truetype(FONT_PATH if bold else FONT_REG, int(round(size)))
 
 
+SMALLEST_SIZE = 9.0
+
+
+def fit(d, s, size, width, bold=True):
+    """UiText.Fit: shrink until the whole string fits rather than cutting its tail off."""
+    if width <= 0 or not s:
+        return size
+    natural = d.textlength(s, font=font(size, bold))
+    if natural <= width:
+        return size
+    return max(SMALLEST_SIZE, size * width / natural)
+
+
 def text(d, rect, s, colour, size, align="left", bold=True):
-    """Mirrors UiText: vertically centred in the rect, aligned on x."""
+    """Mirrors UiText: vertically centred in the rect, aligned on x, shrunk to fit."""
     x, y, w, h = rect
+    size = fit(d, s, size, w, bold)
     f = font(size, bold)
     box = d.textbbox((0, 0), s, font=f)
     tw, th = box[2] - box[0], box[3] - box[1]
@@ -316,7 +330,7 @@ def draw_bar(img, open_amount, stage=1.0, left=0.0, right=0.0):
         bw = d.textlength(" by ", font=f)
         text(d, title_r, "Maki", WHITE, size, "right")
         text(d, (title_r[0], title_r[1], title_r[2] - aw, title_r[3]), " by ", JOINER, size, "right")
-        text(d, (title_r[0], title_r[1], title_r[2] - aw - bw, title_r[3]), "Skyline Sprint", WHITE, size, "right")
+        text(d, (title_r[0], title_r[1], title_r[2] - aw - bw, title_r[3]), "Skyline Sprint Revisited Extended", WHITE, size, "right")
 
     top_r, bottom_r = take_top(lvl_main, lvl_main[3] * 0.5)
 
@@ -331,12 +345,17 @@ def draw_bar(img, open_amount, stage=1.0, left=0.0, right=0.0):
     medal(d, ic, MEDAL_GOLD)
     tick(d, (restc[0], restc[1], restc[3], restc[3]), POSITIVE)
 
-    text(d, bottom_r, "7 attempts", MUTED, TEXT_SIZE * 0.9, "left")
-    text(d, bottom_r, "02:41", MUTED, TEXT_SIZE * 0.9, "right")
+    spent_w = d.textlength("02:41", font=font(TEXT_SIZE * 0.9))
+    spent_r, attempts_r = take_right(bottom_r, spent_w, INNER)
+    text(d, attempts_r, "7 attempts", MUTED, TEXT_SIZE * 0.9, "left")
+    text(d, spent_r, "02:41", MUTED, TEXT_SIZE * 0.9, "right")
 
     if right > 0.0:
-        text(d, lvl_detail, "Skyline Sprint by Maki", MUTED, TEXT_SIZE * 0.85, "left")
-        text(d, lvl_detail, "best 00:25.902", MUTED, TEXT_SIZE * 0.85, "right")
+        best = "best 00:25.902"
+        bw2 = d.textlength(best, font=font(TEXT_SIZE * 0.85))
+        best_r, gold_r = take_right(lvl_detail, bw2, INNER)
+        text(d, gold_r, "gold 00:27.600", MUTED, TEXT_SIZE * 0.85, "left")
+        text(d, best_r, best, MUTED, TEXT_SIZE * 0.85, "right")
 
     # timeline rule
     if wide:
