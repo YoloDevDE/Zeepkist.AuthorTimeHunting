@@ -1,7 +1,6 @@
 using AuthorTimeHunting.Gamemodes;
 using AuthorTimeHunting.Service;
 using AuthorTimeHunting.States.Ath.States;
-using AuthorTimeHunting.Util;
 using UnityEngine;
 using ZeepSDK.PhotoMode;
 using ZeepSDK.Racing;

@@ -116,7 +116,7 @@ public class AthImage : IDisposable
 			}
 
 			byte[] png = new byte[stream.Length];
-			stream.Read(png, 0, png.Length);
+			int read = stream.Read(png, 0, png.Length);
 
 			Texture2D texture = new(2, 2, TextureFormat.RGBA32, false) { hideFlags = HideFlags.HideAndDontSave };
 			texture.LoadImage(png);

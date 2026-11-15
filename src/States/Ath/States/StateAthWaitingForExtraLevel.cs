@@ -48,5 +48,4 @@ public class StateAthWaitingForExtraLevel(AthPreparingController phase) : AthSta
 	{
 		Controller.TransitionTo(new StateAthWaitingForLevelData(phase));
 	}
-
 }

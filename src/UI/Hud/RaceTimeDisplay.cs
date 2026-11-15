@@ -16,7 +16,7 @@ namespace AuthorTimeHunting.UI.Hud;
 ///     anything: how much time is left before the next medal is gone.
 ///     <code>
 ///     counting down          driving               nothing left to chase
-///
+/// 
 ///        ● ● ●
 ///      Attempt 3
 ///      -00:01.749             00:12.340             00:34.343
@@ -194,14 +194,14 @@ public class RaceTimeDisplay : IDisposable
 
 	private readonly FinishVerdict _verdict = new();
 
+	/// <summary>Whether this level already had gold when this attempt started.</summary>
+	private bool _goldOwned;
+
 	/// <summary>
 	///     The lamp row as it looks at every stage there is, built once the label has said which
 	///     shape it can draw. This is written every frame of every run, and there are only six.
 	/// </summary>
 	private string[] _lampRows;
-
-	/// <summary>Whether this level already had gold when this attempt started.</summary>
-	private bool _goldOwned;
 
 	/// <summary>How the chase last sounded, so each step is played once as it is entered.</summary>
 	private int _lastPace = _paceSafe;
@@ -423,9 +423,9 @@ public class RaceTimeDisplay : IDisposable
 		bool gone = !countingDown && last > 0d && run >= last;
 
 		return Mono(AttemptRow(countingDown)
-					+ "\n" + _lampRows[stage]
-					+ "\n" + ClockRow(countingDown, countingDown ? -physicsTime : run, gone)
-					+ "\n" + MedalRows(countingDown, Finished, run, goldTime, authorTime));
+		            + "\n" + _lampRows[stage]
+		            + "\n" + ClockRow(countingDown, countingDown ? -physicsTime : run, gone)
+		            + "\n" + MedalRows(countingDown, Finished, run, goldTime, authorTime));
 	}
 
 	private static int Stage(float physicsTime, double authorTime)

@@ -17,13 +17,13 @@ public class AthPlayingController : AthPhaseController
 
 	public bool WasSkipped { get; private set; }
 
+	public override StateBase InitialState { get; }
+
+	public override StateBase FinalState { get; }
+
 	public void Skip()
 	{
 		WasSkipped = true;
 		InvokeFinish();
 	}
-
-	public override StateBase InitialState { get; }
-
-	public override StateBase FinalState { get; }
 }

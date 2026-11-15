@@ -195,7 +195,7 @@ public class PlayMenuButton
 	/// </summary>
 	private static RectTransform Row(RectTransform slot)
 	{
-		GameObject row = new GameObject(_rowName, typeof(RectTransform), typeof(HorizontalLayoutGroup));
+		GameObject row = new(_rowName, typeof(RectTransform), typeof(HorizontalLayoutGroup));
 
 		RectTransform rect = row.GetComponent<RectTransform>();
 

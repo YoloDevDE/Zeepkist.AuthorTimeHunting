@@ -315,7 +315,7 @@ public class ResultsScreen : IZeepGUIDrawer
 		}
 
 		if (UiWidgets.IconButton(gui, UiMetrics.ButtonRow(gui), UiIcon.Restart, "Back to the history",
-				Color.Style.Action.Restart))
+			    Color.Style.Action.Restart))
 		{
 			_run = null;
 			return;

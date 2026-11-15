@@ -125,5 +125,4 @@ public class StateAthWaitingForLevelData(AthPreparingController phase) : AthStat
 	{
 		return AthController.Ctx.Settings.RejectDuplicateLevels && AthController.Ctx.Levels.Contains(level);
 	}
-
 }

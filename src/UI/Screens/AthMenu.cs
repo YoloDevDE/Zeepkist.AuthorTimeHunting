@@ -84,12 +84,12 @@ public class AthMenu : IZeepGUIDrawer
 
 	private bool _mouseOverWindow;
 
+	private AthMenuPage _page;
+
 	public AthMenu(AthImage background)
 	{
 		_background = background;
 	}
-
-	private AthMenuPage _page;
 
 	public bool Visible
 	{
@@ -225,8 +225,7 @@ public class AthMenu : IZeepGUIDrawer
 		float height = picture.height * scale;
 
 		gui.Image(picture,
-			new ImRect(screen.X + (screen.W - width) * 0.5f, screen.Y + (screen.H - height) * 0.5f, width, height),
-			false);
+			new ImRect(screen.X + (screen.W - width) * 0.5f, screen.Y + (screen.H - height) * 0.5f, width, height));
 
 		gui.Canvas.Rect(screen, Color.Style.Surface.Veil);
 	}
@@ -261,9 +260,9 @@ public class AthMenu : IZeepGUIDrawer
 			case AthMenuPage.Settings:
 				return "Settings";
 			default:
-				return Plugin.Instance.Services.RunOverlay.ActiveRun == null
-					? "Beat the author's time. Then do it again, until the hour is gone."
-					: "A hunt is running.";
+				return Plugin.Instance.Services.RunOverlay.ActiveRun == null ?
+					"Beat the author's time. Then do it again, until the hour is gone." :
+					"A hunt is running.";
 		}
 	}
 

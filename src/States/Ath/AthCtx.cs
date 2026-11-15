@@ -93,7 +93,7 @@ public class AthCtx
 	public TimeSpan GetRemainingTime()
 	{
 		return TimeSpan.FromMilliseconds(Duration -
-										 (GetTotalLevelPlayDuration().TotalMilliseconds + GetAccumulatedPenaltyTime()));
+		                                 (GetTotalLevelPlayDuration().TotalMilliseconds + GetAccumulatedPenaltyTime()));
 	}
 
 	public TimeSpan GetRemainingTimeWithoutPunishments()

@@ -21,6 +21,10 @@ public abstract class StateMachineBase
 	/// </summary>
 	public StateBase CurrentLeafState => Leaf(CurrentState);
 
+	public abstract StateBase InitialState { get; }
+
+	public abstract StateBase FinalState { get; }
+
 	private static StateBase Leaf(StateBase state)
 	{
 		StateBase sub = state?.SubStateMachine?.CurrentState;
@@ -32,10 +36,6 @@ public abstract class StateMachineBase
 
 		return Leaf(sub);
 	}
-
-	public abstract StateBase InitialState { get; }
-
-	public abstract StateBase FinalState { get; }
 
 	public event Action StateMachineFinished;
 

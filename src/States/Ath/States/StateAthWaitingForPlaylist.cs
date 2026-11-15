@@ -105,5 +105,4 @@ public class StateAthWaitingForPlaylist(AthStartingController phase) : AthState(
 			return null;
 		}
 	}
-
 }

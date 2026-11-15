@@ -210,7 +210,9 @@ public class MedalSpriteAsset : IDisposable
 	private static Texture2D Strip(Sprite[] sprites)
 	{
 		Texture2D strip = new(_cell * sprites.Length, _cell, TextureFormat.RGBA32, false)
-		{ hideFlags = HideFlags.HideAndDontSave };
+		{
+			hideFlags = HideFlags.HideAndDontSave
+		};
 
 		for (int index = 0; index < sprites.Length; index++)
 		{

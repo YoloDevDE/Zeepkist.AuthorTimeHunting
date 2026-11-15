@@ -52,5 +52,4 @@ public class StateAthWaitingForReplacementLevel(AthPreparingController phase) : 
 	{
 		Controller.TransitionTo(new StateAthWaitingForLevelData(phase));
 	}
-
 }

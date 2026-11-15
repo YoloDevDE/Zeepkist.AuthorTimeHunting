@@ -27,8 +27,8 @@ This one stops trying. ATH now draws its own game.
   behind them, and they light up and sink under the pointer like buttons in a game should.
 - **The menu knows a hunt is on.** Open it mid-run and Quickstart and Play - the two things you cannot do while a hunt
   is running - are replaced by the five things you can: Skip, Broken, Pause, Restart and End Run, without going through
-  the drawer on the run bar. Quit and Escape only close the menu itself - the run bar, leaderboard and splits stay
-  where they were; End Run is the one that ends the hour.
+  the drawer on the run bar. Quit and Escape only close the menu itself - the run bar, leaderboard and splits stay where
+  they were; End Run is the one that ends the hour.
 - **Three commands, for when your hands are on the wheel.** `/ath start` opens a classic hunt without opening a menu
   first, `/ath stop` ends it, and `/ath broken` writes off a level that cannot be finished and moves on. The last two
   only exist while a hunt is on, and `/ath broken` only while you are actually on a level - so there is no command in
@@ -83,33 +83,33 @@ This one stops trying. ATH now draws its own game.
 - **It waits for the green light.** The bar does not appear until you are actually on a level. It used to come up with
   the run and hang there through the whole lobby setup with nothing in it.
 - **The bar gets out of the way.** Three seconds after the lights go out it folds down to what matters at speed: the
-  hour, your medals, what a skip would cost, the level's own times and how long you have been on it. Cross the line -
-  or respawn - and it is back to full immediately, timeline and level name and all, because that is the moment you want
-  to see it. The three seconds are there so that restarting twenty times does not turn the top of your screen into an
+  hour, your medals, what a skip would cost, the level's own times and how long you have been on it. Cross the line - or
+  respawn - and it is back to full immediately, timeline and level name and all, because that is the moment you want to
+  see it. The three seconds are there so that restarting twenty times does not turn the top of your screen into an
   animation. Reach for the mouse and it comes back out too - the same movement that opens the drawer, and for the same
   reason.
 - **Both halves open.** Put the pointer over the left of the bar and a row comes down with the hunt in detail: levels
   played, attempts driven, and how much of the hour went on penalties rather than on driving. Over the right, and you
-  get the level in detail: what it is called, whose it is, and your best time on it. Take the pointer away and they
-  fold back up.
+  get the level in detail: what it is called, whose it is, and your best time on it. Take the pointer away and they fold
+  back up.
 - **The hour is the middle of the bar.** It used to be the mod's crest - a picture that never changed, in the one place
-  your eye keeps going back to. The clock is there now, with the live dot beside it, and everything on either side of
-  it is what that hour has been spent on.
+  your eye keeps going back to. The clock is there now, with the live dot beside it, and everything on either side of it
+  is what that hour has been spent on.
 - **A gold you own stops being a target.** Once the gold medal is in the bag, its time comes off the bar and a tick
   takes its place. The number cannot change any more; the author time is the only thing left to drive at.
 - **Your splits, and they stay put.** Every checkpoint of the level is listed down the left of the screen: when you got
-  there, how far ahead or behind your best run on it you were, and how fast you went through. The game already tells
-  you this - for one second, in a popup that is gone before the next corner. One checkpoint lost is a mistake; three in
-  a row is the wrong line, and that is only visible if the list stays on screen. Every checkpoint has its row from the
+  there, how far ahead or behind your best run on it you were, and how fast you went through. The game already tells you
+  this - for one second, in a popup that is gone before the next corner. One checkpoint lost is a mistake; three in a
+  row is the wrong line, and that is only visible if the list stays on screen. Every checkpoint has its row from the
   start, so nothing shifts under your eyes while you are reading it. It is built like the bar - same panel, same cut
   corners - and slides in from off the edge of the screen rather than appearing there. Off in the settings if you would
   rather not have it.
 - **The checkpoint you are driving at counts up.** The row you are heading for runs live against your best, and freezes
   on the time you actually went through with - so the answer arrives at the checkpoint rather than a row later.
-- **Splits that survive a respawn.** What you are measured against is the best each checkpoint has ever been driven,
-  not the splits of a run you managed to finish - so a level you have never finished still has a reference, and
-  resetting out of a bad run no longer takes the whole column with it. If you have driven the level before on this
-  machine, your saved replay is the starting reference, so the first attempt of a hunt already has one.
+- **Splits that survive a respawn.** What you are measured against is the best each checkpoint has ever been driven, not
+  the splits of a run you managed to finish - so a level you have never finished still has a reference, and resetting
+  out of a bad run no longer takes the whole column with it. If you have driven the level before on this machine, your
+  saved replay is the starting reference, so the first attempt of a hunt already has one.
 - **Gaps read like times.** A split is behind by `+00:00.042` now, not by `+0.042` - the same shape as the clock in the
   column beside it.
 - **A dot that says it is live.** Beside the clock, blinking once a second the way a recording light does, so a running
@@ -141,8 +141,8 @@ This one stops trying. ATH now draws its own game.
 
 ### Fixed
 
-- The finish verdict no longer stays on screen through the next attempt after you respawn. It goes with the countdown
-  of the attempt after it, whatever the last one did - claiming an author time and respawning used to leave it up.
+- The finish verdict no longer stays on screen through the next attempt after you respawn. It goes with the countdown of
+  the attempt after it, whatever the last one did - claiming an author time and respawning used to leave it up.
 - **A restarted run no longer loads the level you just left.** Swapping a broken level out, or adding one to the
   playlist, told the lobby to move on before the server had the new playlist - so it moved on to the old one. The skip
   now waits for the playlist to land.

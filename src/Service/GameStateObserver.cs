@@ -132,7 +132,7 @@ public class GameStateObserver
 			GameMaster master = Master;
 
 			if (master == null || master.currentLevelPhysicsTime < 0f || master.PlayersReady == null ||
-				master.PlayersReady.Count == 0)
+			    master.PlayersReady.Count == 0)
 			{
 				return -1d;
 			}
@@ -140,6 +140,42 @@ public class GameStateObserver
 			ReadyToReset player = master.PlayersReady[0];
 
 			return player?.ticker == null ? -1d : player.ticker.GetTicker();
+		}
+	}
+
+	private static GameMaster Master => PlayerManager.Instance == null ? null : PlayerManager.Instance.currentMaster;
+
+	/// <summary>The local player's splits, or null when there is no race to read them off.</summary>
+	private static List<WinCompare.SplitTime> LocalSplits
+	{
+		get
+		{
+			GameMaster master = Master;
+
+			if (master == null || master.playerResults == null || master.playerResults.Count == 0)
+			{
+				return null;
+			}
+
+			return master.playerResults[0].split_times;
+		}
+	}
+
+	public static bool IsLevelReady
+	{
+		get
+		{
+			if (PlayerManager.Instance == null || PlayerManager.Instance.currentMaster == null)
+			{
+				return false;
+			}
+
+			if (PlayerManager.Instance.currentMaster.loadNewLevel)
+			{
+				return false;
+			}
+
+			return LevelApi.CurrentLevel != null;
 		}
 	}
 
@@ -187,42 +223,6 @@ public class GameStateObserver
 		}
 
 		return replay.velocities[index];
-	}
-
-	private static GameMaster Master => PlayerManager.Instance == null ? null : PlayerManager.Instance.currentMaster;
-
-	/// <summary>The local player's splits, or null when there is no race to read them off.</summary>
-	private static List<WinCompare.SplitTime> LocalSplits
-	{
-		get
-		{
-			GameMaster master = Master;
-
-			if (master == null || master.playerResults == null || master.playerResults.Count == 0)
-			{
-				return null;
-			}
-
-			return master.playerResults[0].split_times;
-		}
-	}
-
-	public static bool IsLevelReady
-	{
-		get
-		{
-			if (PlayerManager.Instance == null || PlayerManager.Instance.currentMaster == null)
-			{
-				return false;
-			}
-
-			if (PlayerManager.Instance.currentMaster.loadNewLevel)
-			{
-				return false;
-			}
-
-			return LevelApi.CurrentLevel != null;
-		}
 	}
 
 	public event Action<ZeepkistLobbyState?> LobbyStateChanged;
