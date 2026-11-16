@@ -68,6 +68,8 @@ This one stops trying. ATH now draws its own game.
   flashing red. And when the author time slips past, a falling two-tone that tells you the run just changed, while you
   are still looking at the track. Lose the author medal and start chasing gold, and gold gets its own warnings from the
   top.
+- **A real countdown beep.** The start lights now play a recorded beep instead of a generated tone, and the release
+  plays the same beep an octave higher.
 - **Fuller sounds.** Every tone is built from a stack of harmonics with a short room reverb behind it, instead of the
   bare sine it used to be - it sits in the game rather than on top of it.
 - **Medals instead of initials.** The rows are labelled with the game's own author and gold medal art.

@@ -1,4 +1,6 @@
 using System;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using FMOD;
 using FMODUnity;
@@ -10,10 +12,10 @@ namespace AuthorTimeHunting.UI.Hud;
 /// <summary>
 ///     Everything the run ticker says out loud: the start lights counting down, and the three
 ///     things that can happen to the medal being chased.
-///     The clips are generated rather than shipped. Nothing in Zeepkist's own audio bank sounds
-///     like a countdown, borrowing a menu click gave three identical mouse noises, and an mp3 in
-///     the plugin would have to be decoded at load and licensed from somewhere. A handful of sine
-///     partials with a fast decay is what a beep is, and it is a page of arithmetic.
+///     The countdown is one recorded beep, embedded in the plugin and handed to FMOD as the wav
+///     it is. The lamps play it as recorded, the release plays it an octave up.
+///     The medal clips are generated rather than shipped. A handful of sine partials with a fast
+///     decay is what a beep is, and it is a page of arithmetic.
 ///     Each clip is a stack of harmonics rather than one sine, which is the difference between a
 ///     tone and a test signal - a single sine has no body and disappears under an engine. On top
 ///     of that goes a short reverb tail, so the sounds land in the same room as the game instead
@@ -64,6 +66,13 @@ public class HudSounds : IDisposable
 
 	private const float _baseVolume = 0.9f;
 
+	private const string _beepResource = "AuthorTimeHunting.CountdownBeep.wav";
+
+	private const float _recordedPitch = 1f;
+
+	/// <summary>The release, an octave above the lamps. Trackmania's countdown, near enough.</summary>
+	private const float _goPitch = 2f;
+
 	/// <summary>
 	///     The partials every clip is built from, as a share of the fundamental. Four of them is
 	///     where a beep stops sounding like a signal generator and starts sounding like something
@@ -78,12 +87,6 @@ public class HudSounds : IDisposable
 	///     is a longer and thinner sound than three rooms heard at once.
 	/// </summary>
 	private static readonly int[] _echoes = [1103, 1697, 2593];
-
-	/// <summary>One lamp of the countdown.</summary>
-	private static readonly Tone[] _lampNotes = [new(660f, 0f, 0.11f)];
-
-	/// <summary>The release, an octave above the lamps and longer. Trackmania's countdown, near enough.</summary>
-	private static readonly Tone[] _goNotes = [new(1320f, 0f, 0.32f)];
 
 	/// <summary>
 	///     The medal getting tight. One beep, below the lamps so it is not mistaken for a start
@@ -105,9 +108,8 @@ public class HudSounds : IDisposable
 
 	private Sound _alert;
 
-	private Sound _go;
-
-	private Sound _lamp;
+	/// <summary>One lamp of the countdown, and at <see cref="_goPitch" /> the release.</summary>
+	private Sound _beep;
 
 	/// <summary>
 	///     The tones are made on the first beep rather than in the constructor. This is built while
@@ -121,14 +123,12 @@ public class HudSounds : IDisposable
 
 	public void Dispose()
 	{
-		Release(_lamp);
-		Release(_go);
+		Release(_beep);
 		Release(_warning);
 		Release(_alert);
 		Release(_missed);
 
-		_lamp = default;
-		_go = default;
+		_beep = default;
 		_warning = default;
 		_alert = default;
 		_missed = default;
@@ -137,31 +137,31 @@ public class HudSounds : IDisposable
 	public void Lamp()
 	{
 		Make();
-		Play(_lamp);
+		Play(_beep, _recordedPitch);
 	}
 
 	public void Go()
 	{
 		Make();
-		Play(_go);
+		Play(_beep, _goPitch);
 	}
 
 	public void Warning()
 	{
 		Make();
-		Play(_warning);
+		Play(_warning, _recordedPitch);
 	}
 
 	public void Alert()
 	{
 		Make();
-		Play(_alert);
+		Play(_alert, _recordedPitch);
 	}
 
 	public void Missed()
 	{
 		Make();
-		Play(_missed);
+		Play(_missed, _recordedPitch);
 	}
 
 	private void Make()
@@ -172,8 +172,7 @@ public class HudSounds : IDisposable
 		}
 
 		_made = true;
-		_lamp = Clip(_lampNotes);
-		_go = Clip(_goNotes);
+		_beep = Beep();
 		_warning = Clip(_warningNotes);
 		_alert = Clip(_alertNotes);
 		_missed = Clip(_missedNotes);
@@ -183,7 +182,7 @@ public class HudSounds : IDisposable
 	///     Started paused so the volume is on it before its first sample is heard, which is the
 	///     difference between a beep and a beep with a click in front of it.
 	/// </summary>
-	private static void Play(Sound sound)
+	private static void Play(Sound sound, float pitch)
 	{
 		if (!sound.hasHandle())
 		{
@@ -199,6 +198,7 @@ public class HudSounds : IDisposable
 		}
 
 		channel.setVolume(Volume());
+		channel.setPitch(pitch);
 		channel.setPaused(false);
 	}
 
@@ -223,6 +223,41 @@ public class HudSounds : IDisposable
 
 		return _baseVolume * Mathf.Clamp01(settings.audio_master / 100f)
 		                   * Mathf.Clamp01(settings.audio_gameplay / 100f);
+	}
+
+	/// <summary>The wav as it sits in the plugin. FMOD reads the header itself, so only the length is said.</summary>
+	private static Sound Beep()
+	{
+		using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(_beepResource);
+
+		if (stream == null)
+		{
+			Logger.LogWarning($"HudSounds: '{_beepResource}' is not in the plugin, the countdown stays silent.");
+
+			return default;
+		}
+
+		byte[] wav = new byte[stream.Length];
+		stream.Read(wav, 0, wav.Length);
+
+		CREATESOUNDEXINFO info = new()
+		{
+			cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)),
+			length = (uint)wav.Length
+		};
+
+		MODE mode = MODE.OPENMEMORY | MODE.CREATESAMPLE | MODE.LOOP_OFF;
+
+		RESULT result = RuntimeManager.CoreSystem.createSound(wav, mode, ref info, out Sound sound);
+
+		if (result == RESULT.OK)
+		{
+			return sound;
+		}
+
+		Logger.LogWarning($"HudSounds: FMOD would not take the beep ({result}), the countdown stays silent.");
+
+		return default;
 	}
 
 	/// <summary>

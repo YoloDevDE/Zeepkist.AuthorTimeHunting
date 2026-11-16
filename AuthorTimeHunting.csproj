@@ -33,16 +33,21 @@
         <EmbeddedResource Include="assets\icons\icons.png" LogicalName="AuthorTimeHunting.Icons.png"/>
     </ItemGroup>
 
+    <!-- The start countdown's beep. -->
+    <ItemGroup>
+        <EmbeddedResource Include="assets\media\Countdown_Beep.wav" LogicalName="AuthorTimeHunting.CountdownBeep.wav"/>
+    </ItemGroup>
+
     <ItemGroup>
         <PackageReference Include="GraphQL.Client" Version="6.1.0"/>
         <PackageReference Include="GraphQL.Client.Serializer.Newtonsoft" Version="6.1.0"/>
-        <PackageReference Include="Zeepkist.GameLibs" Version="18.10.2087" PrivateAssets="all" />
-        <PackageReference Include="ZeepSDK" Version="2.7.6" PrivateAssets="all" />
+        <PackageReference Include="Zeepkist.GameLibs" Version="18.10.2087" PrivateAssets="all"/>
+        <PackageReference Include="ZeepSDK" Version="2.7.6" PrivateAssets="all"/>
 
         <!-- Costura embeds the dependencies above into the plugin DLL. -->
         <PackageReference Include="Fody" Version="6.9.3" PrivateAssets="all"/>
         <PackageReference Include="Costura.Fody" Version="6.2.0" PrivateAssets="all"/>
-        <PackageReference Update="MinVer" Version="8.0.0" />
+        <PackageReference Update="MinVer" Version="8.0.0"/>
     </ItemGroup>
 
     <!--
