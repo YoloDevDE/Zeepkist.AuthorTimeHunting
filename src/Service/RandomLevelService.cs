@@ -52,12 +52,7 @@ public class RandomLevelService
 	/// </summary>
 	public string SourceOf(string levelUid)
 	{
-		if (string.IsNullOrEmpty(levelUid))
-		{
-			return null;
-		}
-
-		return DrawnFrom.TryGetValue(levelUid, out string source) ? source : null;
+		return string.IsNullOrEmpty(levelUid) ? null : DrawnFrom.GetValueOrDefault(levelUid);
 	}
 
 	/// <summary>

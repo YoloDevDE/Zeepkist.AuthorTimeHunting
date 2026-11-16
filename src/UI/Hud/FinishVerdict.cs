@@ -120,17 +120,17 @@ public class FinishVerdict
 	/// </summary>
 	private static string Verdict(AthCtx ctx, MedalSpriteAsset medals)
 	{
-		if (ctx.LastRunMedalStatus == LevelStatus.Author)
+		switch (ctx.LastRunMedalStatus)
 		{
-			return Line(Head(medals, MedalSpriteAsset.Author, _authorWord) + _acquired, _authorNote);
-		}
+			case LevelStatus.Author:
+				return Line(Head(medals, MedalSpriteAsset.Author, _authorWord) + _acquired, _authorNote);
 
-		if (ctx.LastRunMedalStatus == LevelStatus.Gold && ctx.LastRunMedalWasNew)
-		{
-			return Line(Head(medals, MedalSpriteAsset.Gold, _goldWord) + _acquired, _goldNote);
-		}
+			case LevelStatus.Gold when ctx.LastRunMedalWasNew:
+				return Line(Head(medals, MedalSpriteAsset.Gold, _goldWord) + _acquired, _goldNote);
 
-		return Line(Head(medals, MedalSpriteAsset.OhNo, _missWord) + " " + _keepGoing, Missed(ctx));
+			default:
+				return Line(Head(medals, MedalSpriteAsset.OhNo, _missWord) + " " + _keepGoing, Missed(ctx));
+		}
 	}
 
 	/// <summary>
@@ -141,12 +141,9 @@ public class FinishVerdict
 	{
 		double authorTime = ctx.CurrentLevel?.AuthorTime ?? 0d;
 
-		if (authorTime <= 0d)
-		{
-			return "";
-		}
-
-		return $"AT missed by <color={_gap}>{TimeFormatter.FormatDelta(ctx.LastRunTime - authorTime)}</color>";
+		return authorTime <= 0d ?
+			"" :
+			$"AT missed by <color={_gap}>{TimeFormatter.FormatDelta(ctx.LastRunTime - authorTime)}</color>";
 	}
 
 	/// <summary>The medal itself where the label can draw one, and its name where it cannot.</summary>
@@ -163,11 +160,8 @@ public class FinishVerdict
 	/// <summary>The verdict over its caption, the caption in the smaller type captions are read in.</summary>
 	private static string Line(string verdict, string note)
 	{
-		if (string.IsNullOrEmpty(note))
-		{
-			return verdict;
-		}
-
-		return $"{verdict}\n<size=60%>{note}</size>";
+		return string.IsNullOrEmpty(note) ?
+			verdict :
+			$"{verdict}<br><br><size=60%>{note}</size>";
 	}
 }
