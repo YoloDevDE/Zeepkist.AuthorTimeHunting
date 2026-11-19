@@ -114,7 +114,7 @@ public class LeaderboardOverlay : IZeepGUIDrawer
 		ImRect row = gui.AddLayoutRectWithSpacing(gui.GetLayoutWidth(), gui.GetRowHeight());
 		float size = gui.Style.Layout.TextSize;
 
-		Color32 rankColour = entry.IsLocal ? Color.Style.Surface.White : Color.Style.Text.Muted;
+		Color32 rankColour = entry.IsLocal ? UiText.Default(gui) : UiText.Muted(gui);
 
 		UiText.Draw(gui, UiNumbers.Text(rank), rankColour, Cell(row, 0), size * 0.9f, 0f);
 		UiText.Draw(gui, entry.Name, entry.Colour, Cell(row, 1), size, 0f);

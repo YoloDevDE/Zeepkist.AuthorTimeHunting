@@ -1,5 +1,6 @@
 using System;
 using AuthorTimeHunting.States.Ath;
+using AuthorTimeHunting.UI.Hud;
 using AuthorTimeHunting.UI.Toolkit;
 using AuthorTimeHunting.UI.Views;
 using AuthorTimeHunting.Util;
@@ -12,27 +13,39 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The screen that comes up between levels: what the level just played came to, and the run
-///     so far beside it.
+///     The screen that comes up between levels: the level just played at the top, the run so far
+///     below it, which is what the screen is really for.
 ///     Painted on the canvas, not a window, so it takes no clicks; drawn at <see cref="UiScreen.Order" />.
 /// </summary>
 public class LevelSummaryOverlay : IZeepGUIDrawer
 {
-	private const float _titleSize = 2.1f;
-	private const float _statusSize = 2.9f;
+	private const float _titleSize = 1.6f;
+	private const float _scoreSize = 2.2f;
 	private const float _lineHeight = 1.8f;
 
-	private const float _columnGap = 0.06f;
+	/// <summary>The line beside the thumbnail, tighter so name, verdict and stats fit its height.</summary>
+	private const float _sideLine = 1.4f;
+
+	private const float _columnGap = 0.03f;
 	private const float _recentRow = 1.1f;
 
 	/// <summary>How much of its column the thumbnail takes, and the shape the game stores it in.</summary>
-	private const float _thumbnailWidth = 0.85f;
+	private const float _thumbnailWidth = 0.42f;
 
 	private const float _thumbnailAspect = 9f / 16f;
 
-	private static readonly float[] _weights = [0.08f, 0.44f, 0.24f, 0.1f, 0.14f];
+	private static readonly Color32 _ath = Color.Zeepkist.Medal.Author;
+
+	private static readonly float[] _weights = [0.07f, 0.38f, 0.31f, 0.1f, 0.14f];
+
+	private readonly MedalArt _medals;
 
 	private LevelSummaryView _view;
+
+	public LevelSummaryOverlay(MedalArt medals)
+	{
+		_medals = medals;
+	}
 
 	public bool Visible => _view != null;
 
@@ -66,7 +79,7 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 		_view = null;
 	}
 
-	private static void Draw(ImGui gui, LevelSummaryView view)
+	private void Draw(ImGui gui, LevelSummaryView view)
 	{
 		gui.Canvas.PushOrder(UiScreen.Order);
 
@@ -80,7 +93,7 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 		}
 	}
 
-	private static void Paint(ImGui gui, LevelSummaryView view)
+	private void Paint(ImGui gui, LevelSummaryView view)
 	{
 		ImRect screen = UiScreen.Full(gui);
 		float text = gui.Style.Layout.TextSize;
@@ -89,68 +102,55 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 
 		UiColumn body = new(UiScreen.Column(screen), text * _lineHeight);
 
-		DrawHeadline(gui, body, view, text);
-		DrawColumns(gui, body, view, text);
-	}
-
-	private static void DrawHeadline(ImGui gui, UiColumn body, LevelSummaryView view, float text)
-	{
 		body.Space(0.6f);
-
-		Centre(gui, view.Name, Color.Style.Text.LevelName, body.Row(_titleSize * 1.3f), text * _titleSize);
-		Centre(gui, view.ByAuthor, Color.Style.Text.AuthorName, body.Row(1.1f), text * 0.95f);
-
+		DrawLevel(gui, body, view, text);
 		body.Space(0.4f);
-
-		Centre(gui, view.StatusUpper, view.StatusColour, body.Row(_statusSize * 1.2f), text * _statusSize);
-
-		UiScreen.Rule(gui, body.Row(1f), view.StatusColour);
-
-		body.Space(0.8f);
+		UiScreen.Rule(gui, body.Row(0.6f), _ath);
+		DrawScore(gui, body.Row(_scoreSize * 1.2f), view, text);
+		body.Space(0.3f);
+		DrawRecentHeader(gui, body.Row(1f), text);
+		DrawRecent(gui, body, view, text);
 	}
 
-	private static void DrawColumns(ImGui gui, UiColumn body, LevelSummaryView view, float text)
+	/// <summary>The level as a picture on the left, its name and how it went beside it.</summary>
+	private static void DrawLevel(ImGui gui, UiColumn body, LevelSummaryView view, float text)
 	{
-		ImRect rest = body.Rest();
-		float gap = rest.W * _columnGap;
-		float width = (rest.W - gap) * 0.5f;
-
-		DrawLevel(gui, new UiColumn(new ImRect(rest.X, rest.Y, width, rest.H), text * _lineHeight), view, text);
-
-		DrawRun(gui, new UiColumn(new ImRect(rest.Right - width, rest.Y, width, rest.H), text * _lineHeight), view,
-			text);
-	}
-
-	private static void DrawLevel(ImGui gui, UiColumn column, LevelSummaryView view, float text)
-	{
-		DrawThumbnail(gui, column, view, text);
-
-		Heading(gui, column.Row(1f), "THIS LEVEL", text);
-
-		Color32 bestColour = view.BestWithDelta == null ? Color.Style.Text.Muted : view.StatusColour;
-
-		Stat(gui, column.Row(1.2f), "Your Time", view.BestWithDelta ?? "never finished", bestColour, text);
-
-		Stat(gui, column.Row(1.2f), "Author Time", view.AuthorTime, Color.Zeepkist.Medal.Author, text);
-		Stat(gui, column.Row(1.2f), "Attempts", view.Attempts, Color.Style.Text.Default, text);
-		Stat(gui, column.Row(1.2f), "Crashes", view.Crashes, Color.Style.Text.Default, text);
-		Stat(gui, column.Row(1.2f), "Time Here", view.TimeHere, Color.Style.Text.Default, text);
-	}
-
-	/// <summary>
-	///     The level, as a picture. The column hands out rows in line heights, so the picture asks
-	///     for as many of them as its own shape works out to.
-	/// </summary>
-	private static void DrawThumbnail(ImGui gui, UiColumn column, LevelSummaryView view, float text)
-	{
-		float width = column.Rest().W * _thumbnailWidth;
+		float width = body.Rest().W * _thumbnailWidth;
 		float height = width * _thumbnailAspect;
+		ImRect block = body.Row(height / (text * _lineHeight));
+		ImRect picture = new(block.X, block.Y, width, height);
+		float gap = block.W * _columnGap;
 
-		ImRect row = column.Row(height / (text * _lineHeight));
-		ImRect box = new(row.X + (row.W - width) * 0.5f, row.Y, width, height);
+		DrawThumbnail(gui, picture, view, text);
 
-		column.Space(0.4f);
+		UiColumn side = new(new ImRect(picture.Right + gap, block.Y, block.W - width - gap, block.H),
+			text * _sideLine);
 
+		Left(gui, view.Name, Color.Style.Text.LevelName, side.Row(_titleSize), text * _titleSize);
+		Left(gui, view.ByAuthor, Color.Style.Text.AuthorName, side.Row(0.9f), text * 0.9f);
+		Left(gui, view.StatusUpper, view.StatusColour, side.Row(_titleSize), text * _titleSize);
+		side.Space(0.3f);
+
+		Stat(gui, side.Row(1f), "Author Time", view.AuthorTime, Color.Zeepkist.Medal.Author, text);
+		Stat(gui, side.Row(1f), "Your Time", view.Best ?? "never finished", Color.Style.Text.Default, text);
+		DrawDelta(gui, side.Row(1f), view, text);
+		Stat(gui, side.Row(1f), "Attempts / Crashes", view.Attempts + " / " + view.Crashes, Color.Style.Text.Muted,
+			text);
+		Stat(gui, side.Row(1f), "Time Here", view.TimeHere, Color.Style.Text.Muted, text);
+	}
+
+	private static void DrawDelta(ImGui gui, ImRect row, LevelSummaryView view, float text)
+	{
+		if (view.AuthorDelta == null)
+		{
+			return;
+		}
+
+		Stat(gui, row, view.AuthorDeltaLabel, view.AuthorDelta, view.AuthorDeltaColour, text);
+	}
+
+	private static void DrawThumbnail(ImGui gui, ImRect box, LevelSummaryView view, float text)
+	{
 		Texture2D thumbnail = LevelThumbnails.Get(view.Uid);
 
 		if (thumbnail == null)
@@ -164,20 +164,19 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 		gui.Image(thumbnail, box);
 	}
 
-	private static void DrawRun(ImGui gui, UiColumn column, LevelSummaryView view, float text)
+	/// <summary>The run so far, big: the medals on the left, the time left on the right.</summary>
+	private void DrawScore(ImGui gui, ImRect row, LevelSummaryView view, float text)
 	{
-		Heading(gui, column.Row(1f), "RUN SO FAR", text);
-		DrawScore(gui, column.Row(1.5f), view, text);
+		ImRect medals = new(row.X, row.Y, row.W * 0.55f, row.H);
 
-		column.Space(0.4f);
-		DrawRecentHeader(gui, column.Row(1f), text);
-		DrawRecent(gui, column, view, text);
-	}
+		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, medals, 0, 3), _medals.Author, view.AuthorMedals,
+			Color.Zeepkist.Medal.Author);
+		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, medals, 1, 3), _medals.Gold, view.GoldMedals,
+			Color.Zeepkist.Medal.Gold);
+		UiWidgets.MedalCount(gui, UiWidgets.Column(gui, medals, 2, 3), _medals.OhNo, view.Penalties,
+			Color.Style.Status.Penalty);
 
-	private static void DrawScore(ImGui gui, ImRect row, LevelSummaryView view, float text)
-	{
-		gui.Canvas.Text(view.Score.AsSpan(), Color.Style.Surface.White, row, text * 1.05f, 0f);
-		gui.Canvas.Text(view.TimeLeft.AsSpan(), Color.Style.Status.Good, row, text * 1.3f, 1f);
+		gui.Canvas.Text(view.TimeLeft.AsSpan(), Color.Style.Status.Positive, row, text * _scoreSize, 1f);
 	}
 
 	/// <summary>
@@ -229,7 +228,7 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 
 		try
 		{
-			gui.Canvas.Text(value.AsSpan(), colour, rect, size, alignX);
+			gui.Canvas.Text(value.AsSpan(), colour, rect, UiText.Fit(gui, value, size, rect.W), alignX);
 		}
 		finally
 		{
@@ -237,10 +236,6 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 		}
 	}
 
-	private static void Heading(ImGui gui, ImRect row, string text, float size)
-	{
-		gui.Canvas.Text(text.AsSpan(), Color.Style.Text.Section, row, size * 0.85f, 0f);
-	}
 
 	private static void Stat(ImGui gui, ImRect row, string label, string value, Color32 colour, float size)
 	{
@@ -248,13 +243,13 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 		gui.Canvas.Text(value.AsSpan(), colour, row, size, 1f);
 	}
 
-	private static void Centre(ImGui gui, string value, Color32 colour, ImRect row, float size)
+	private static void Left(ImGui gui, string value, Color32 colour, ImRect row, float size)
 	{
 		if (string.IsNullOrEmpty(value))
 		{
 			return;
 		}
 
-		gui.Canvas.Text(value.AsSpan(), colour, row, size);
+		gui.Canvas.Text(value.AsSpan(), colour, row, UiText.Fit(gui, value, size, row.W), 0f);
 	}
 }

@@ -121,8 +121,8 @@ public class ResultsScreen : IZeepGUIDrawer
 	{
 		float text = gui.Style.Layout.TextSize;
 
-		UiText.Centre(gui, report.Kicker, Color.Style.Text.Muted, UiMetrics.Row(gui, 1f), text * 0.9f);
-		UiText.Centre(gui, report.PlayerName, Color.Style.Surface.White, UiMetrics.Row(gui, _headlineSize * 1.2f),
+		UiText.Centre(gui, report.Kicker, UiText.Muted(gui), UiMetrics.Row(gui, 1f), text * 0.9f);
+		UiText.Centre(gui, report.PlayerName, UiText.Default(gui), UiMetrics.Row(gui, _headlineSize * 1.2f),
 			text * _headlineSize);
 		UiText.Centre(gui, report.Headline, Color.Zeepkist.Medal.Author, UiMetrics.Row(gui, 1.4f), text * 1.2f);
 
@@ -201,7 +201,7 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		if (levels.Count == 0)
 		{
-			UiText.Left(gui, "No levels were played.", Color.Style.Text.Muted, UiMetrics.Row(gui, 1f));
+			UiText.Left(gui, "No levels were played.", UiText.Muted(gui), UiMetrics.Row(gui, 1f));
 			return;
 		}
 
@@ -238,14 +238,14 @@ public class ResultsScreen : IZeepGUIDrawer
 		DrawMedalTime(gui, _medals.Gold, "Gold Time", level.GoldTime, Color.Zeepkist.Medal.Gold);
 
 		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Your Best", level.BestWithDelta ?? "never finished",
-			level.BestWithDelta == null ? Color.Style.Text.Muted : level.StatusColour);
+			level.BestWithDelta == null ? UiText.Muted(gui) : level.StatusColour);
 
 		gui.AddSpacing();
 		UiWidgets.Heading(gui, UiMetrics.Row(gui, 0.85f), "EFFORT");
-		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Attempts", level.Attempts, Color.Style.Text.Default);
-		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Crashes", level.Crashes, Color.Style.Text.Default);
-		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Wheels Lost", level.WheelsLost, Color.Style.Text.Default);
-		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Time Spent", level.Duration, Color.Style.Text.Default);
+		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Attempts", level.Attempts, UiText.Default(gui));
+		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Crashes", level.Crashes, UiText.Default(gui));
+		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Wheels Lost", level.WheelsLost, UiText.Default(gui));
+		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), "Time Spent", level.Duration, UiText.Default(gui));
 	}
 
 	private static void DrawThumbnail(ImGui gui, LevelRow level)
@@ -259,7 +259,7 @@ public class ResultsScreen : IZeepGUIDrawer
 		if (thumbnail == null)
 		{
 			gui.Canvas.Rect(box, Color.Style.Surface.Track, box.H * 0.05f);
-			UiText.Centre(gui, "no thumbnail", Color.Style.Text.Muted, box, gui.Style.Layout.TextSize);
+			UiText.Centre(gui, "no thumbnail", UiText.Muted(gui), box, gui.Style.Layout.TextSize);
 			return;
 		}
 
@@ -288,7 +288,7 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		if (history.Count == 0)
 		{
-			UiText.Left(gui, "No runs recorded yet. This one is the first.", Color.Style.Text.Muted, UiMetrics.Row(gui, 1f));
+			UiText.Left(gui, "No runs recorded yet. This one is the first.", UiText.Muted(gui), UiMetrics.Row(gui, 1f));
 			return;
 		}
 
@@ -329,7 +329,7 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		if (run.Levels.Count == 0)
 		{
-			UiText.Left(gui, "This run was recorded before levels were kept.", Color.Style.Text.Muted, UiMetrics.Row(gui, 1f));
+			UiText.Left(gui, "This run was recorded before levels were kept.", UiText.Muted(gui), UiMetrics.Row(gui, 1f));
 
 			return;
 		}
@@ -352,11 +352,11 @@ public class ResultsScreen : IZeepGUIDrawer
 		ImRect row = UiMetrics.Row(gui, 0.9f);
 		float size = gui.Style.Layout.TextSize * 0.8f;
 
-		UiText.Draw(gui, "#", Color.Style.Text.Muted, Cell(row, 0), size, 0f);
-		UiText.Draw(gui, "LEVEL", Color.Style.Text.Muted, Cell(row, 1), size, 0f);
-		UiText.Draw(gui, "RESULT", Color.Style.Text.Muted, Cell(row, 2), size, 0f);
-		UiText.Draw(gui, "TRIES", Color.Style.Text.Muted, Cell(row, 3), size, 1f);
-		UiText.Draw(gui, "TIME", Color.Style.Text.Muted, Cell(row, 4), size, 1f);
+		UiText.Draw(gui, "#", UiText.Muted(gui), Cell(row, 0), size, 0f);
+		UiText.Draw(gui, "LEVEL", UiText.Muted(gui), Cell(row, 1), size, 0f);
+		UiText.Draw(gui, "RESULT", UiText.Muted(gui), Cell(row, 2), size, 0f);
+		UiText.Draw(gui, "TRIES", UiText.Muted(gui), Cell(row, 3), size, 1f);
+		UiText.Draw(gui, "TIME", UiText.Muted(gui), Cell(row, 4), size, 1f);
 	}
 
 	private static bool DrawLevelRow(ImGui gui, LevelRow level)
@@ -364,11 +364,11 @@ public class ResultsScreen : IZeepGUIDrawer
 		ImRect row = UiMetrics.Row(gui, 1f);
 		bool clicked = UiWidgets.Clickable(gui, row);
 
-		UiText.Left(gui, UiNumbers.Text(level.Index), Color.Style.Text.Muted, Cell(row, 0));
+		UiText.Left(gui, UiNumbers.Text(level.Index), UiText.Muted(gui), Cell(row, 0));
 		UiText.Left(gui, level.Title, Color.Style.Text.LevelName, Cell(row, 1));
 		UiText.Left(gui, level.Status, level.StatusColour, Cell(row, 2));
-		UiText.Right(gui, level.Attempts, Color.Style.Text.Default, Cell(row, 3), gui.Style.Layout.TextSize);
-		UiText.Right(gui, level.Duration, Color.Style.Text.Default, Cell(row, 4), gui.Style.Layout.TextSize);
+		UiText.Right(gui, level.Attempts, UiText.Default(gui), Cell(row, 3), gui.Style.Layout.TextSize);
+		UiText.Right(gui, level.Duration, UiText.Default(gui), Cell(row, 4), gui.Style.Layout.TextSize);
 
 		return clicked;
 	}

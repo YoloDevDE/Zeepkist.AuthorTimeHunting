@@ -28,6 +28,10 @@ public class FinishVerdict
 
 	private static readonly string _gap = Color.ToHex(Color.Zeepkist.Medal.Gold);
 
+	private static readonly string _authorColor = Color.ToHex(Color.Zeepkist.Medal.Author);
+
+	private static readonly string _missColor = Color.ToHex(Color.Style.Status.Penalty);
+
 	private TMP_Text _label;
 
 	private string _replaced;
@@ -90,13 +94,13 @@ public class FinishVerdict
 		switch (ctx.LastRunMedalStatus)
 		{
 			case LevelStatus.Author:
-				return Line(Head(medals, MedalSpriteAsset.Author, _authorWord) + _acquired, _authorNote);
+				return Line(Head(medals, MedalSpriteAsset.Author, _authorWord + _acquired, _authorColor), _authorNote);
 
 			case LevelStatus.Gold when ctx.LastRunMedalWasNew:
-				return Line(Head(medals, MedalSpriteAsset.Gold, _goldWord) + _acquired, _goldNote);
+				return Line(Head(medals, MedalSpriteAsset.Gold, _goldWord + _acquired, _gap), _goldNote);
 
 			default:
-				return Line(Head(medals, MedalSpriteAsset.OhNo, _missWord) + " " + _keepGoing, Missed(ctx));
+				return Line(Head(medals, MedalSpriteAsset.OhNo, _missWord + " " + _keepGoing, _missColor), Missed(ctx));
 		}
 	}
 
@@ -116,15 +120,17 @@ public class FinishVerdict
 		return $"AT missed by <color={_gap}>{TimeFormatter.FormatDelta(ctx.LastRunTime - authorTime)}</color>";
 	}
 
-	/// <summary>The medal itself where the label can draw one, and its name where it cannot.</summary>
-	private static string Head(MedalSpriteAsset medals, int medal, string word)
+	/// <summary>The medal over its name, the name in the medal's color, in a smaller type than the game's.</summary>
+	private static string Head(MedalSpriteAsset medals, int medal, string word, string color)
 	{
+		string named = $"<size=70%><color={color}>{word}</color></size>";
+
 		if (medals == null || !medals.Has(medal))
 		{
-			return word;
+			return named;
 		}
 
-		return MedalSpriteAsset.Tag(medal, _white);
+		return MedalSpriteAsset.Tag(medal, _white) + "<br>" + named;
 	}
 
 	/// <summary>The verdict over its caption, the caption in the smaller type captions are read in.</summary>

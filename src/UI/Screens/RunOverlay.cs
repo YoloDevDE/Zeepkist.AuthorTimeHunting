@@ -70,7 +70,7 @@ public class RunOverlay : IZeepGUIDrawer
 	/// </summary>
 	private const float _medalColumns = 7.4f;
 
-	private const float _skipColumns = 9.4f;
+	private const float _skipColumns = 14f;
 
 	private const float _levelTimeColumns = 9.4f;
 
@@ -299,7 +299,7 @@ public class RunOverlay : IZeepGUIDrawer
 		DrawPennant(gui, strip, tileWidth * _pennantWidthFraction, gui.GetRowHeight() * _pennantRows);
 		DrawRunTime(gui, tile, view);
 		DrawHunt(gui, new ImRect(inner.X, inner.Y, wing, inner.H), view);
-		DrawLevel(gui, new ImRect(inner.Right - wing, inner.Y, wing, inner.H), view, full);
+		DrawLevel(gui, new ImRect(inner.Right - wing, inner.Y, wing, inner.H), view);
 
 		if (!full)
 		{
@@ -362,8 +362,11 @@ public class RunOverlay : IZeepGUIDrawer
 		float icon = rect.H * 0.7f;
 		ImRect glyph = rect.TakeLeft(icon, gui.Style.Layout.InnerSpacing, out ImRect label);
 
+		string text = view.SkipType;
+		float size = UiText.Fit(gui, text, gui.Style.Layout.TextSize, label.W);
+
 		UiIcons.Draw(gui, glyph, UiIcon.Skip, view.SkipCostColour);
-		UiText.Draw(gui, view.SkipCost, view.SkipCostColour, label, gui.Style.Layout.TextSize * 1.1f, 0f);
+		UiText.Draw(gui, text, view.SkipCostColour, label, size, 0f);
 	}
 
 	/// <summary>The hunt as a whole: levels played, attempts, and how much of the hour went on penalties.</summary>
@@ -413,38 +416,28 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The right wing: the level being driven and what it is costing. Its name only shows while
-	///     not driving.
+	///     The right wing: the level being driven, always named because the game's own name is hidden,
+	///     and what it is costing.
 	/// </summary>
-	private void DrawLevel(ImGui gui, ImRect rect, RunHudView view, bool full)
+	private void DrawLevel(ImGui gui, ImRect rect, RunHudView view)
 	{
 		ImRect detail = rect.TakeBottom(Detail(gui, _right), out ImRect main);
 
-		if (full)
-		{
-			ImRect title = main.TakeTop(main.H / 3f, out main);
+		ImRect title = main.TakeTop(main.H / 3f, out main);
 
-			DrawTitle(gui, title, view, gui.Style.Layout.TextSize);
-		}
+		DrawTitle(gui, title, view, gui.Style.Layout.TextSize);
 
 		ImRect top = main.TakeTop(main.H * 0.5f, out ImRect bottom);
-		ImRect times = top.TakeRight(Mathf.Min(top.W, gui.GetRowHeight() * _levelTimeColumns), out ImRect skip);
+		ImRect times = top.TakeRight(Mathf.Min(top.W, gui.GetRowHeight() * _levelTimeColumns));
 
 		float size = gui.Style.Layout.TextSize * 0.9f;
 		ImRect spent = bottom.TakeRight(UiText.Width(gui, view.LevelTime, size), gui.Style.Layout.InnerSpacing,
 			out ImRect attempts);
 
-		DrawSkipType(gui, skip, view);
 		DrawTimes(gui, times, view);
 		UiText.Draw(gui, view.Attempts + _attempts, Color.Style.Text.Muted, attempts, size, 0f);
 		UiText.Right(gui, view.LevelTime, Color.Style.Text.Muted, spent, size);
 		DrawLevelDetail(gui, detail, view);
-	}
-
-	/// <summary>Which kind of skip is on offer here, said in words - the price is on the other wing.</summary>
-	private static void DrawSkipType(ImGui gui, ImRect rect, RunHudView view)
-	{
-		UiText.Draw(gui, view.SkipType, view.SkipColour, rect, gui.Style.Layout.TextSize * 0.9f, 0f);
 	}
 
 	/// <summary>The level in detail: your best on it, and the gold time.</summary>

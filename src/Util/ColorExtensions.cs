@@ -103,6 +103,9 @@ public static class ColorExtensions
 
 		public Color32 Penalty { get; } = new(191, 57, 57, 255);
 
+		/// <summary>A target that was not reached.</summary>
+		public Color32 Missed { get; } = new(255, 150, 60, 255);
+
 		/// <summary>The medal is still in reach, but not by much.</summary>
 		public Color32 Close { get; } = new(255, 226, 84, 255);
 	}

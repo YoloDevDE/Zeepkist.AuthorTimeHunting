@@ -30,7 +30,14 @@ public class LevelSummaryView
 
 	public string StatusUpper { get; private set; }
 
-	public string BestWithDelta { get; private set; }
+	public string Best { get; private set; }
+
+	/// <summary>"Author beaten by" or "Author missed by", whichever the best run did.</summary>
+	public string AuthorDeltaLabel { get; private set; }
+
+	public string AuthorDelta { get; private set; }
+
+	public Color32 AuthorDeltaColour { get; private set; }
 
 	public Color32 StatusColour { get; private set; }
 
@@ -41,7 +48,9 @@ public class LevelSummaryView
 
 	public IReadOnlyList<LevelRow> Recent { get; private set; }
 
-	public string Score { get; private set; }
+	public int AuthorMedals { get; private set; }
+	public int GoldMedals { get; private set; }
+	public int Penalties { get; private set; }
 
 	public string TimeLeft { get; private set; }
 
@@ -66,7 +75,9 @@ public class LevelSummaryView
 			Crashes = UiNumbers.Text(level.Crashes),
 			TimeHere = level.GetPlayDuration().ToFormattedString(),
 			Recent = Tail(ctx.Levels),
-			Score = $"{ctx.AuthorMedals} AT   {ctx.GoldMedals} gold   {ctx.Penalties} penalty",
+			AuthorMedals = ctx.AuthorMedals,
+			GoldMedals = ctx.GoldMedals,
+			Penalties = ctx.Penalties,
 			TimeLeft = TimeFormatter.FormatDuration((int)ctx.GetRemainingTime().TotalMilliseconds)
 		};
 
@@ -76,9 +87,12 @@ public class LevelSummaryView
 		}
 
 		double delta = level.PersonalBestTime - level.AuthorTime;
+		bool beaten = delta <= 0d;
 
-		view.BestWithDelta =
-			$"{TimeFormatter.FormatTime(level.PersonalBestTime)}   ({TimeFormatter.FormatDelta(delta)})";
+		view.Best = TimeFormatter.FormatTime(level.PersonalBestTime);
+		view.AuthorDeltaLabel = beaten ? "Author beaten by" : "Author missed by";
+		view.AuthorDelta = TimeFormatter.FormatDelta(delta);
+		view.AuthorDeltaColour = beaten ? Color.Style.Status.Positive : Color.Style.Status.Missed;
 
 		return view;
 	}

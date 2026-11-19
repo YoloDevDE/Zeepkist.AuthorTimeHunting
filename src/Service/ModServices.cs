@@ -20,6 +20,7 @@ public class ModServices
 		Health = new HealthService(GraphQL);
 		RunOverlay = new RunOverlay(Control, Medals);
 		Results = new ResultsScreen(Medals);
+		LevelSummary = new LevelSummaryOverlay(Medals);
 		Loading = new LoadingOverlay(Thumbnail);
 		Menu = new AthMenu(MenuBackground);
 	}
@@ -54,7 +55,7 @@ public class ModServices
 
 	public DebugPanel Debug { get; } = new();
 
-	public LevelSummaryOverlay LevelSummary { get; } = new();
+	public LevelSummaryOverlay LevelSummary { get; }
 
 	public RaceTimeDisplay RaceTime { get; } = new();
 

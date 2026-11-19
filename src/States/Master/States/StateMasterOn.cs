@@ -54,6 +54,7 @@ public class StateMasterOn : StateBase
 		}
 
 		PlayerManager.Instance.currentMaster.OnlineGameplayUI.TimeLeftText.enabled = false;
+		PlayerManager.Instance.currentMaster.OnlineGameplayUI.GameLevelText.enabled = false;
 		AthMaster.Services.PublishRun(AthController);
 		AthController.StartTimer();
 		FrogNotification.Success($"{Gamemode.DisplayName} started");
@@ -109,6 +110,7 @@ public class StateMasterOn : StateBase
 	private void OnRoundStarted()
 	{
 		PlayerManager.Instance.currentMaster.OnlineGameplayUI.TimeLeftText.enabled = false;
+		PlayerManager.Instance.currentMaster.OnlineGameplayUI.GameLevelText.enabled = false;
 	}
 
 	/// <summary>
@@ -158,5 +160,6 @@ public class StateMasterOn : StateBase
 		}
 
 		PlayerManager.Instance.currentMaster.OnlineGameplayUI.TimeLeftText.enabled = true;
+		PlayerManager.Instance.currentMaster.OnlineGameplayUI.GameLevelText.enabled = true;
 	}
 }

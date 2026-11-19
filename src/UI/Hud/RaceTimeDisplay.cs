@@ -49,6 +49,9 @@ public class RaceTimeDisplay : IDisposable
 	/// <summary>The game's label holds one line and grows downwards, and this one holds four.</summary>
 	private const float _linesUp = 1f;
 
+	/// <summary>The four rows at the game's own size crowd the screen, so the label is drawn smaller.</summary>
+	private const float _fontScale = 0.7f;
+
 	private const double _shortestLevelWorthLights = 2d;
 
 	/// <summary>Glyphs in "● ● ●", so the row can be centred without measuring the markup.</summary>
@@ -637,6 +640,8 @@ public class RaceTimeDisplay : IDisposable
 		label.enableWordWrapping = false;
 
 		label.enableAutoSizing = false;
+
+		label.fontSize *= _fontScale;
 
 		transform.anchoredPosition += new Vector2(0f, label.fontSize * _linesUp);
 	}

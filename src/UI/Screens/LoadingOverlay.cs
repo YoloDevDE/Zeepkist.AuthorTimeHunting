@@ -28,6 +28,9 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 	private const float _titleSize = 1.8f;
 	private const float _messageSize = 1.05f;
 
+	/// <summary>Smaller than a message so "Starting in 5" stays on one line in the narrow column.</summary>
+	private const float _stepSize = 0.8f;
+
 	private const float _lineHeight = 1.9f;
 	private const float _titleLines = 1.4f;
 
@@ -392,7 +395,7 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 		ImRect text = new(row.X + box * 2f, row.Y, row.W - box * 2f, row.H);
 
 		gui.Canvas.Text(StepLabel(step, last).AsSpan(),
-			step.Done ? Color.Style.Text.Muted : Color.Style.Surface.White, text, size * _messageSize, 0f);
+			step.Done ? Color.Style.Text.Muted : Color.Style.Surface.White, text, size * _stepSize, 0f);
 	}
 
 	/// <summary>

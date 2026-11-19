@@ -29,7 +29,7 @@ CHAMFER_FRACTION = 0.45
 BADGE_ASPECT = 16.0 / 9.0
 PENNANT_WIDTH_FRACTION = 0.34
 PENNANT_ROWS = 0.55
-CLOCK_SIZE = 1.6
+CLOCK_SIZE = 1.2
 DETAIL_ROWS = 1.1
 MEDAL_COLUMNS = 7.4
 SKIP_COLUMNS = 9.4
@@ -243,7 +243,7 @@ def draw_bar(img, open_amount, stage=1.0, left=0.0, right=0.0):
                     (bx, band_h), (bx, band_h + drawer_h - dcut)], fill=PANEL)
         inner_x = bx + SPACING * 2
         inner_w = width - SPACING * 4
-        text(cd, (inner_x, top + SPACING, inner_w, skip_row), "Penalty Skip", PENALTY,
+        text(cd, (inner_x, top + SPACING, inner_w, skip_row), "Skip type: Penalty", PENALTY,
              TEXT_SIZE * 0.8, "center")
         side = strip_h * TILE_ASPECT
         total = side * BUTTONS + INNER * (BUTTONS - 1)
@@ -335,7 +335,7 @@ def draw_bar(img, open_amount, stage=1.0, left=0.0, right=0.0):
     top_r, bottom_r = take_top(lvl_main, lvl_main[3] * 0.5)
 
     times_r, skip_r2 = take_right(top_r, min(top_r[2], ROW * LEVEL_TIME_COLUMNS))
-    text(d, skip_r2, "Penalty Skip", PENALTY, TEXT_SIZE * 0.9, "left")
+    text(d, skip_r2, "Skip type: Penalty", PENALTY, TEXT_SIZE * 0.9, "left")
     cellr = column(times_r, 0, 2)
     ic, restc = take_left(cellr, cellr[3], INNER)
     medal(d, ic, MEDAL_AUTHOR)

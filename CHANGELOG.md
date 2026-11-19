@@ -46,13 +46,17 @@ This one stops trying. ATH now draws its own game.
 - **You never see it happen.** Starting a hunt puts up ATH's own screen over everything - the game's menus, its loading
   screen, the podium - and keeps the game quiet behind it until your round begins. What you get instead is a checklist
   ticking itself off: creating the lobby, loading the level, fetching levels, starting in 3. It stays up all the way to
-  the green light, so the setup is one screen from start to finish rather than four scene loads you watch go past.
+  the green light, so the setup is one screen from start to finish rather than four scene loads you watch go past. Each
+  step fits on one line.
 - **You see what you are about to drive.** Once the podium starts, the setup screen stops describing the run and starts
   describing the level: its thumbnail, its name, who made it, and the author and gold times you are about to go after.
   The wait before a hunt is now the last few seconds to plan it in.
 
 ### The hunt, while you are driving it
 
+- **The skip says what it does.** Bottom left of the bar it reads "Skip: free, gold taken", "Skip: free, 2 free skips
+  left", "Skip: costs 5:00" - or "Skip: ends the run" once a penalty would take the last of your time.
+- **The level is always named.** The bar shows the level above its medal times, also while driving.
 - **The clock counts down, not up.** The number on screen is the time you have left to beat the medal you are still
   chasing - no more doing subtraction at 90 km/h. It runs green, goes yellow when it gets tight, and **flashes red**
   over the last stretch before the medal is gone.
@@ -68,6 +72,11 @@ This one stops trying. ATH now draws its own game.
   flashing red. And when the author time slips past, a falling two-tone that tells you the run just changed, while you
   are still looking at the track. Lose the author medal and start chasing gold, and gold gets its own warnings from the
   top.
+- **The level name steps aside.** The game's own "level by author" line is hidden while a hunt runs and comes back
+  when it ends.
+- **A calmer clock.** The time left on the tile in the middle of the bar is drawn smaller, so it stays on one line and
+  no longer
+  crowds the band.
 - **A real countdown beep.** The start lights now play a recorded beep instead of a generated tone, and the release
   plays the same beep an octave higher.
 - **Fuller sounds.** Every tone is built from a stack of harmonics with a short room reverb behind it, instead of the
@@ -75,8 +84,8 @@ This one stops trying. ATH now draws its own game.
 - **Medals instead of initials.** The rows are labelled with the game's own author and gold medal art.
 - **The finish tells you what happened.** Where the game printed your time again, it now shows the medal you took and
   the one thing it changes: *gold acquired - you can now skip without a penalty*, *author acquired - respawn to
-  continue*, or the face this mode makes when you miss, with how far off the author time you were. The medals are the
-  game's own art rather than the words for them, and nothing is announced twice: the toasts that used to say the same
+  continue*, or the face this mode makes when you miss, with how far off the author time you were. Each medal is the
+  game's own art with its name beside it, and nothing is announced twice: the toasts that used to say the same
   thing in the opposite corner, while the finish panel was coming up, are gone.
 - **A broadcast bar, not a panel.** Everything ATH has to say while you drive is one band across the top of the screen,
   with the hour on a tile in the middle of it: the hunt on the left, the level on the right. It is a fraction of the
@@ -138,11 +147,19 @@ This one stops trying. ATH now draws its own game.
 
 - **A level summary** with the level's thumbnail, your time against the author's, how many tries it took, how long you
   spent there - and the run so far next to it.
+- **A clear finish line.** The medal sits above its name, the name in the medal's color, in a smaller type.
+- **A level summary about the run.** The thumbnail sits on the left with the level and how far you beat or missed
+  the author time beside it - green when beaten, orange when missed. Below it, big, your medals and the time left,
+  then the run history.
+- **Medals on the level summary.** The run so far shows the same author, gold and penalty medals as the overlay
+  while driving, instead of a line of text. Long results like "Free Skip" shrink to fit instead of being cut off.
 - **Challenge History** keeps every hunt this machine has recorded, so you can go back and look at a run instead of
   remembering it.
 
 ### Fixed
 
+- **Readable with light themes.** The text in the help, welcome, status, results, debug and leaderboard windows follows
+  your ZeepSDK theme instead of being drawn light on light.
 - The finish verdict no longer stays on screen through the next attempt after you respawn. It goes with the countdown of
   the attempt after it, whatever the last one did - claiming an author time and respawning used to leave it up.
 - **A restarted run no longer loads the level you just left.** Swapping a broken level out, or adding one to the
@@ -171,6 +188,7 @@ This one stops trying. ATH now draws its own game.
 - The mod's panels are back at the game's own text size. They had been drawn a third smaller than everything around
   them, which was a squint you should not have needed.
 - Settings for what the mod draws and how loud it is, in the menu, where settings go.
+- The ATH dropdown in the top bar now shows and hides every window and flips every on/off setting in one click.
 - A status screen for when a level will not load and you want to know whose fault it is.
 - The button icons are Bootstrap Icons, used under the MIT licence.
 - ATH no longer writes into the chat or the server message block at all. The bar and the menus say everything, so the

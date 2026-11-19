@@ -87,7 +87,7 @@ public static class UiWidgets
 	{
 		ImRect labelRect = rect.TakeLeft(UiMetrics.LabelWidth(rect.W), out ImRect valueRect);
 
-		UiText.Left(gui, label, Color.Style.Text.Muted, labelRect);
+		UiText.Left(gui, label, UiText.Muted(gui), labelRect);
 		UiText.Left(gui, value, valueColour, valueRect);
 	}
 

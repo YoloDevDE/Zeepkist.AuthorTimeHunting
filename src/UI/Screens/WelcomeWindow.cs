@@ -103,8 +103,8 @@ public class WelcomeWindow : IZeepGUIDrawer
 	{
 		float text = gui.Style.Layout.TextSize;
 
-		UiText.Centre(gui, "WELCOME TO", Color.Style.Text.Muted, UiMetrics.Row(gui, 1f), text * 0.9f);
-		UiText.Centre(gui, "Author Time Hunting", Color.Style.Surface.White, UiMetrics.Row(gui, _titleSize * 1.2f),
+		UiText.Centre(gui, "WELCOME TO", UiText.Muted(gui), UiMetrics.Row(gui, 1f), text * 0.9f);
+		UiText.Centre(gui, "Author Time Hunting", UiText.Default(gui), UiMetrics.Row(gui, _titleSize * 1.2f),
 			text * _titleSize);
 		UiText.Centre(gui, "Beat the author's time. Then do it again, until the hour is gone.",
 			Color.Zeepkist.Medal.Author,
@@ -159,7 +159,7 @@ public class WelcomeWindow : IZeepGUIDrawer
 
 		UiText.Paragraph(gui,
 			"More modes are on the way. Classic is the one that exists today, and it is the one every "
-			+ "other mode will be measured against.", Color.Style.Text.Muted);
+			+ "other mode will be measured against.", UiText.Muted(gui));
 
 		gui.AddSpacing();
 	}
@@ -167,12 +167,12 @@ public class WelcomeWindow : IZeepGUIDrawer
 	private static void DrawGamemode(ImGui gui, WelcomeMode mode, float text)
 	{
 		UiText.Draw(gui, mode.Name, Color.Zeepkist.Medal.Author, UiMetrics.Row(gui, 1.3f), text * 1.15f, 0f);
-		UiText.Paragraph(gui, mode.Description, Color.Style.Text.Default);
+		UiText.Paragraph(gui, mode.Description, UiText.Default(gui));
 		gui.AddSpacing();
 
 		foreach (string rule in mode.Rules)
 		{
-			UiText.Paragraph(gui, rule, Color.Style.Text.Default);
+			UiText.Paragraph(gui, rule, UiText.Default(gui));
 		}
 
 		gui.AddSpacing();
@@ -186,7 +186,7 @@ public class WelcomeWindow : IZeepGUIDrawer
 			"The workshop has levels that simply cannot be finished - a checkpoint that never arms, a jump "
 			+ "that does not exist any more, an author time nobody including the author has ever driven. "
 			+ "'Level is Broken' throws that level out, refunds every second you spent on it, and draws "
-			+ "another one.", Color.Style.Text.Default);
+			+ "another one.", UiText.Default(gui));
 
 		gui.AddSpacing();
 

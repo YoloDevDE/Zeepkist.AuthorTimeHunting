@@ -86,7 +86,7 @@ public class HelpWindow : IZeepGUIDrawer
 
 		UiWidgets.Heading(gui, UiMetrics.Row(gui, 1f), "GAMEMODE");
 		UiText.Left(gui, mode.DisplayName, Color.Zeepkist.Medal.Author, UiMetrics.Row(gui, 1f));
-		UiText.Paragraph(gui, mode.Description, Color.Style.Text.Muted);
+		UiText.Paragraph(gui, mode.Description, UiText.Muted(gui));
 		gui.AddSpacing();
 	}
 
@@ -97,12 +97,12 @@ public class HelpWindow : IZeepGUIDrawer
 		UiText.Paragraph(gui,
 			"Every window ATH draws can be switched on and off under Settings in the main menu. The run HUD "
 			+ "sits across the top, the level and the controls in the corners, and none of them can get lost - "
-			+ "the list is always there.", Color.Style.Text.Default);
+			+ "the list is always there.", UiText.Default(gui));
 
 		gui.AddSpacing();
 
 		UiText.Paragraph(gui,
-			"The skip buttons stay dead unless the lobby is actually racing.", Color.Style.Text.Muted);
+			"The skip buttons stay dead unless the lobby is actually racing.", UiText.Muted(gui));
 
 		gui.AddSpacing();
 	}
@@ -115,7 +115,7 @@ public class HelpWindow : IZeepGUIDrawer
 		UiText.Paragraph(gui,
 			"The mod's only chat command, and the same thing as clicking ATH in the game's top bar: it opens "
 			+ "the main menu. Starting, stopping, restarting and the history all live in there.",
-			Color.Style.Text.Muted);
+			UiText.Muted(gui));
 
 		gui.AddSpacing();
 	}

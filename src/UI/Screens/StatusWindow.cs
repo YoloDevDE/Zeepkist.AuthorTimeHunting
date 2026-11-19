@@ -127,7 +127,7 @@ public class StatusWindow : IZeepGUIDrawer
 		gui.Canvas.Circle(dot.Center, dotSize * 0.28f, DotColour(status));
 		UiWidgets.Row(gui, rest, status.Name, status.Verdict, DotColour(status));
 
-		UiText.Draw(gui, status.Detail ?? "", Color.Style.Text.Muted, UiMetrics.Row(gui, 0.9f),
+		UiText.Draw(gui, status.Detail ?? "", UiText.Muted(gui), UiMetrics.Row(gui, 0.9f),
 			gui.Style.Layout.TextSize * 0.85f, 0f);
 	}
 
@@ -150,7 +150,7 @@ public class StatusWindow : IZeepGUIDrawer
 
 		if (level == null)
 		{
-			UiText.Left(gui, "No hunt running.", Color.Style.Text.Muted, UiMetrics.Row(gui, 1f));
+			UiText.Left(gui, "No hunt running.", UiText.Muted(gui), UiMetrics.Row(gui, 1f));
 
 			return;
 		}

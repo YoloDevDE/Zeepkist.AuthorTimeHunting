@@ -192,7 +192,7 @@ public class DebugPanel : IZeepGUIDrawer
 
 		if (run?.Ctx.CurrentLevel == null)
 		{
-			UiText.Left(gui, "No level loaded.", Color.Style.Text.Muted, UiMetrics.Row(gui, 1f));
+			UiText.Left(gui, "No level loaded.", UiText.Muted(gui), UiMetrics.Row(gui, 1f));
 			return;
 		}
 
@@ -215,7 +215,7 @@ public class DebugPanel : IZeepGUIDrawer
 			Grant(run, (float)level.GoldTime + Random.Range(0.05f, _spread));
 		}
 
-		UiText.Left(gui, "Only improvements stick.", Color.Style.Text.Muted, UiMetrics.Row(gui, 0.9f));
+		UiText.Left(gui, "Only improvements stick.", UiText.Muted(gui), UiMetrics.Row(gui, 0.9f));
 	}
 
 	private static void Grant(AthController run, float time)
@@ -232,7 +232,7 @@ public class DebugPanel : IZeepGUIDrawer
 
 	private static void Line(ImGui gui, string label, string value)
 	{
-		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), label, value, Color.Style.Text.Default);
+		UiWidgets.Row(gui, UiMetrics.Row(gui, 1f), label, value, UiText.Default(gui));
 	}
 
 	private float Height(ImGui gui)

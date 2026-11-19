@@ -15,6 +15,23 @@ public static class UiText
 	/// <summary>One step back for the rounding, where the exact guess lands a fraction over.</summary>
 	private const float _nudge = 0.97f;
 
+	/// <summary>Faded share of the theme's text color for asides.</summary>
+	private const byte _mutedAlpha = 150;
+
+	/// <summary>The active theme's text color, readable on a light window as on a dark one.</summary>
+	public static Color32 Default(ImGui gui)
+	{
+		return gui.Style.Text.Color;
+	}
+
+	/// <summary>The active theme's text color, faded for asides.</summary>
+	public static Color32 Muted(ImGui gui)
+	{
+		Color32 text = gui.Style.Text.Color;
+
+		return new Color32(text.r, text.g, text.b, _mutedAlpha);
+	}
+
 	public static void Left(ImGui gui, string text, Color32 colour, ImRect rect)
 	{
 		Draw(gui, text, colour, rect, gui.Style.Layout.TextSize, 0f);

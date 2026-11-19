@@ -18,8 +18,6 @@ public class RunHudView
 {
 	private const string _noTime = "--:--.---";
 
-	private const string _free = "0";
-
 	private static int _frame = -1;
 
 	private static AthController _run;
@@ -67,8 +65,6 @@ public class RunHudView
 	public string Attempts { get; private set; }
 
 	public string PersonalBest { get; private set; }
-
-	public string SkipCost { get; private set; }
 
 	public Color32 SkipCostColour { get; private set; }
 
@@ -127,7 +123,6 @@ public class RunHudView
 			TimeLostToPenalties = TimeSpan.FromMilliseconds(ctx.GetAccumulatedPenaltyTime()).ToFormattedString(),
 			SkipType = SkipTypeLabel(ctx),
 			SkipColour = SkipTypeColour(ctx),
-			SkipCost = SkipCostLabel(ctx),
 			SkipCostColour = SkipTypeColour(ctx),
 			LevelName = level.Name,
 			Author = level.Author,
@@ -140,20 +135,6 @@ public class RunHudView
 			LevelsPlayed = UiNumbers.Text(ctx.Levels.Count),
 			TotalAttempts = UiNumbers.Text(ctx.Levels.Sum(played => played.Attempt))
 		};
-	}
-
-	/// <summary>
-	///     What leaving this level right now would take off the clock. A free skip says a plain
-	///     zero, because an empty space reads as a number not loaded yet.
-	/// </summary>
-	private static string SkipCostLabel(AthCtx ctx)
-	{
-		if (ctx.CurrentLevel.GoldMedalAcquired || ctx.AvaiableFreeSkips > 0)
-		{
-			return _free;
-		}
-
-		return "-" + TimeFormatter.FormatDuration(ctx.PenaltyTimeInMilliseconds);
 	}
 
 	/// <summary>
@@ -226,24 +207,35 @@ public class RunHudView
 		return ctx.IsTimeAfterSkipRunningLow ? Color.Style.Status.Warning : Color.Style.Status.Good;
 	}
 
+	/// <summary>What skipping this level right now would do, as one short sentence.</summary>
 	private static string SkipTypeLabel(AthCtx ctx)
 	{
 		if (ctx.CurrentLevel.AuthorTimeAcquired)
 		{
-			return "Author Skip";
+			return "Skip: free, author time taken";
 		}
 
 		if (ctx.CurrentLevel.GoldMedalAcquired)
 		{
-			return "Gold Skip";
+			return "Skip: free, gold taken";
 		}
 
-		if (ctx.AvaiableFreeSkips > 0)
+		if (ctx.AvaiableFreeSkips == 1)
 		{
-			return $"Free Skip ({ctx.AvaiableFreeSkips}x)";
+			return "Skip: free, 1 free skip left";
 		}
 
-		return ctx.IsTimeRunningLow ? "FATAL SKIP" : "Penalty Skip";
+		if (ctx.AvaiableFreeSkips > 1)
+		{
+			return $"Skip: free, {ctx.AvaiableFreeSkips} free skips left";
+		}
+
+		if (ctx.IsTimeRunningLow)
+		{
+			return "Skip: ends the run";
+		}
+
+		return "Skip: costs " + TimeFormatter.FormatDuration(ctx.PenaltyTimeInMilliseconds);
 	}
 
 	private static Color32 SkipTypeColour(AthCtx ctx)
