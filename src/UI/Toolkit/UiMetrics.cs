@@ -4,17 +4,7 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     Screen-relative sizing for ATH's windows and overlays.
-///     Imui's canvas already applies the game's UI scale, so a number here means the same
-///     thing at any DPI. What the canvas does not tell us is how much room there actually is:
-///     a fixed 340-unit window is a third of a 1024-wide canvas and a stripe on an ultrawide.
-///     So sizes that should track the screen are a fraction of it with a clamp, and sizes that
-///     should track the font (buttons, chrome) are derived from the row height instead.
-///     The layout rows a panel is stacked from live here too, for the same reason: a row that is
-///     one row height in one window and something else in the next is what makes two panels of
-///     the same mod look like two mods.
-/// </summary>
+/// <summary>Screen-relative sizing for ATH's windows and overlays.</summary>
 public static class UiMetrics
 {
 	public static float Margin(ImGui gui)
@@ -78,11 +68,7 @@ public static class UiMetrics
 		return gui.AddLayoutRectWithSpacing(gui.GetLayoutWidth(), ButtonHeight(gui));
 	}
 
-	/// <summary>
-	///     What a window has to be to hold what was drawn in it last frame. Before there is a
-	///     measurement, the caller's own guess in rows stands in - a window that opens at the wrong
-	///     size for one frame is better than one that opens at zero.
-	/// </summary>
+	/// <summary>What a window has to be to hold what was drawn in it last frame.</summary>
 	public static float WindowHeight(ImGui gui, float contentHeight, float fallbackRows)
 	{
 		float content = contentHeight > 0f ? contentHeight : gui.GetRowHeight() * fallbackRows;

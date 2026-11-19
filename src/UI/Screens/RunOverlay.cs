@@ -15,33 +15,9 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The hunt as a broadcast bar: a band across the top of the screen with the hour on a tile in
-///     the middle of it, the hunt on the left of that tile and the level on the right, and the
-///     controls in a drawer underneath.
-///     It was a window in the middle of the top of the screen and it kept growing, until it was
-///     eleven rows tall and sat exactly where a player looks on a jump. Flattening it to one line
-///     fixed the height and broke the shape instead: a strip the full width of the screen is a
-///     letterbox bar, and on an ultrawide it put the clock and the medals a monitor's width
-///     apart. So the band is a fraction of the screen and centred, which is what a bar over a
-///     game looks like everywhere else it is done.
-///     The hour is the middle of it because that is what the middle is for: it is the number the
-///     whole mode is made of, and everything on either side of it is what that hour has been spent
-///     on. The mod's crest had the tile before it, which is a picture that never changes in the one
-///     place the eye keeps going back to.
-///     Nothing here is drawn before there is a level under the wheels. The bar used to come up
-///     with the run, which meant it hung over the whole of the lobby setup with nothing in it but
-///     dashes - and over the loading screen that exists to hide exactly that.
-///     It has two heights, because it answers two questions and they are not asked at the same
-///     time. Between attempts the question is how the hunt is going: the medal tally, the hour
-///     spent on the timeline, whose level this is. On the way down a hill none of that is worth a
-///     row - the questions are what the clock says, what is being driven, and what leaving would
-///     cost - so the bar folds to those and gives the screen back. See <see cref="Stage" /> for
-///     when it switches, and why only one of the two directions waits.
-///     There is no visible window here, but there is a window. Imui draws text through the window
-///     it is inside, and an earlier attempt at drawing a line of it against the bare canvas drew
-///     nothing at all - so the frame is styled away rather than done without, the same way
-///     <see cref="AthMenu" /> turns a window into a fullscreen screen. The band is then drawn by
-///     hand, because a window box is a rectangle and this one has its corners cut off.
+///     The hunt as a broadcast bar: the hour on a tile in the middle, the hunt to its left, the
+///     level to its right, and the controls in a drawer underneath. Folds to a minimal height
+///     while driving - see <see cref="Stage" />.
 /// </summary>
 public class RunOverlay : IZeepGUIDrawer
 {
@@ -64,15 +40,14 @@ public class RunOverlay : IZeepGUIDrawer
 	private const float _detailRows = 1.1f;
 
 	/// <summary>
-	///     How long the full bar stays up once the zeepkists are released. A restart is two seconds
-	///     of somebody's life and there are a lot of them in a hunt; a bar that folded on every one
-	///     of them would be the most animated thing on the screen.
+	///     How long the full bar stays up once the zeepkists are released, so restarts do not
+	///     animate it.
 	/// </summary>
 	private const float _settleSeconds = 3f;
 
 	/// <summary>
-	///     How far through the slide the band's contents change over. Halfway, where the height is
-	///     moving fastest and the swap is least likely to be the thing the eye catches.
+	///     How far through the slide the band's contents change over: halfway, where the height
+	///     moves fastest.
 	/// </summary>
 	private const float _swapAt = 0.5f;
 
@@ -90,11 +65,8 @@ public class RunOverlay : IZeepGUIDrawer
 	private const float _clockSize = 1.6f;
 
 	/// <summary>
-	///     How wide each block of a wing actually is, in rows.
-	///     A wing is as wide as the band leaves it, which is far wider than anything standing in
-	///     one. Spread to fill, three medal counts land a hand's width apart and stop reading as
-	///     three medal counts, and one of them ends up nearer the crest than the row it belongs to.
-	///     So every block takes what it needs off its own edge and leaves the rest empty.
+	///     How wide each block of a wing actually is, in rows. Each block takes what it needs off
+	///     its own edge and leaves the rest empty, so the medal counts stay together.
 	/// </summary>
 	private const float _medalColumns = 7.4f;
 
@@ -127,12 +99,8 @@ public class RunOverlay : IZeepGUIDrawer
 	private const float _restSeconds = 2.5f;
 
 	/// <summary>
-	///     The corner points of the two hand-drawn shapes, written afresh every frame rather than
-	///     allocated every frame. Both are filled up to three times a frame.
-	///     A <c>stackalloc</c> would say this without a field, and the compiler takes one. The IDE
-	///     does not: the plugin hides System.Memory behind an alias so that only the game's own
-	///     <c>Span</c> is visible, the IDE resolves references without applying it, and every
-	///     <c>stackalloc</c> here then reads as an error. Do not put them back.
+	///     The corner points of the hand-drawn shapes, written afresh every frame rather than
+	///     allocated. Not <c>stackalloc</c>: the IDE cannot resolve the plugin's Span alias.
 	/// </summary>
 	private static readonly Vector2[] _bandPoints = new Vector2[6];
 
@@ -173,11 +141,7 @@ public class RunOverlay : IZeepGUIDrawer
 		_medals = medals;
 	}
 
-	/// <summary>
-	///     Starting a hunt arms the bar; the first level is what puts it on screen. Everything the
-	///     bar has to say comes off the level being driven, so between the two there is nothing to
-	///     draw, and a band of empty dashes over the setup screen is worse than no band.
-	/// </summary>
+	/// <summary>Starting a hunt arms the bar; the first level is what puts it on screen.</summary>
 	public AthController ActiveRun
 	{
 		get;
@@ -213,11 +177,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The drawer is sized before it is drawn, from how far open it was last frame, because the
-	///     window it lives in has to be given its rect up front.
-	///     The pennant is in the window's rect whether the drawer is out or not. It hangs below the
-	///     band by design, and a window clips what is drawn in it - a rect that stopped at the band
-	///     would cut the point off every time the drawer was shut.
+	///     The drawer is sized from last frame's opening, because the window needs its rect up front.
+	///     The pennant always sits inside the window's rect, so the window does not clip it.
 	/// </summary>
 	private void Draw(ImGui gui)
 	{
@@ -261,11 +222,7 @@ public class RunOverlay : IZeepGUIDrawer
 		}
 	}
 
-	/// <summary>
-	///     Takes the window's frame away entirely: the band is a cut-cornered shape drawn by hand,
-	///     and anything the window painted underneath it would show at the corners as the rectangle
-	///     the band is not.
-	/// </summary>
+	/// <summary>Takes the window's frame away entirely: the band is a cut-cornered shape drawn by hand.</summary>
 	private static void Bare(ImGui gui)
 	{
 		gui.Style.Window.Box.BackColor = Color.clear;
@@ -275,9 +232,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     Back to front, which in an immediate mode GUI is call order: the drawer first so it
-	///     comes out from behind the band, then the band, then the crest over the seam between
-	///     them, then everything that is words.
+	///     Back to front, which in an immediate mode GUI is call order: the drawer, then the band,
+	///     then everything that is words.
 	/// </summary>
 	private void DrawWindow(ImGui gui, ImRect rect, float band, float drawer, AthController run, RunHudView view,
 		float stage)
@@ -306,11 +262,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The bar's silhouette: a rectangle with its two bottom corners cut away. Imui's window
-	///     box cannot do it, so it is six points and a convex fill - counter-clockwise, the winding
-	///     Imui's own arrows use.
-	///     The band and the drawer are both drawn with it, off the same cut, because the drawer is
-	///     the band coming open rather than a second thing under it.
+	///     The bar's silhouette: a rectangle with its two bottom corners cut away, as six points
+	///     counter-clockwise. The band and the drawer share it.
 	/// </summary>
 	private static void Chamfered(ImGui gui, ImRect rect, float cut, Color32 colour)
 	{
@@ -337,8 +290,7 @@ public class RunOverlay : IZeepGUIDrawer
 
 		ImRect inner = strip.WithPadding(pad + cut, pad + cut, pad, rule + pad);
 
-		// The tile is the two rows the band always has, never the ones a side has opened. Sized off
-		// the whole band it grew with every detail row, and what it grew into was the wings.
+		// The tile is the two rows the band always has, never the ones a side has opened.
 		float tileHeight = Mathf.Min(inner.H, gui.GetRowHeight() * _minimalRows);
 		float tileWidth = tileHeight * _badgeAspect;
 		ImRect tile = new(inner.Center.x - tileWidth * 0.5f, inner.Top - tileHeight, tileWidth, tileHeight);
@@ -358,11 +310,7 @@ public class RunOverlay : IZeepGUIDrawer
 			view.Timeline);
 	}
 
-	/// <summary>
-	///     The tab hanging off the middle of the band. It is the only part of the bar that is not
-	///     information, and it is worth its pixels twice over: it is what says there is a drawer,
-	///     and it is what stops the crest looking like it was dropped on the band by accident.
-	/// </summary>
+	/// <summary>The tab hanging off the middle of the band - what says there is a drawer.</summary>
 	private static void DrawPennant(ImGui gui, ImRect strip, float width, float height)
 	{
 		float half = width * 0.5f;
@@ -377,14 +325,7 @@ public class RunOverlay : IZeepGUIDrawer
 		gui.Canvas.ConvexFill(_pennantPoints, Color.Zeepkist.Medal.Gold);
 	}
 
-	/// <summary>
-	///     The hour, in the middle, on the tile the mod's crest used to sit on.
-	///     The crest was the right thing there for as long as the bar was being learned and the
-	///     wrong thing for every hunt after: it is the one part of the band that never changed, in
-	///     the one place the eye goes back to. The hour is the number the whole mode is - everything
-	///     else on the bar is what that hour has been spent on - so it takes the middle, and the
-	///     light that says it is running goes with it.
-	/// </summary>
+	/// <summary>The hour, in the middle, on its tile, with the light that says it is running.</summary>
 	private static void DrawRunTime(ImGui gui, ImRect rect, RunHudView view)
 	{
 		float radius = rect.H * 0.14f;
@@ -401,12 +342,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The left wing: what the hour has bought, and what the next skip would cost it.
-	///     Both are the hunt rather than the level, which is what puts them on the same side of the
-	///     crest. The score is read between attempts and the price while driving, but neither is
-	///     worth taking away for the other - they are two numbers, and a wing holds two rows.
-	///     A third row comes down when the pointer is over this half: the same hunt in more detail,
-	///     for the moments somebody has stopped to look at it. See <see cref="Side" />.
+	///     The left wing: what the hour has bought, and what the next skip would cost it. A third
+	///     row comes down while the pointer is over this half - see <see cref="Sides" />.
 	/// </summary>
 	private void DrawHunt(ImGui gui, ImRect rect, RunHudView view)
 	{
@@ -429,11 +366,7 @@ public class RunOverlay : IZeepGUIDrawer
 		UiText.Draw(gui, view.SkipCost, view.SkipCostColour, label, gui.Style.Layout.TextSize * 1.1f, 0f);
 	}
 
-	/// <summary>
-	///     The hunt as a whole, for somebody who has stopped to read it: how many levels it has
-	///     been through, how many attempts that took, and how much of the hour went on penalties
-	///     rather than on driving.
-	/// </summary>
+	/// <summary>The hunt as a whole: levels played, attempts, and how much of the hour went on penalties.</summary>
 	private static void DrawRunDetail(ImGui gui, ImRect rect, RunHudView view)
 	{
 		if (rect.H <= 0f)
@@ -449,11 +382,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The dot a live broadcast puts in the corner: on for most of every second, off for the
-	///     rest of it, hard edges both ways. It is the only thing on the bar that says the hour is
-	///     being spent right now rather than merely standing at some number, and a fade would read
-	///     as breathing rather than as recording.
-	///     Unscaled time, so the game slowing itself down cannot stretch the second.
+	///     The dot a live broadcast puts in the corner: on for most of every second, hard edges both
+	///     ways. Unscaled time, so the game slowing down cannot stretch the second.
 	/// </summary>
 	private static void DrawLive(ImGui gui, ImRect rect, bool running)
 	{
@@ -483,11 +413,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The right wing: the level being driven and what it is costing.
-	///     Whose level it is, and what it is called, is not on it while it is being driven. That was
-	///     the last thing on the bar a player could not act on - the name of a level you are looking
-	///     at out of the windscreen - and it took the row the level's own clock now has. It comes
-	///     back the moment the driving stops, which is when a name is worth reading.
+	///     The right wing: the level being driven and what it is costing. Its name only shows while
+	///     not driving.
 	/// </summary>
 	private void DrawLevel(ImGui gui, ImRect rect, RunHudView view, bool full)
 	{
@@ -520,10 +447,7 @@ public class RunOverlay : IZeepGUIDrawer
 		UiText.Draw(gui, view.SkipType, view.SkipColour, rect, gui.Style.Layout.TextSize * 0.9f, 0f);
 	}
 
-	/// <summary>
-	///     The level in detail: your best on it, and the gold time - which is off the row above the
-	///     moment it is won, and is still the thing you would be driving at if you had not.
-	/// </summary>
+	/// <summary>The level in detail: your best on it, and the gold time.</summary>
 	private static void DrawLevelDetail(ImGui gui, ImRect rect, RunHudView view)
 	{
 		if (rect.H <= 0f)
@@ -540,16 +464,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The level and whose it is on one line: both names in plain white, and only the "by"
-	///     between them carrying a colour.
-	///     It was two lines, the level in blue over the author in gold, which gave the wing two
-	///     coloured labels and no plain text - so neither name was the one being read. One line in
-	///     one colour makes them a title, and the joining word is the only thing that has to be
-	///     told apart from a name.
-	///     Imui draws one colour per call, so the line is measured from the right and each run gets
-	///     the rect it ends in. The size is settled for the whole line before any of it is measured:
-	///     three runs left to shrink themselves would each shrink by what their own piece needed and
-	///     the line would come out in three different sizes.
+	///     The level and whose it is on one line, only the "by" in color. Imui draws one color per
+	///     call, so the size is fitted for the whole line first, then each part is drawn from the right.
 	/// </summary>
 	private static void DrawTitle(ImGui gui, ImRect rect, RunHudView view, float size)
 	{
@@ -595,11 +511,7 @@ public class RunOverlay : IZeepGUIDrawer
 		UiText.Draw(gui, time, colour, text, gui.Style.Layout.TextSize * 0.9f, 0f);
 	}
 
-	/// <summary>
-	///     A medal that has been taken, with a tick where its time was. The time is what you drive
-	///     at while it is still a target; once it is won it is a number that cannot change and one
-	///     more thing on the bar to read past.
-	/// </summary>
+	/// <summary>A medal that has been taken, with a tick where its time was.</summary>
 	private static void DrawMedalDone(ImGui gui, ImRect cell, Texture2D medal)
 	{
 		ImRect icon = cell.TakeLeft(cell.H, gui.Style.Layout.InnerSpacing, out ImRect rest);
@@ -608,11 +520,7 @@ public class RunOverlay : IZeepGUIDrawer
 		DrawTick(gui, rest.TakeLeft(rest.H), Color.Style.Status.Positive);
 	}
 
-	/// <summary>
-	///     A tick, as its two strokes. There is no tick in the icon strip and no glyph for one in
-	///     the theme's font, and this is two quads - which is less than it would cost to teach
-	///     either of them about a shape used in exactly one place.
-	/// </summary>
+	/// <summary>A tick, as its two strokes - neither the icon strip nor the font has one.</summary>
 	private static void DrawTick(ImGui gui, ImRect rect, Color32 colour)
 	{
 		float size = Mathf.Min(rect.W, rect.H);
@@ -639,12 +547,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The controls, always laid out at their full height against the underside of the band,
-	///     and clipped to however far the drawer has come out. That is what makes it read as a
-	///     drawer rather than as a fade: the buttons arrive from behind the band with their far
-	///     edge still cut off by it.
-	///     The clip does the input too. Imui throws away a hover that falls outside the active clip
-	///     rect, so a button half out of the slot is live on exactly the half that can be seen.
+	///     The controls, laid out at full height under the band and clipped to however far the
+	///     drawer is out. The clip also limits input to the visible half.
 	/// </summary>
 	private void DrawDrawer(ImGui gui, ImRect rect, float cut, AthController run, RunHudView view)
 	{
@@ -670,15 +574,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     How much of the bar is showing, and the whole of the rule that decides it: the bar folds
-	///     away while the level is being driven and comes back the instant the driving stops.
-	///     The two directions are deliberately not symmetric. Coming back is immediate, because the
-	///     moment a run ends is the moment its result is worth reading. Folding away waits
-	///     <see cref="_settleSeconds" />, because a hunt is mostly restarts - and a bar that folded
-	///     on every one of them would spend the level animating rather than saying anything.
-	///     A hand on the mouse counts as not driving, whatever the run says. It is the same signal
-	///     the drawer opens on and it means the same thing here: somebody has stopped steering and
-	///     gone looking for the mod, and what they are looking for is the part that folded away.
+	///     How much of the bar is showing: it folds after <see cref="_settleSeconds" /> of driving and
+	///     comes back the instant driving stops. A moving mouse counts as not driving.
 	/// </summary>
 	private float Stage(AthController run, bool stirred)
 	{
@@ -709,15 +606,7 @@ public class RunOverlay : IZeepGUIDrawer
 		return _full;
 	}
 
-	/// <summary>
-	///     How far each half of the band is open, and what opens it: the pointer being over that
-	///     half of it.
-	///     A hunt is driven with the hands on the keys and the mouse untouched, so a pointer that
-	///     has arrived somewhere is somebody looking rather than somebody steering - the same signal
-	///     the drawer opens on. Which half it is over is the question being asked: the left of the
-	///     crest is the hunt and the right of it is the level, and reaching for one of them is
-	///     asking for more of that one.
-	/// </summary>
+	/// <summary>Opens whichever half of the band the pointer is over: left is the hunt, right is the level.</summary>
 	private void Sides(ImGui gui, ImRect band)
 	{
 		Vector2 pointer = gui.Input.MousePosition;
@@ -741,11 +630,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     Whether a new attempt has begun since the last frame, which is what a respawn is from
-	///     out here. A respawn is the one moment in a hunt when the player has decided the run is
-	///     over and has not yet started the next one - the one moment the bar's own numbers are
-	///     both readable and worth reading - so it comes back up for them, and then folds away
-	///     again on its own once the driving resumes.
+	///     Whether a new attempt has begun since the last frame. A respawn brings the full bar back
+	///     up until driving resumes.
 	/// </summary>
 	private bool Respawned(AthController run)
 	{
@@ -772,13 +658,8 @@ public class RunOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     Whether the pointer has been used lately, which is the question the drawer actually
-	///     wants answered. Opening on hover meant aiming at a strip of screen to reach the buttons
-	///     behind it, and the strip is at the very top edge, which is the one place a pointer
-	///     cannot overshoot into - so it was a drawer that only opened for somebody who already
-	///     knew where it was.
-	///     Moving the mouse at all is the honest signal here: this is a racing game, the pointer
-	///     does not steer anything, and a hand that has gone to it has gone to it for the buttons.
+	///     Whether the pointer has been used lately - the drawer's signal. The pointer steers
+	///     nothing in a racing game, so a hand on it is reaching for the buttons.
 	/// </summary>
 	private bool PointerActive()
 	{

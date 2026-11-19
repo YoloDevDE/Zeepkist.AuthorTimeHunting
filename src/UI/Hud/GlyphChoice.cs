@@ -3,10 +3,7 @@ using TMPro;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     Picks a character the label's font can draw. The HUD font has no U+25CF, so the start
-///     lamps came out as hollow boxes, and no fallback font is available in a built game.
-/// </summary>
+/// <summary>Picks a character the label's font can draw.</summary>
 public static class GlyphChoice
 {
 	/// <summary>The first candidate the font can draw. If it can draw none, the last candidate.</summary>

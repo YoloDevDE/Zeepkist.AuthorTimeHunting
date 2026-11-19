@@ -71,14 +71,9 @@ public class StateAthWaitingForLevelData(AthPreparingController phase) : AthStat
 	}
 
 	/// <summary>
-	///     Whether the level that loaded is not the one the playlist asked for, which is what a
-	///     server skipping an entry it cannot serve looks like from in here.
-	///     The UID is the honest answer and the name is the fallback, because the two are not
-	///     always the same level's idea of itself: the backend hands out a fileUid that some
-	///     levels do not carry in their own data - 'Level D-01' comes back as <c>ead1</c> and
-	///     loads as <c>55MzxAULxUegEfl_PlayerName</c>. Judged on the UID alone that level is
-	///     broken every single time it loads, so the run replaced it, restarted, drew the same
-	///     verdict again and never got out of the loading screen.
+	///     Whether the level that loaded is not the one the playlist asked for. The name is the
+	///     fallback to the UID, because some levels load with a different UID than the backend
+	///     lists, and judged on the UID alone they would be replaced forever.
 	/// </summary>
 	private bool IsBrokenLevel(Level level)
 	{

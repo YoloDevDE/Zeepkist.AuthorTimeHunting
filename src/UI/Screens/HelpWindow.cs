@@ -12,11 +12,7 @@ namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
 ///     How to operate the mod: where its windows are and what mode is loaded.
-///     Kept apart from the welcome screen because the two answer different questions and are
-///     wanted at different times. The welcome screen explains the game and is read once; this
-///     is a reference and is opened again three runs later, when the question is where the
-///     restart button went. Putting that at the bottom of a page about gamemodes would mean
-///     scrolling past the rules every time.
+///     Kept apart from the welcome screen, which is read once; this is a reference.
 /// </summary>
 public class HelpWindow : IZeepGUIDrawer
 {

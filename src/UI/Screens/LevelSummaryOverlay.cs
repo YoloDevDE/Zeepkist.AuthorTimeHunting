@@ -14,18 +14,7 @@ namespace AuthorTimeHunting.UI.Screens;
 /// <summary>
 ///     The screen that comes up between levels: what the level just played came to, and the run
 ///     so far beside it.
-///     It exists because the gap between two levels was the one moment in a run with nothing to
-///     read and everything worth reading. A level ends, the screen says "press Y", and whatever
-///     the last ten minutes bought was already gone from the panels by the time the next level
-///     loaded. This holds it up until the player is driving again, and then gets out of the way
-///     on its own - there is nothing to close and nothing to remember to close.
-///     It is painted straight onto the canvas rather than into a window, and that is the point.
-///     An Imui window the size of the screen would take every click on it for the whole time the
-///     level is loading, and the game is still under there with a podium the player has to get
-///     past. Paint takes nothing.
-///     What paint does not get for free is being on top: Imui draws each window above the plain
-///     canvas, so the mod's own run panels would float over a fullscreen card drawn at the
-///     default order. Hence <see cref="UiScreen.Order" />.
+///     Painted on the canvas, not a window, so it takes no clicks; drawn at <see cref="UiScreen.Order" />.
 /// </summary>
 public class LevelSummaryOverlay : IZeepGUIDrawer
 {
@@ -138,8 +127,9 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 
 		Heading(gui, column.Row(1f), "THIS LEVEL", text);
 
-		Stat(gui, column.Row(1.2f), "Your Time", view.BestWithDelta ?? "never finished",
-			view.BestWithDelta == null ? Color.Style.Text.Muted : view.StatusColour, text);
+		Color32 bestColour = view.BestWithDelta == null ? Color.Style.Text.Muted : view.StatusColour;
+
+		Stat(gui, column.Row(1.2f), "Your Time", view.BestWithDelta ?? "never finished", bestColour, text);
 
 		Stat(gui, column.Row(1.2f), "Author Time", view.AuthorTime, Color.Zeepkist.Medal.Author, text);
 		Stat(gui, column.Row(1.2f), "Attempts", view.Attempts, Color.Style.Text.Default, text);
@@ -148,10 +138,8 @@ public class LevelSummaryOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The level, as a picture. A name and an author say which level it was; the thumbnail is
-	///     what makes the player remember driving it.
-	///     The column hands out rows in line heights, so the picture asks for as many of them as
-	///     its own shape works out to rather than for a height directly.
+	///     The level, as a picture. The column hands out rows in line heights, so the picture asks
+	///     for as many of them as its own shape works out to.
 	/// </summary>
 	private static void DrawThumbnail(ImGui gui, UiColumn column, LevelSummaryView view, float text)
 	{

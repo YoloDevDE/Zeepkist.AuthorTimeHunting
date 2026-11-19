@@ -3,11 +3,8 @@ using UnityEngine;
 namespace AuthorTimeHunting.UI.Views;
 
 /// <summary>
-///     One level of a run: the five columns the list shows, and everything behind them that
-///     the detail view opens up.
-///     A class rather than a struct because it doubles as "which level is selected", and a
-///     null reference is a cleaner way to say "none" than an index that has to be kept in
-///     step with a list that is rebuilt every frame.
+///     One level of a run: the five list columns and the detail behind them. A class because
+///     null doubles as "no level selected".
 /// </summary>
 public class LevelRow
 {

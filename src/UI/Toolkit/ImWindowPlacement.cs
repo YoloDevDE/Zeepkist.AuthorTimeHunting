@@ -15,12 +15,8 @@ public enum ImWindowAnchor
 	BottomRight
 }
 
-/// <summary>
-///     Places an Imui window the first time it appears and then gets out of the way, so a
-///     window the player dragged somewhere stays where they put it.
-///     Same approach as GTR's helper of the same name - Imui has no notion of a default
-///     anchor, it only remembers where a window already is.
-/// </summary>
+/// <summary>Places an Imui window the first time it appears and then gets out of the way, so a window the player dragged
+/// somewhere stays where they put it.</summary>
 public static class ImWindowPlacement
 {
 	public static ImRect PlaceAutoSized(ImGui gui, ReadOnlySpan<char> title, float width, float height,

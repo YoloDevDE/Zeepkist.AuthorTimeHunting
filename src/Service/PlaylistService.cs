@@ -9,9 +9,17 @@ using Logger = AuthorTimeHunting.Util.Logger;
 
 namespace AuthorTimeHunting.Service;
 
+/// <summary>Edits the lobby playlist and pushes it to the server within its 5 second rate limit.</summary>
 public class PlaylistService
 {
+	private static readonly TimeSpan _minUpdateInterval = TimeSpan.FromSeconds(5);
+
 	private readonly WorkshopDownloadService _workshopDownloads;
+
+	private readonly Queue<Action> _updateQueue = new();
+	private readonly object _queueLock = new();
+	private Task _processingTask;
+	private DateTime _lastUpdate = DateTime.MinValue;
 
 	public PlaylistService(WorkshopDownloadService workshopDownloads)
 	{
@@ -22,9 +30,8 @@ public class PlaylistService
 	private static int CurrentPlaylistIndex => ZeepkistNetwork.CurrentLobby.CurrentPlaylistIndex;
 
 	/// <summary>
-	///     The returned task completes once the playlist has actually reached the server, which
-	///     can be up to the rate limit later than this call. A skip sent before that lands on the
-	///     playlist the lobby still had.
+	///     The returned task completes once the playlist has actually reached the server, up to
+	///     the rate limit later. A skip sent before that lands on the old playlist.
 	/// </summary>
 	public Task StartNewPlaylist(OnlineZeeplevel initialLevel)
 	{
@@ -55,32 +62,6 @@ public class PlaylistService
 		return QueueServerPlaylistUpdate();
 	}
 
-	private static string Describe(OnlineZeeplevel level)
-	{
-		if (level == null)
-		{
-			return "no level at all";
-		}
-
-		return $"'{level.Name}' by {level.Author} (UID {level.UID}, workshop {level.WorkshopID})";
-	}
-
-	/// <summary>
-	///     A level with no workshop id cannot be handed out by the server: it answers the other
-	///     clients with an empty level data packet and the lobby skips on the spot, which from
-	///     inside the run looks like a level that will not load however often it is retried.
-	/// </summary>
-	private static void WarnIfUnplayable(OnlineZeeplevel level)
-	{
-		if (level != null && level.WorkshopID != 0)
-		{
-			return;
-		}
-
-		Logger.LogError(
-			$"PlaylistService: {Describe(level)} has no workshop id - the server cannot serve it and the lobby will skip it.");
-	}
-
 	/// <summary>The returned task carries the same promise as <see cref="StartNewPlaylist" />'s.</summary>
 	public Task ReplaceLevelInCurrentPlaylist(OnlineZeeplevel oldLevel, OnlineZeeplevel newLevel)
 	{
@@ -102,14 +83,57 @@ public class PlaylistService
 		return QueueServerPlaylistUpdate();
 	}
 
-	#region ServerPlaylistUpdateQueue
+	public void SkipLevel()
+	{
+		SkipCommand();
+	}
 
-	private static readonly TimeSpan _minUpdateInterval = TimeSpan.FromSeconds(5);
+	public void SkipToNextLevel()
+	{
+		SkipCommand("next");
+	}
 
-	private readonly Queue<Action> _updateQueue = new();
-	private readonly object _queueLock = new();
-	private Task _processingTask;
-	private DateTime _lastUpdate = DateTime.MinValue;
+	public void SkipToPrevLevel()
+	{
+		SkipCommand("prev");
+	}
+
+	public void SkipToLastLevel()
+	{
+		SkipCommand(CurrentLobbyPlaylist.Count - 1);
+	}
+
+	public void SkipToFirstLevel()
+	{
+		SkipCommand(0);
+	}
+
+	public void RestartCurrentLevel()
+	{
+		SkipCommand("restart");
+	}
+
+	private static string Describe(OnlineZeeplevel level)
+	{
+		if (level == null)
+		{
+			return "no level at all";
+		}
+
+		return $"'{level.Name}' by {level.Author} (UID {level.UID}, workshop {level.WorkshopID})";
+	}
+
+	/// <summary>A level with no workshop id cannot be served, and the lobby skips it on the spot.</summary>
+	private static void WarnIfUnplayable(OnlineZeeplevel level)
+	{
+		if (level != null && level.WorkshopID != 0)
+		{
+			return;
+		}
+
+		Logger.LogError(
+			$"PlaylistService: {Describe(level)} has no workshop id - the server cannot serve it and the lobby will skip it.");
+	}
 
 	private Task QueueServerPlaylistUpdate()
 	{
@@ -187,40 +211,6 @@ public class PlaylistService
 		}
 	}
 
-	#endregion
-
-	#region SkipLevelCommands
-
-	public void SkipLevel()
-	{
-		SkipCommand();
-	}
-
-	public void SkipToNextLevel()
-	{
-		SkipCommand("next");
-	}
-
-	public void SkipToPrevLevel()
-	{
-		SkipCommand("prev");
-	}
-
-	public void SkipToLastLevel()
-	{
-		SkipCommand(CurrentLobbyPlaylist.Count - 1);
-	}
-
-	public void SkipToFirstLevel()
-	{
-		SkipCommand(0);
-	}
-
-	public void RestartCurrentLevel()
-	{
-		SkipCommand("restart");
-	}
-
 	private static void SkipCommand(int command)
 	{
 		Send($"/fs {command}");
@@ -243,6 +233,4 @@ public class PlaylistService
 			$"PlaylistService: Sending '{command}' at index {CurrentPlaylistIndex} of {CurrentLobbyPlaylist.Count} entries.");
 		ChatApi.SendMessage(command);
 	}
-
-	#endregion
 }

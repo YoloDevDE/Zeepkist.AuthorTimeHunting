@@ -6,12 +6,7 @@ using Logger = AuthorTimeHunting.Util.Logger;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     Level thumbnails, as something a drawer can ask for without waiting.
-///     The game loads these off disk asynchronously, and a GUI pass has nowhere to await. So
-///     the first ask starts the load and returns nothing, and the picture appears a frame or
-///     two later - which for a screen the player is reading is soon enough.
-/// </summary>
+/// <summary>Level thumbnails, as something a drawer can ask for without waiting.</summary>
 public static class LevelThumbnails
 {
 	private static readonly Dictionary<string, Texture2D> _loaded = new();

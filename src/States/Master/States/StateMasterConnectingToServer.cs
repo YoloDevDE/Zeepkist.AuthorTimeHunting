@@ -11,17 +11,8 @@ using ZeepkistClient;
 namespace AuthorTimeHunting.States.Master.States;
 
 /// <summary>
-///     Gets the client onto the lobby server, which is where lobbies are made. A hunt needs a
-///     lobby the player hosts: the playlist, the round time and every skip are host powers, so
-///     a lobby somebody else runs cannot be hunted in.
-///     The connection is opened here rather than by walking the player through the online menu,
-///     because the menu is the only thing in the game that ever opens one and it does so in its
-///     Start - which has already run by the time we would get there, or has not run yet and
-///     sees a connection that is still closing. Asking the network manager directly is the same
-///     call the menu makes and it can be made from any scene.
-///     Whatever connection exists is dropped first, even one to the lobby server. A fresh
-///     connect is one event we know will arrive; a connection already up is a state with no
-///     event and nothing to read it off.
+///     Gets the client onto the lobby server so the hunt can host its own lobby. Any existing
+///     connection is dropped first, because only a fresh connect raises an event to wait for.
 /// </summary>
 public class StateMasterConnectingToServer : StateBase
 {
@@ -76,9 +67,8 @@ public class StateMasterConnectingToServer : StateBase
 	}
 
 	/// <summary>
-	///     The network manager lives as long as the game does, so this works from the main menu,
-	///     a lobby or the level editor alike. Loading the online menu is the fallback for the one
-	///     case where it is not there yet: that menu opens a connection on its own.
+	///     Connects through the network manager from any scene; loading the online menu is the
+	///     fallback when the manager does not exist yet.
 	/// </summary>
 	private static void StartConnecting()
 	{

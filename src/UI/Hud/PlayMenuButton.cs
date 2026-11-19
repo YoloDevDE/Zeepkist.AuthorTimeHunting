@@ -11,19 +11,7 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     A hunt on the game's own Play Game screen, beside Zeepkist Online.
-///     ATH's own menu is one keypress away from anywhere, and that keypress is still one thing a
-///     player has to know about before the mod exists for them. The main menu is where somebody
-///     decides what to play, so that is where the choice belongs - a hunt reads as a way to play
-///     Zeepkist rather than as a mod you first have to summon.
-///     The button is the Online button, cloned. Copying the game's own control is the only way to
-///     get a control that looks like the game's own: the shape, the hover colors, the click sound
-///     and the controller navigation all come with it, and none of them have to be kept in step
-///     with a patch later. What is replaced is the text, the color, the picture and what happens on
-///     the click - so the one button on the screen that is not the game's own says as much by
-///     looking like the mod.
-/// </summary>
+/// <summary>A hunt on the game's own Play Game screen, beside Zeepkist Online.</summary>
 public class PlayMenuButton
 {
 	private const string _menuScene = "3D_MainMenu";
@@ -70,10 +58,8 @@ public class PlayMenuButton
 		}
 	}
 
-	/// <summary>
-	///     The play menu is a panel the main menu keeps switched off until somebody picks Play Game,
-	///     so the screen is looked for among the inactive objects as well.
-	/// </summary>
+	/// <summary>The play menu is a panel the main menu keeps switched off until somebody picks Play Game, so the screen
+	/// is looked for among the inactive objects as well.</summary>
 	private static void Add()
 	{
 		StartGameUI screen = Object.FindObjectOfType<StartGameUI>(true);
@@ -104,11 +90,7 @@ public class PlayMenuButton
 		Clone(screen, online, slot);
 	}
 
-	/// <summary>
-	///     The button that takes you online, found by what it does rather than by what it is called.
-	///     A name is localised and a position moves; the click is wired to StartGameUI.StartOnline
-	///     in the scene and has been for as long as the screen has existed.
-	/// </summary>
+	/// <summary>The button that takes you online, found by what it does rather than by what it is called.</summary>
 	private static GenericButton Online(StartGameUI screen)
 	{
 		foreach (GenericButton button in screen.buttonsToDisableWhenGoingIntoAthing)
@@ -137,14 +119,8 @@ public class PlayMenuButton
 		return false;
 	}
 
-	/// <summary>
-	///     The game does not hang its play menu buttons in the panel directly: each one sits by
-	///     itself in a numbered holder, and the panel arranges the holders. A button dropped in
-	///     beside another button therefore lands inside somebody else's holder, where it is placed
-	///     by nothing and ends up behind the panel - which is exactly what happened. What belongs
-	///     beside the other rows is a holder, so the holder is what gets copied: the outermost thing
-	///     around the button that contains nothing but the button.
-	/// </summary>
+	/// <summary>The game does not hang its play menu buttons in the panel directly: each one sits by itself in a
+	/// numbered holder, and the panel arranges the holders.</summary>
 	private static Transform Slot(Transform button)
 	{
 		Transform slot = button;
@@ -183,16 +159,7 @@ public class PlayMenuButton
 		Report(row, copy);
 	}
 
-	/// <summary>
-	///     Where the two halves of the row live. A copy dropped in beside Online lands exactly on top
-	///     of it, and cutting the two apart with anchors only holds until something lays the panel out
-	///     again - a <c>LayoutGroup</c> writes its own anchors over both halves on the next frame and
-	///     the hunt is back in Online.
-	///     So the split is not written, it is arranged: Online's holder moves into a new holder that
-	///     carries a <c>HorizontalLayoutGroup</c> and stands where Online's holder stood. The group
-	///     divides whatever width it is given between its children every time it is laid out, which is
-	///     what keeps the two apart no matter who lays out the panel or how wide the screen is.
-	/// </summary>
+	/// <summary>Where the two halves of the row live.</summary>
 	private static RectTransform Row(RectTransform slot)
 	{
 		GameObject row = new(_rowName, typeof(RectTransform), typeof(HorizontalLayoutGroup));
@@ -212,12 +179,8 @@ public class PlayMenuButton
 		return rect;
 	}
 
-	/// <summary>
-	///     The row stands exactly where Online's holder stood, in whatever terms the panel places its
-	///     rows: anchors if the panel places them itself, and a preferred height if a
-	///     <c>LayoutGroup</c> does. Both are taken, because which of the two is read is the panel's
-	///     business and the play menu is switched off while this happens, so nothing can be measured.
-	/// </summary>
+	/// <summary>The row stands exactly where Online's holder stood, in whatever terms the panel places its rows: anchors
+	/// if the panel places them itself, and a preferred height if a <c>LayoutGroup</c> does.</summary>
 	private static void Fit(RectTransform row, RectTransform slot)
 	{
 		row.anchorMin = slot.anchorMin;
@@ -242,10 +205,8 @@ public class PlayMenuButton
 		mine.flexibleWidth = theirs.flexibleWidth;
 	}
 
-	/// <summary>
-	///     Two halves, side by side, each as tall as the row and each given the same share of its
-	///     width once the gap between them is taken out.
-	/// </summary>
+	/// <summary>Two halves, side by side, each as tall as the row and each given the same share of its width once the
+	/// gap between them is taken out.</summary>
 	private static void Arrange(HorizontalLayoutGroup layout)
 	{
 		layout.spacing = _gap;
@@ -255,10 +216,7 @@ public class PlayMenuButton
 		layout.childForceExpandHeight = true;
 	}
 
-	/// <summary>
-	///     One half of the row. Neither half asks for a width of its own, and both stretch by the same
-	///     amount, so the row's width lands on them evenly however wide the row turns out to be.
-	/// </summary>
+	/// <summary>One half of the row.</summary>
 	private static void Share(GameObject half)
 	{
 		LayoutElement element = Element(half);
@@ -280,10 +238,7 @@ public class PlayMenuButton
 		return element;
 	}
 
-	/// <summary>
-	///     Which of the panel's own arrangers ends up placing the new row. Whatever the panel does
-	///     with the rows it already had, it now does with one more.
-	/// </summary>
+	/// <summary>Which of the panel's own arrangers ends up placing the new row.</summary>
 	private static void Report(RectTransform row, GameObject copy)
 	{
 		Transform panel = row.parent;
@@ -299,11 +254,7 @@ public class PlayMenuButton
 		Parts(copy);
 	}
 
-	/// <summary>
-	///     What the copy is made of, by name. The play menu is scene data and nothing in the game's
-	///     code arranges it, so when the button comes out wrong this is the only place the shape of
-	///     the thing that was copied can be read from.
-	/// </summary>
+	/// <summary>What the copy is made of, by name.</summary>
 	private static void Parts(GameObject copy)
 	{
 		foreach (Transform part in copy.GetComponentsInChildren<Transform>(true))
@@ -314,14 +265,8 @@ public class PlayMenuButton
 		}
 	}
 
-	/// <summary>
-	///     A cloned button carries the original's label and, with it, whatever localiser was keeping
-	///     that label up to date. The localiser has to go first or it writes "Online" back over this
-	///     the next time the language is read.
-	///     Every label on the button is written, not the two the button names: the Online button
-	///     leaves both of those empty and keeps its wording in a text of its own, so a button that
-	///     went by the named ones alone kept saying Zeepkist Online.
-	/// </summary>
+	/// <summary>A cloned button carries the original's label and, with it, whatever localiser was keeping that label up
+	/// to date.</summary>
 	private static void Rename(GenericButton button)
 	{
 		foreach (TMP_Text label in button.GetComponentsInChildren<TMP_Text>(true))
@@ -347,13 +292,7 @@ public class PlayMenuButton
 		label.text = _label;
 	}
 
-	/// <summary>
-	///     The hunt's own color, in every state the game paints a button in. Setting the image's
-	///     color alone would last one frame: <c>GenericButton.RedrawButton</c> writes one of these
-	///     fields over it on every update, so the fields are where a color survives - and the image
-	///     is set as well only so the button is right on the frame it appears.
-	///     The text is left alone: it is white, and white on this is right.
-	/// </summary>
+	/// <summary>The hunt's own color, in every state the game paints a button in.</summary>
 	private static void Paint(GenericButton button)
 	{
 		Color hunt = Color.Zeepkist.Medal.Author;
@@ -383,11 +322,8 @@ public class PlayMenuButton
 		return new Color(color.r, color.g, color.b, 0.5f);
 	}
 
-	/// <summary>
-	///     The mod's own picture where the Online one was, across the whole button rather than in the
-	///     little square the game uses for a pictogram. The PNG is transparent, so it stands on the
-	///     color rather than on a panel of its own, and it goes behind the label rather than over it.
-	/// </summary>
+	/// <summary>The mod's own picture where the Online one was, across the whole button rather than in the little square
+	/// the game uses for a pictogram.</summary>
 	private static void Picture(GenericButton button)
 	{
 		Sprite thumbnail = Plugin.Instance.Services.Thumbnail.Sprite;
@@ -424,11 +360,8 @@ public class PlayMenuButton
 		Behind(icon, button.buttonImage);
 	}
 
-	/// <summary>
-	///     The Online picture is not one picture: it is a stack of them, coins and a hand and a
-	///     sparkle, each its own image. The first one carries the mod's picture and the rest go out,
-	///     or the Online ones stay lying over it.
-	/// </summary>
+	/// <summary>The Online picture is not one picture: it is a stack of them, coins and a hand and a sparkle, each its
+	/// own image.</summary>
 	private static void Replace(Image image, Sprite thumbnail)
 	{
 		if (thumbnail == null)
@@ -453,11 +386,7 @@ public class PlayMenuButton
 		rect.offsetMax = Vector2.zero;
 	}
 
-	/// <summary>
-	///     In front of the button's own back and behind everything else on it. First child is the
-	///     back of a canvas, which is the right place only as long as the back is not a child too -
-	///     where it is, the picture goes one place after it instead of underneath it.
-	/// </summary>
+	/// <summary>In front of the button's own back and behind everything else on it.</summary>
 	private static void Behind(Image icon, Image background)
 	{
 		if (background == null || background.transform.parent != icon.transform.parent)
@@ -470,12 +399,7 @@ public class PlayMenuButton
 		icon.transform.SetSiblingIndex(background.transform.GetSiblingIndex() + 1);
 	}
 
-	/// <summary>
-	///     A button nobody points at can be reached with the mouse and by no other means. The hunt
-	///     stands to the right of Online and is reached by going right, which is how the panel's
-	///     other row of two is walked. Up and down stay whatever Online's were, so the row still
-	///     leads to the same rows above and below whichever half is being pointed at.
-	/// </summary>
+	/// <summary>A button nobody points at can be reached with the mouse and by no other means.</summary>
 	private static void Navigate(GenericButton online, GenericButton hunt)
 	{
 		hunt.up = online.up;
@@ -485,12 +409,7 @@ public class PlayMenuButton
 		online.right = hunt;
 	}
 
-	/// <summary>
-	///     The mod's own menu, over the main menu. The button used to start Classic on the spot, and
-	///     that is one tile inside this menu - beside the other modes, the settings and the history.
-	///     A play menu offers ways to play rather than performing one, so this one opens the mod
-	///     instead of committing the player to a run they did not get to look at first.
-	/// </summary>
+	/// <summary>The mod's own menu, over the main menu.</summary>
 	private static void OpenMenu()
 	{
 		Plugin.Instance.Services.Menu.Visible = true;

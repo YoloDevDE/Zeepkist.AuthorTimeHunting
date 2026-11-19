@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AuthorTimeHunting.Commands;
 using AuthorTimeHunting.Gamemodes;
 using AuthorTimeHunting.Service;
@@ -20,24 +21,8 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The mod's front door: what /ath and the top bar open, and the only screen a player has
-///     to know about.
-///     Everything ATH can do used to be a chat command or a window somebody had to find -
-///     starting a hunt, looking up an old one, changing what the run is worth. This is the one
-///     place all of it is listed, and it is a menu rather than a panel because a menu is what a
-///     game puts up before a round, not while one is being played.
-///     Which is why it takes the whole screen. Nothing is happening behind it that the player
-///     is watching - a hunt has not started yet, or the one that did is between levels - so the
-///     screen is free, and a menu that owns the screen is a menu nobody has to hunt for. The
-///     window itself is fullscreen and its side padding is what holds the content to a column in
-///     the middle; a choice spread across an ultrawide is not a choice anyone aims at.
-///     One window with pages instead of five windows: a player picking a gamemode is not
-///     reading the history at the same time, and a page that replaces the one before it cannot
-///     end up behind it.
-///     No page opens a scrollable of its own. Imui's BeginScrollable claims the whole layout
-///     frame it sits in rather than the part still free, so one opened after a header or a Back
-///     button lands on top of them - which is what made the history page unreadable. The window
-///     already brings one, and it covers the whole page.
+///     The mod's front door: what /ath and the top bar open. One fullscreen window with pages.
+///     No page opens a scrollable of its own - Imui's would land on top of the header.
 /// </summary>
 public class AthMenu : IZeepGUIDrawer
 {
@@ -137,6 +122,19 @@ public class AthMenu : IZeepGUIDrawer
 		Visible = !Visible;
 	}
 
+	public void Quickstart()
+	{
+		GamemodeRegistry registry = Plugin.Instance.Services.Gamemodes;
+		IGamemode classic = registry.Resolve(_classicId);
+
+		if (classic != null)
+		{
+			registry.Selected = classic;
+		}
+
+		Start();
+	}
+
 	private void Draw(ImGui gui)
 	{
 		ImRect screen = UiScreen.Full(gui);
@@ -155,10 +153,8 @@ public class AthMenu : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     Turns the window into the screen: no border, no rounded corners, the mod's backdrop
-	///     behind it, and side padding wide enough to leave a column in the middle. Imui hands the
-	///     content rect out after the padding, so every row laid out inside is already centred and
-	///     no control has to be told how wide the screen is.
+	///     Turns the window into the screen: no border, no rounded corners, and side padding wide
+	///     enough to leave a centered column in the middle.
 	/// </summary>
 	private static void Fullscreen(ImGui gui, ImRect screen)
 	{
@@ -185,14 +181,7 @@ public class AthMenu : IZeepGUIDrawer
 
 		try
 		{
-			DrawBackdrop(gui, screen);
-
-			if (DrawHeadline(gui))
-			{
-				return;
-			}
-
-			DrawPage(gui);
+			DrawContent(gui, screen);
 		}
 		finally
 		{
@@ -200,14 +189,21 @@ public class AthMenu : IZeepGUIDrawer
 		}
 	}
 
+	private void DrawContent(ImGui gui, ImRect screen)
+	{
+		DrawBackdrop(gui, screen);
+
+		if (DrawHeadline(gui))
+		{
+			return;
+		}
+
+		DrawPage(gui);
+	}
+
 	/// <summary>
-	///     What the screen puts over the game: the mod's own picture, and a veil over that so the
-	///     words on top of it stay words. Drawn first inside the window, so everything laid out
-	///     after it lands on top - the window's own box is cleared for exactly this reason.
-	///     The picture is scaled to cover rather than to fit. A backdrop with the game showing
-	///     down two sides of it is a picture in a frame, not a backdrop, and the window clips
-	///     whatever hangs over the edges anyway.
-	///     Without the picture the veil is still drawn, which is the screen it used to be.
+	///     The mod's own picture, scaled to cover the screen, and a veil over it so the words on
+	///     top stay readable. Drawn first inside the window, so everything else lands on top.
 	/// </summary>
 	private void DrawBackdrop(ImGui gui, ImRect screen)
 	{
@@ -251,19 +247,23 @@ public class AthMenu : IZeepGUIDrawer
 
 	private string Subtitle()
 	{
-		switch (_page)
+		return _page switch
 		{
-			case AthMenuPage.Play:
-				return "Pre-Game Setup";
-			case AthMenuPage.History:
-				return "Challenge History";
-			case AthMenuPage.Settings:
-				return "Settings";
-			default:
-				return Plugin.Instance.Services.RunOverlay.ActiveRun == null ?
-					"Beat the author's time. Then do it again, until the hour is gone." :
-					"A hunt is running.";
+			AthMenuPage.Play => "Pre-Game Setup",
+			AthMenuPage.History => "Challenge History",
+			AthMenuPage.Settings => "Settings",
+			_ => RootSubtitle()
+		};
+	}
+
+	private static string RootSubtitle()
+	{
+		if (Plugin.Instance.Services.RunOverlay.ActiveRun != null)
+		{
+			return "A hunt is running.";
 		}
+
+		return "Beat the author's time. Then do it again, until the hour is gone.";
 	}
 
 	private void DrawPage(ImGui gui)
@@ -325,15 +325,7 @@ public class AthMenu : IZeepGUIDrawer
 		DrawFooter(gui);
 	}
 
-	/// <summary>
-	///     What the screen is for once a hunt is on: the run's own five buttons where Quickstart
-	///     and Play used to be.
-	///     Those two were drawn greyed out for the whole hour, which is a menu telling a player
-	///     twice a minute that the thing they are doing is not available. The five that took their
-	///     place are the ones that were only reachable by opening the drawer on the run bar - and a
-	///     player who has hit Escape and gone looking for a menu is exactly the player looking for
-	///     them.
-	/// </summary>
+	/// <summary>The root page once a hunt is on: the run's own five buttons in place of Quickstart and Play.</summary>
 	private void DrawRunRoot(ImGui gui, AthController run)
 	{
 		Spacer(gui, (gui.GetLayoutHeight() - RunGridHeight(gui) - FooterHeight(gui)) * 0.5f);
@@ -482,10 +474,6 @@ public class AthMenu : IZeepGUIDrawer
 		DrawHelpButtons(gui);
 	}
 
-	/// <summary>
-	///     The windows used to be one checkbox each in the top bar. The top bar is a single
-	///     switch now, so this is where they moved - same list, one screen further in.
-	/// </summary>
 	private static void DrawWindowToggles(ImGui gui)
 	{
 		ModServices services = Plugin.Instance.Services;
@@ -529,19 +517,6 @@ public class AthMenu : IZeepGUIDrawer
 			Plugin.Instance.Services.History.Records).History;
 
 		_page = AthMenuPage.History;
-	}
-
-	public void Quickstart()
-	{
-		GamemodeRegistry registry = Plugin.Instance.Services.Gamemodes;
-		IGamemode classic = registry.Resolve(_classicId);
-
-		if (classic != null)
-		{
-			registry.Selected = classic;
-		}
-
-		Start();
 	}
 
 	private void Start()
@@ -595,15 +570,7 @@ public class AthMenu : IZeepGUIDrawer
 
 	private static int SelectedIndex(GamemodeRegistry registry)
 	{
-		for (int i = 0; i < registry.All.Count; i++)
-		{
-			if (registry.All[i] == registry.Selected)
-			{
-				return i;
-			}
-		}
-
-		return 0;
+		return Math.Max(0, registry.All.ToList().IndexOf(registry.Selected));
 	}
 
 	private static ImRect Tile(ImGui gui, ImRect row, int column)

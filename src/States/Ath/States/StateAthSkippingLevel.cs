@@ -20,7 +20,7 @@ public class StateAthSkippingLevel(AthController controller) : AthState(controll
 	{
 		if (ctx.CurrentLevel.LevelBroken)
 		{
-			HandleBrokenSkip(ctx);
+			HandleBrokenSkip();
 
 			return;
 		}
@@ -49,9 +49,8 @@ public class StateAthSkippingLevel(AthController controller) : AthState(controll
 		HandlePenaltySkip();
 	}
 
-	private void HandleBrokenSkip(AthCtx ctx)
+	private void HandleBrokenSkip()
 	{
-		ctx.CurrentLevel.LevelBroken = true;
 		FrogNotification.Warn("'Broken-Skip' used - spent time refunded");
 	}
 

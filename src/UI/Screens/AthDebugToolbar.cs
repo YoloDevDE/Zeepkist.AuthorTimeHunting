@@ -9,8 +9,7 @@ namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
 ///     The top bar's way into the developer panel. Its own entry rather than a line in the ATH
-///     menu, so a player opening the mod's front door never trips over a button that hands out
-///     author times.
+///     menu, so players never trip over a button that hands out author times.
 /// </summary>
 public class AthDebugToolbar : IZeepToolbarDrawer
 {

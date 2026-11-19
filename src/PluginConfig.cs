@@ -2,9 +2,7 @@
 
 namespace AuthorTimeHunting;
 
-/// <summary>
-///     Handles configuration settings for the plugin
-/// </summary>
+/// <summary>The plugin's BepInEx config entries.</summary>
 public class PluginConfig
 {
 	public PluginConfig(ConfigFile config)
@@ -52,13 +50,9 @@ public class PluginConfig
 
 	public ConfigEntry<string> GtrUrl { get; }
 
-	#region Race Timer
-
 	public ConfigEntry<bool> StartLights { get; }
 
 	public ConfigEntry<bool> Splits { get; }
 
 	public ConfigEntry<bool> LeaderboardMedals { get; }
-
-	#endregion
 }

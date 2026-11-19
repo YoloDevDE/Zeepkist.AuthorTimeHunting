@@ -9,37 +9,15 @@ using Logger = AuthorTimeHunting.Util.Logger;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     Everything the run ticker says out loud: the start lights counting down, and the three
-///     things that can happen to the medal being chased.
-///     The countdown is one recorded beep, embedded in the plugin and handed to FMOD as the wav
-///     it is. The lamps play it as recorded, the release plays it an octave up.
-///     The medal clips are generated rather than shipped. A handful of sine partials with a fast
-///     decay is what a beep is, and it is a page of arithmetic.
-///     Each clip is a stack of harmonics rather than one sine, which is the difference between a
-///     tone and a test signal - a single sine has no body and disappears under an engine. On top
-///     of that goes a short reverb tail, so the sounds land in the same room as the game instead
-///     of in front of it.
-///     They go out through FMOD, which is the only audio this game actually has. A Unity
-///     AudioSource does technically play here, and that is the trap: the game sets
-///     <c>AudioListener.volume</c> to the master slider, so a beep already scaled by that slider
-///     got scaled by it a second time. At a master of 10% - an ordinary setting - that is a
-///     hundredth of the volume asked for, which is silence with extra steps.
-///     The sound is built straight out of PCM through FMOD's core system and played on its master
-///     group. That sits below the Studio buses, so the game's own VCAs do not touch it and the
-///     sliders are applied here instead, exactly once.
-/// </summary>
+/// <summary>Everything the run ticker says out loud: the start lights counting down, and the three things that can
+/// happen to the medal being chased.</summary>
 public class HudSounds : IDisposable
 {
 	private const int _sampleRate = 44100;
 
 	private const int _channels = 1;
 
-	/// <summary>
-	///     How long the room takes to fall 60 dB. Under half a second is a small hard room, which is
-	///     what a beep wants: enough that it lands somewhere rather than in front of the player's
-	///     face, and over before the next lamp lights.
-	/// </summary>
+	/// <summary>How long the room takes to fall 60 dB.</summary>
 	private const float _reverbSeconds = 0.45f;
 
 	/// <summary>How much of the room is heard against the clip itself.</summary>
@@ -47,18 +25,10 @@ public class HudSounds : IDisposable
 
 	private const float _minus60Db = 0.001f;
 
-	/// <summary>
-	///     Room at the end of every clip for the reverb to die away in. The tail is inaudible about
-	///     a tenth of a second before this runs out, which is the margin rather than waste - a clip
-	///     cut off while it still rings is a click.
-	/// </summary>
+	/// <summary>Room at the end of every clip for the reverb to die away in.</summary>
 	private const float _tailSeconds = 0.25f;
 
-	/// <summary>
-	///     What every clip is scaled to once it is mixed. Normalising rather than trusting the
-	///     arithmetic is what keeps the double beep exactly as loud as the single one, and what
-	///     keeps three cascaded echoes from clipping.
-	/// </summary>
+	/// <summary>What every clip is scaled to once it is mixed.</summary>
 	private const float _headroom = 0.95f;
 
 	private const float _attackSeconds = 0.006f;
@@ -73,37 +43,19 @@ public class HudSounds : IDisposable
 	/// <summary>The release, an octave above the lamps. Trackmania's countdown, near enough.</summary>
 	private const float _goPitch = 2f;
 
-	/// <summary>
-	///     The partials every clip is built from, as a share of the fundamental. Four of them is
-	///     where a beep stops sounding like a signal generator and starts sounding like something
-	///     that was struck; past that the top ones only add hiss at the sample rate this runs at.
-	/// </summary>
+	/// <summary>The partials every clip is built from, as a share of the fundamental.</summary>
 	private static readonly float[] _partials = [1f, 0.34f, 0.16f, 0.07f];
 
-	/// <summary>
-	///     The reverb, in samples of delay: 25, 38 and 59 milliseconds. Mutually prime, so the three
-	///     of them do not line up and turn a room into a single flutter. They run in parallel, each
-	///     one fed the dry clip - in series they would only reverberate each other's output, which
-	///     is a longer and thinner sound than three rooms heard at once.
-	/// </summary>
+	/// <summary>The reverb, in samples of delay: 25, 38 and 59 milliseconds.</summary>
 	private static readonly int[] _echoes = [1103, 1697, 2593];
 
-	/// <summary>
-	///     The medal getting tight. One beep, below the lamps so it is not mistaken for a start
-	///     light, and short enough to be over before it is in the way.
-	/// </summary>
+	/// <summary>The medal getting tight.</summary>
 	private static readonly Tone[] _warningNotes = [new(587f, 0f, 0.18f)];
 
-	/// <summary>
-	///     The medal about to be gone. Two of them, quick and high: a repeat is heard as urgency
-	///     where a single tone of any pitch is only heard as information.
-	/// </summary>
+	/// <summary>The medal about to be gone.</summary>
 	private static readonly Tone[] _alertNotes = [new(880f, 0f, 0.1f), new(880f, 0.15f, 0.1f)];
 
-	/// <summary>
-	///     The author time going past. A falling fourth, the second note held - falling is the one
-	///     shape nobody has ever read as good news, and it needs no learning.
-	/// </summary>
+	/// <summary>The author time going past.</summary>
 	private static readonly Tone[] _missedNotes = [new(415f, 0f, 0.16f), new(311f, 0.18f, 0.32f)];
 
 	private Sound _alert;
@@ -111,10 +63,7 @@ public class HudSounds : IDisposable
 	/// <summary>One lamp of the countdown, and at <see cref="_goPitch" /> the release.</summary>
 	private Sound _beep;
 
-	/// <summary>
-	///     The tones are made on the first beep rather than in the constructor. This is built while
-	///     the plugin loads, and FMOD is not up that early.
-	/// </summary>
+	/// <summary>The tones are made on the first beep rather than in the constructor.</summary>
 	private bool _made;
 
 	private Sound _missed;
@@ -178,10 +127,8 @@ public class HudSounds : IDisposable
 		_missed = Clip(_missedNotes);
 	}
 
-	/// <summary>
-	///     Started paused so the volume is on it before its first sample is heard, which is the
-	///     difference between a beep and a beep with a click in front of it.
-	/// </summary>
+	/// <summary>Started paused so the volume is on it before its first sample is heard, which is the difference between
+	/// a beep and a beep with a click in front of it.</summary>
 	private static void Play(Sound sound, float pitch)
 	{
 		if (!sound.hasHandle())
@@ -260,10 +207,8 @@ public class HudSounds : IDisposable
 		return default;
 	}
 
-	/// <summary>
-	///     Raw PCM handed to FMOD as if it were a file in memory: no header, no decoding, and
-	///     <see cref="FMOD.CREATESOUNDEXINFO" /> saying what the bytes are instead.
-	/// </summary>
+	/// <summary>Raw PCM handed to FMOD as if it were a file in memory: no header, no decoding, and <see
+	/// cref="FMOD.CREATESOUNDEXINFO" /> saying what the bytes are instead.</summary>
 	private static Sound Clip(Tone[] notes)
 	{
 		byte[] pcm = Pcm(notes);
@@ -340,10 +285,8 @@ public class HudSounds : IDisposable
 		}
 	}
 
-	/// <summary>
-	///     Left unnormalised on purpose - <see cref="Normalize" /> scales the finished clip, so
-	///     dividing by the weights here would only be undone a moment later.
-	/// </summary>
+	/// <summary>Left unnormalized on purpose - <see cref="Normalize" /> scales the finished clip, so dividing by the
+	/// weights here would only be undone a moment later.</summary>
 	private static float Wave(float frequency, float t)
 	{
 		float phase = 2f * Mathf.PI * frequency * t;
@@ -379,12 +322,8 @@ public class HudSounds : IDisposable
 		Blend(wave, wet);
 	}
 
-	/// <summary>
-	///     A feedback comb: every sample picks up an attenuated copy of one a delay earlier, which
-	///     then feeds the one after it. That is where the tail comes from - it is not a handful of
-	///     echoes stuck on the end, it is one echo running out of energy. The copy is worked on so
-	///     the dry clip stays intact for the next comb to be fed the same thing.
-	/// </summary>
+	/// <summary>A feedback comb: every sample picks up an attenuated copy of one a delay earlier, which then feeds the
+	/// one after it.</summary>
 	private static void Comb(float[] dry, float[] wet, int delay)
 	{
 		float[] line = (float[])dry.Clone();
@@ -398,10 +337,7 @@ public class HudSounds : IDisposable
 		Accumulate(wet, line);
 	}
 
-	/// <summary>
-	///     What one echo has to be worth for the comb to lose 60 dB in <see cref="_reverbSeconds" />.
-	///     A long delay gets fewer repeats in that time, so each of them has to fade faster.
-	/// </summary>
+	/// <summary>What one echo has to be worth for the comb to lose 60 dB in <see cref="_reverbSeconds" />.</summary>
 	private static float Feedback(int delay)
 	{
 		return Mathf.Pow(_minus60Db, delay / (float)_sampleRate / _reverbSeconds);

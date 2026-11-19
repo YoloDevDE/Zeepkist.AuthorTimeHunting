@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 namespace AuthorTimeHunting.Util;
 
 /// <summary>
-///     Waiting for the game to be in a state it does not announce. Polling rather than
-///     listening, because the things worth waiting for here are spread over a disconnect, a
-///     scene load and a server round trip, and a poll cannot miss an edge that fired while
-///     nothing was subscribed.
+///     Waits for a game state the game does not announce. Polls, so it cannot miss an edge
+///     that fired while nothing was subscribed.
 /// </summary>
 public static class Wait
 {

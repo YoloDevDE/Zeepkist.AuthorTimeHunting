@@ -7,13 +7,7 @@ namespace AuthorTimeHunting.Service;
 
 /// <summary>
 ///     Keeps the game quiet while the mod builds the lobby the hunt runs in.
-///     The setup screen hides what is happening behind it; the sound gives it away anyway. A
-///     player who asked ATH for a run hears a lobby being joined, a menu closing, a level loading
-///     and a round starting - four noises belonging to a thing they did not do, over a screen
-///     saying the mod is getting their run ready.
-///     So FMOD's master bus is muted from the moment the setup begins until the round the mod set
-///     up actually starts. Muting the bus rather than turning the volume down leaves the player's
-///     own settings alone: there is nothing to restore afterwards but a flag.
+///     Mutes FMOD's master bus instead of the volume, so the player's settings stay untouched.
 /// </summary>
 public class LobbySilence
 {

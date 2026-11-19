@@ -2,9 +2,7 @@ using System;
 
 namespace AuthorTimeHunting.Service;
 
-/// <summary>
-///     What one backend answered the last time it was asked, and how long it took.
-/// </summary>
+/// <summary>What one backend answered the last time it was asked, and how long it took.</summary>
 public class HealthStatus
 {
 	public HealthStatus(string name)

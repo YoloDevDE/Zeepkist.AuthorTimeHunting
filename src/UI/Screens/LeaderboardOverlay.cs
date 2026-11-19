@@ -18,19 +18,6 @@ namespace AuthorTimeHunting.UI.Screens;
 /// <summary>
 ///     ATH's own leaderboard, with the author and gold times standing in it as if they were two
 ///     more players in the lobby.
-///     <code>
-///     1  AT         +00:03.231
-///     2  Hi Im Yolo  00:56.345
-///     3  GOLD       -00:00.344
-///     </code>
-///     A hunt is a race against two times, and a leaderboard is the widget for "who is ahead of
-///     whom" - it simply does not know that the medals are competitors. Sorting them in turns
-///     the question into the one the board was built to answer, and the medal rows carry the gap
-///     rather than the time, because the gap is what is actually being read.
-///     Its own window rather than a rewrite of the game's own rows. The first version took over
-///     the small leaderboard's labels in a LateUpdate, which meant living inside somebody else's
-///     layout and handing every row back on the way out. Drawn here, it can be moved, and it can
-///     later be put exactly over the game's board instead of inside it.
 /// </summary>
 public class LeaderboardOverlay : IZeepGUIDrawer
 {
@@ -178,32 +165,39 @@ public class LeaderboardOverlay : IZeepGUIDrawer
 		_entries.Add(Medal(_authorLabel, (float)level.AuthorTime, Color.Zeepkist.Medal.Author, yourTime));
 		_entries.Add(Medal(_goldLabel, (float)level.GoldTime, Color.Zeepkist.Medal.Gold, yourTime));
 
-		List<ZeepkistNetworkPlayer> players = ZeepkistNetwork.PlayerList;
-
-		if (players != null)
-		{
-			foreach (ZeepkistNetworkPlayer player in players)
-			{
-				if (player == null)
-				{
-					continue;
-				}
-
-				bool local = player == ZeepkistNetwork.LocalPlayer;
-				float time = local ? yourTime : player.CurrentResult?.Time ?? -1f;
-
-				if (time <= 0f)
-				{
-					continue;
-				}
-
-				_entries.Add(new LeaderboardEntry(player.Username, time,
-					local ? Color.Style.Surface.White : Color.Style.Text.Default, local,
-					TimeFormatter.FormatTime(time)));
-			}
-		}
+		AddPlayers(yourTime);
 
 		_entries.Sort(_byTime);
+	}
+
+	private void AddPlayers(float yourTime)
+	{
+		List<ZeepkistNetworkPlayer> players = ZeepkistNetwork.PlayerList;
+
+		if (players == null)
+		{
+			return;
+		}
+
+		foreach (ZeepkistNetworkPlayer player in players)
+		{
+			if (player == null)
+			{
+				continue;
+			}
+
+			bool local = player == ZeepkistNetwork.LocalPlayer;
+			float time = local ? yourTime : player.CurrentResult?.Time ?? -1f;
+
+			if (time <= 0f)
+			{
+				continue;
+			}
+
+			_entries.Add(new LeaderboardEntry(player.Username, time,
+				local ? Color.Style.Surface.White : Color.Style.Text.Default, local,
+				TimeFormatter.FormatTime(time)));
+		}
 	}
 
 	private static LeaderboardEntry Medal(string name, float time, Color32 colour, float yourTime)

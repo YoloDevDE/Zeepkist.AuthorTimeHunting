@@ -7,10 +7,8 @@ using UnityEngine;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     Past runs as a table of five columns, one row per run, clickable.
-///     Lives on its own because the history is asked for from two places now - the report that
-///     goes up when a run ends, and the menu, where it is looked up between runs. The columns
-///     have to line up in both, and they only do that if there is one method drawing them.
+///     Past runs as a table of five columns, one row per run, clickable. Shared by the run
+///     report and the menu so the columns line up in both.
 /// </summary>
 public static class HistoryTable
 {

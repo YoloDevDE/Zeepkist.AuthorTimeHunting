@@ -1,4 +1,4 @@
-﻿using AuthorTimeHunting.Commands;
+using AuthorTimeHunting.Commands;
 using AuthorTimeHunting.Gamemodes;
 using AuthorTimeHunting.Service;
 using AuthorTimeHunting.States.Ath.StateMachine;
@@ -113,8 +113,6 @@ public class StateMasterOn : StateBase
 
 	/// <summary>
 	///     A restart is a new run, and a new run gets a new lobby - the same way a start does.
-	///     Restarting inside the lobby the last run left behind meant inheriting its playlist and
-	///     whatever was left of its round, which is the state the mod stopped trusting.
 	/// </summary>
 	private void Restart()
 	{
@@ -125,11 +123,13 @@ public class StateMasterOn : StateBase
 
 	private void SkipBrokenLevel()
 	{
-		if (AthController.Ctx.CurrentLevel != null)
+		if (AthController.Ctx.CurrentLevel == null)
 		{
-			AthController.Ctx.CurrentLevel.LevelBroken = true;
-			ChatApi.SendMessage("/fs");
+			return;
 		}
+
+		AthController.Ctx.CurrentLevel.LevelBroken = true;
+		ChatApi.SendMessage("/fs");
 	}
 
 	private void Start()

@@ -29,13 +29,18 @@ public class StateMasterOff : StateBase
 		StartPendingRun();
 	}
 
+	public override void Exit()
+	{
+		AthRequests.StopRequested -= StopChallenge;
+		AthRequests.StartRequested -= StartChallenge;
+		AthRequests.RestartRequested -= StartChallenge;
+		AthMaster.Services.GameState.BecameRacing -= OnBecameRacing;
+		_pendingGamemode = null;
+	}
+
 	/// <summary>
-	///     A start handed over by the lobby setup arrives when the race is already running:
-	///     BecameRacing fired while the lobby was still being built, and an edge that has passed
-	///     never comes again. So a pending run looks at the state once by itself.
-	///     A frame later, because the transition into this state has not finished yet - starting
-	///     the next one from inside Enter would run the run's own machine through its initial
-	///     state twice.
+	///     A pending run checks the race state itself, because BecameRacing already fired while the
+	///     lobby was built. It waits a frame so it does not transition from inside Enter.
 	/// </summary>
 	private async void StartPendingRun()
 	{
@@ -61,21 +66,9 @@ public class StateMasterOff : StateBase
 		}
 	}
 
-	public override void Exit()
-	{
-		AthRequests.StopRequested -= StopChallenge;
-		AthRequests.StartRequested -= StartChallenge;
-		AthRequests.RestartRequested -= StartChallenge;
-		AthMaster.Services.GameState.BecameRacing -= OnBecameRacing;
-		_pendingGamemode = null;
-	}
-
 	/// <summary>
-	///     Every start builds the hunt its own lobby, even one asked for by a player who is
-	///     already hosting one. Reusing the lobby that happened to be there was a shortcut past
-	///     the whole setup screen: the run began wherever the playlist and the round timer had
-	///     been left, and the player saw none of it happen. A lobby ATH opened itself is the only
-	///     one it knows the state of.
+	///     Every start builds the hunt its own lobby, even for a player already hosting one - a
+	///     lobby ATH opened itself is the only one it knows the state of.
 	/// </summary>
 	private void StartChallenge()
 	{

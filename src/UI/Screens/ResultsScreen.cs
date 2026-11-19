@@ -15,16 +15,7 @@ namespace AuthorTimeHunting.UI.Screens;
 /// <summary>
 ///     The end-of-run report: a large results screen with tabs, in the shape a party game
 ///     puts up when the round is over.
-///     Deliberately a step coarser than the rest of the mod's UI. The panels beside it are
-///     read at a glance mid-run and are sized to stay out of the way; this is read once, when
-///     nothing else is happening, and it is the only place the whole run is visible at all.
-///     It holds a snapshot rather than the run, because the run's state machine is destroyed
-///     the moment it stops.
-///     Nothing in here opens a scrollable of its own, and that is load-bearing. Imui's
-///     BeginScrollable takes the whole of the layout frame it is in, not the part still free,
-///     so one opened after a header or a Back button is laid out on top of it - which is what
-///     made the level list and the history unusable. Both the window and every tab already
-///     bring their own, so the pages just add rows and let those do the scrolling.
+///     Opens no scrollable of its own: Imui's would cover the header, and every tab already scrolls.
 /// </summary>
 public class ResultsScreen : IZeepGUIDrawer
 {
@@ -155,33 +146,38 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		try
 		{
-			if (gui.BeginTab("Summary".AsSpan()))
-			{
-				DrawRows(gui, report.Summary);
-				gui.EndTab();
-			}
-
-			if (gui.BeginTab("Levels".AsSpan()))
-			{
-				DrawLevels(gui, report);
-				gui.EndTab();
-			}
-
-			if (gui.BeginTab("Records".AsSpan()))
-			{
-				DrawRows(gui, report.Records);
-				gui.EndTab();
-			}
-
-			if (gui.BeginTab("History".AsSpan()))
-			{
-				DrawHistory(gui, report);
-				gui.EndTab();
-			}
+			DrawTabPages(gui, report);
 		}
 		finally
 		{
 			gui.EndTabsPane();
+		}
+	}
+
+	private void DrawTabPages(ImGui gui, RunReportView report)
+	{
+		if (gui.BeginTab("Summary".AsSpan()))
+		{
+			DrawRows(gui, report.Summary);
+			gui.EndTab();
+		}
+
+		if (gui.BeginTab("Levels".AsSpan()))
+		{
+			DrawLevels(gui, report);
+			gui.EndTab();
+		}
+
+		if (gui.BeginTab("Records".AsSpan()))
+		{
+			DrawRows(gui, report.Records);
+			gui.EndTab();
+		}
+
+		if (gui.BeginTab("History".AsSpan()))
+		{
+			DrawHistory(gui, report);
+			gui.EndTab();
 		}
 	}
 
@@ -213,10 +209,12 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		foreach (LevelRow level in levels)
 		{
-			if (DrawLevelRow(gui, level))
+			if (!DrawLevelRow(gui, level))
 			{
-				_level = level;
+				continue;
 			}
+
+			_level = level;
 		}
 	}
 
@@ -298,11 +296,13 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		foreach (HistoryRow record in history)
 		{
-			if (HistoryTable.Row(gui, record))
+			if (!HistoryTable.Row(gui, record))
 			{
-				_run = RunReportView.FromRecord(record.Record);
-				_level = null;
+				continue;
 			}
+
+			_run = RunReportView.FromRecord(record.Record);
+			_level = null;
 		}
 	}
 
@@ -338,10 +338,12 @@ public class ResultsScreen : IZeepGUIDrawer
 
 		foreach (LevelRow level in run.Levels)
 		{
-			if (DrawLevelRow(gui, level))
+			if (!DrawLevelRow(gui, level))
 			{
-				_level = level;
+				continue;
 			}
+
+			_level = level;
 		}
 	}
 

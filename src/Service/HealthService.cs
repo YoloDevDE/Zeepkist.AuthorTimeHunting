@@ -7,15 +7,8 @@ using AuthorTimeHunting.Util;
 namespace AuthorTimeHunting.Service;
 
 /// <summary>
-///     Asks the two backends a hunt depends on whether they are still there.
-///     GraphQL is asked with a real query, because "the host answers" and "the level pool
-///     works" are not the same claim - ATH draws its levels from it, and an endpoint that
-///     serves an error page would look healthy to a plain ping.
-///     GTR gets a plain HTTP request and any answer at all counts as up. Its routes are all
-///     POST endpoints behind a login, so there is nothing safe to call; what a status window
-///     can honestly report is that the host is reachable, and it says exactly that.
-///     The two are asked at the same time. They share nothing, and one backend being down should
-///     not add its timeout to the wait for the other.
+///     Asks the two backends a hunt depends on whether they are still there, both at once.
+///     GraphQL gets a real query; GTR only a plain GET, where any answer counts as up.
 /// </summary>
 public class HealthService : IDisposable
 {

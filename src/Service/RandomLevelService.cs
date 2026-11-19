@@ -9,12 +9,8 @@ using ZeepkistNetworking;
 namespace AuthorTimeHunting.Service;
 
 /// <summary>
-///     The pool of levels a run draws from. One instance per run, created by AthStateMachine
-///     - the exclusions it tracks are a within-run rule, and a fresh run starts from a clean
-///     pool.
-///     This used to be a process-wide singleton with no way to clear it, which meant every
-///     run inherited the exclusions of all previous ones. With local playlists as the source
-///     the pool ran dry after a few runs and starting a hunt failed until the game was restarted.
+///     The pool of levels a run draws from. One instance per run, so a fresh run starts from a
+///     clean pool of exclusions.
 /// </summary>
 public class RandomLevelService
 {
@@ -29,13 +25,6 @@ public class RandomLevelService
 		_localLevelCache = localLevelCache;
 	}
 
-	private HashSet<string> FetchedLevelUids { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-	private Dictionary<string, string> DrawnFrom { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-	private List<LevelItem> CachedLevels { get; } = new();
-	private List<LevelItem> PlayedLevels { get; } = new();
-
 	public int CachedCount => CachedLevels.Count;
 
 	public int PlayedCount => PlayedLevels.Count;
@@ -46,10 +35,14 @@ public class RandomLevelService
 
 	public string LastDrawn { get; private set; }
 
-	/// <summary>
-	///     Where the level with this uid came from, or null if this pool never handed it out -
-	///     which is the answer whenever the lobby's own playlist is being played.
-	/// </summary>
+	private HashSet<string> FetchedLevelUids { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+	private Dictionary<string, string> DrawnFrom { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+	private List<LevelItem> CachedLevels { get; } = new();
+	private List<LevelItem> PlayedLevels { get; } = new();
+
+	/// <summary>Where the level with this uid came from, or null if this pool never handed it out.</summary>
 	public string SourceOf(string levelUid)
 	{
 		return string.IsNullOrEmpty(levelUid) ? null : DrawnFrom.GetValueOrDefault(levelUid);
@@ -57,9 +50,7 @@ public class RandomLevelService
 
 	/// <summary>
 	///     What this pool knows about the level with this uid, or null if it never handed it out.
-	///     The lobby's playlist carries a level's name and author and nothing else, so this is the
-	///     only place the author and gold times of a level that has not loaded yet can come from -
-	///     and only for the levels the pool drew itself, with the times attached.
+	///     The only source of medal times for a level that has not loaded yet.
 	/// </summary>
 	public LevelItem Drawn(string levelUid)
 	{

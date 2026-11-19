@@ -2,6 +2,7 @@
 
 namespace AuthorTimeHunting.Util;
 
+/// <summary>Short readable TimeSpan text like <c>1h 5m 3s</c>.</summary>
 public static class TimeSpanExtensions
 {
 	public static string ToFormattedString(this TimeSpan timeSpan)

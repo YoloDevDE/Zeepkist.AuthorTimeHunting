@@ -15,9 +15,6 @@ namespace AuthorTimeHunting.UI.Screens;
 /// <summary>
 ///     Whether the things a hunt depends on are actually there: the two backends, and where
 ///     the level under the wheels came from.
-///     Both questions used to be answerable only by reading the log after the fact. A run that
-///     silently fell back to local playlists looks exactly like one that did not, and a
-///     backend that went down mid-run looks like a mod that broke. This says which it is.
 /// </summary>
 public class StatusWindow : IZeepGUIDrawer
 {

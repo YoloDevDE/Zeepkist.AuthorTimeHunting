@@ -6,21 +6,7 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     Text drawn into a rect at an explicit size and alignment.
-///     Imui's plain gui.Text draws at the theme's body size, left aligned. The HUD needs
-///     neither: a clock is only a clock if it is large, and anything centred in a slice of
-///     the screen has to be centred in the rect too, or it starts at an offset that moves
-///     with the resolution.
-///     Every rect here goes through <see cref="Fits" /> first, and that is not a nicety.
-///     Anything but ImTextOverflow.Overflow makes Imui fit whole lines into the rect -
-///     <c>(int)((boundsHeight + 0.001f) / LineHeight)</c> of them - and a rect one pixel short
-///     of a single line gets zero lines and is drawn as nothing at all. No exception, no
-///     warning, no text. A line is the font's line height rather than the size asked for, which
-///     is the trap: a rect sized generously against the font size can still be under it. Sizing
-///     the rect from the size is the mistake every caller makes once, so it is corrected here
-///     instead of being written down for them.
-/// </summary>
+/// <summary>Text drawn into a rect at an explicit size and alignment.</summary>
 public static class UiText
 {
 	/// <summary>The point below which shrinking has stopped being a way of showing the text.</summary>
@@ -79,18 +65,8 @@ public static class UiText
 		gui.Text(text.AsSpan(), in settings, colour, Fits(gui, rect, fitted));
 	}
 
-	/// <summary>
-	///     The largest size at or under <paramref name="size" /> that fits <paramref name="text" />
-	///     into <paramref name="width" />.
-	///     Text that does not fit used to lose its tail to an ellipsis, and a level called
-	///     "Skyline Sprint Revisit…" is a level you cannot look up, ask about or remember. Nothing on
-	///     this HUD is long enough for shrinking to cost more than cutting does - these are names and
-	///     clocks, not paragraphs - so the rule is that whatever is written is written in full.
-	///     A glyph's advance is proportional to the font size, so the first guess is exact to within
-	///     rounding, and the second measure is what catches the rounding. Below
-	///     <see cref="_smallestSize" /> the text would be there without being readable, and an
-	///     ellipsis is the more honest answer.
-	/// </summary>
+	/// <summary>The largest size at or under <paramref name="size" /> that fits <paramref name="text" /> into <paramref
+	/// name="width" />.</summary>
 	public static float Fit(ImGui gui, string text, float size, float width)
 	{
 		if (width <= 0f || string.IsNullOrEmpty(text))
@@ -116,11 +92,7 @@ public static class UiText
 		return gui.TextDrawer.GetLineHeightFromFontSize(size);
 	}
 
-	/// <summary>
-	///     How wide a line of text comes out. Only worth asking when several runs of text in
-	///     different colours have to sit on one line: Imui draws one colour per call, so the line
-	///     is laid out by measuring the pieces and handing each one the rect it ends in.
-	/// </summary>
+	/// <summary>How wide a line of text comes out.</summary>
 	public static float Width(ImGui gui, string text, float size)
 	{
 		if (string.IsNullOrEmpty(text))

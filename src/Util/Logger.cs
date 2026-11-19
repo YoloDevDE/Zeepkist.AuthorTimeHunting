@@ -3,6 +3,7 @@ using BepInEx.Logging;
 
 namespace AuthorTimeHunting.Util;
 
+/// <summary>Static front for the plugin's BepInEx log source.</summary>
 public static class Logger
 {
 	private static ManualLogSource _logSource;

@@ -1,3 +1,4 @@
+using AuthorTimeHunting.Util;
 using System;
 using System.Collections.Generic;
 using AuthorTimeHunting.Enums;
@@ -11,18 +12,14 @@ using Object = UnityEngine.Object;
 namespace AuthorTimeHunting.Service;
 
 /// <summary>
-///     Writes down what the player and the game did, so a bug report is a timeline rather than
-///     a memory: every key pressed, every screen entered, and every change to the lobby's
-///     playlist and its index.
-///     The playlist half is the reason this exists. A run that walks into a loop does so because
-///     the mod's idea of the playlist and the server's have come apart, and until now the log
-///     showed only what the mod believed - never what the lobby actually held at that moment.
+///     Logs every key pressed, every screen entered and every change to the lobby's playlist,
+///     so a bug report is a timeline rather than a memory.
 /// </summary>
 public class TraceService
 {
 	private static readonly KeyCode[] _keys = (KeyCode[])Enum.GetValues(typeof(KeyCode));
 
-	private TraceBehaviour _behaviour;
+	private TickBehaviour _behaviour;
 	private int _lastCount = int.MinValue;
 	private bool _lastInGame;
 
@@ -33,11 +30,7 @@ public class TraceService
 
 	public TraceService()
 	{
-		GameObject host = new(nameof(TraceService)) { hideFlags = HideFlags.HideAndDontSave };
-
-		Object.DontDestroyOnLoad(host);
-		_behaviour = host.AddComponent<TraceBehaviour>();
-		_behaviour.Bind(this);
+		_behaviour = TickBehaviour.Create(nameof(TraceService), Tick);
 
 		Logger.LogInfo("TraceService: Tracing keys, screens and the lobby playlist.");
 	}
@@ -60,11 +53,7 @@ public class TraceService
 		_behaviour = null;
 	}
 
-	/// <summary>
-	///     Runs every frame, so the three things a screen is made of are compared as they are and
-	///     only written out on the frame one of them actually moved. Building the sentence first and
-	///     comparing that would mean four throwaway strings per frame for a line logged once a minute.
-	/// </summary>
+	/// <summary>Compares the parts rather than the sentence, so no strings are built per frame.</summary>
 	private void TraceScreen()
 	{
 		string scene = SceneManager.GetActiveScene().name;

@@ -4,13 +4,12 @@ using ZeepSDK.ChatCommands;
 namespace AuthorTimeHunting.Commands;
 
 /// <summary>
-///     The mod's only chat command, and its front door: /ath shows or hides the ATH window,
-///     from where everything else can be reached without typing.
-///     It does exactly what the top bar's ATH entry does, on purpose - there is one way in,
-///     and a player who found either one has found the whole mod.
+///     The mod's front door: /ath shows or hides the ATH window, exactly like the top bar's ATH entry.
 /// </summary>
 public class CommandAth : ILocalChatCommand
 {
+	public static event Action CommandTrigger;
+
 	public string Prefix => "/";
 	public string Command => "ath";
 
@@ -30,6 +29,4 @@ public class CommandAth : ILocalChatCommand
 	{
 		CommandTrigger?.Invoke();
 	}
-
-	public static event Action CommandTrigger;
 }

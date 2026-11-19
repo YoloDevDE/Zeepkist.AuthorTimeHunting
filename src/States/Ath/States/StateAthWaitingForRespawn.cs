@@ -3,10 +3,8 @@ using AuthorTimeHunting.States.Ath.StateMachine;
 namespace AuthorTimeHunting.States.Ath.States;
 
 /// <summary>
-///     The author time is in the bag and the level is over; the respawn is what moves the hunt on.
-///     Nothing is announced here. The finish panel already says what was taken and what to do
-///     about it - see <see cref="UI.Hud.FinishVerdict" /> - and a toast saying the same thing in
-///     the opposite corner was the player being told twice.
+///     The author time is beaten and the level is over; the respawn moves the hunt on.
+///     Nothing is announced here - <see cref="UI.Hud.FinishVerdict" /> already says it.
 /// </summary>
 public class StateAthWaitingForRespawn(AthPlayingController phase) : AthState(phase, phase.Ath)
 {

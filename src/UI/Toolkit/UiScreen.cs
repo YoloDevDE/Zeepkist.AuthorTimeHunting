@@ -4,24 +4,11 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     What a screen that takes the whole game over is made of: how wide its content is allowed
-///     to be, the rule under its title, and the order it has to be drawn at.
-///     Two of the mod's screens are looked at while nothing else is happening - the menu before a
-///     hunt and the card between two levels - and both are the only thing worth reading when they
-///     are up. A panel sized to stay out of the way is the wrong shape for that, so they get the
-///     whole screen, and this is what keeps the two of them looking like the same mod.
-///     The content is a column in the middle rather than the full width, because a button that
-///     runs the length of an ultrawide is not a button anyone aims at.
-/// </summary>
+/// <summary>What a screen that takes the whole game over is made of: how wide its content is allowed to be, the rule
+/// under its title, and the order it has to be drawn at.</summary>
 public static class UiScreen
 {
-	/// <summary>
-	///     Above every Imui window, below its popups. Imui hands each window a slice of 128
-	///     starting at zero and starts popups at 1048576, so a screen drawn at this order covers
-	///     the mod's own panels - which is what fullscreen has to mean - without swallowing a
-	///     dropdown opened on top of it.
-	/// </summary>
+	/// <summary>Above every Imui window, below its popups.</summary>
 	public const int Order = 1 << 16;
 
 	private const float _columnFraction = 0.62f;

@@ -8,12 +8,8 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     ATH's entry in the game's top bar. It is not a list of windows any more - it is the
-///     same switch /ath is, and it opens the one screen everything else hangs off.
-///     Eight checkboxes lived here before, one per window, which made the top bar a second
-///     control panel that had to be kept in step with the first. The menu owns that job now.
-///     ZeepSDK only hands a mod a dropdown, never a bare button, so this is a dropdown with a
-///     single item in it - the closest thing to a button the toolbar allows.
+///     ATH's entry in the game's top bar - the same switch /ath is. ZeepSDK only hands a mod a
+///     dropdown, never a bare button, so this is a dropdown with a single item.
 /// </summary>
 public class AthToolbar : IZeepToolbarDrawer
 {

@@ -5,9 +5,7 @@ namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
 ///     One gamemode as the welcome screen draws it: the name, the one-liner, and the rules
-///     already turned into list items. A gamemode describes itself in plain sentences and
-///     knows nothing about dashes - that is this screen's idea of how a list looks, so this is
-///     where it is applied, once.
+///     already turned into dashed list items.
 /// </summary>
 public readonly struct WelcomeMode
 {

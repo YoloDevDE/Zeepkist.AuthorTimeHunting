@@ -6,24 +6,8 @@ using AuthorTimeHunting.Util;
 namespace AuthorTimeHunting.UI.Views;
 
 /// <summary>
-///     The split list as text: one row per checkpoint, in order, and the finish under them.
-///     <code>
-///     1   00:04.221   -0.113   78
-///     2   00:09.874   +0.042   64
-///     3   --:--.---
-///     F   --:--.---
-///     </code>
-///     The game already compares a checkpoint against the best run and says so for one second,
-///     in a popup that is gone before the next corner. What it never shows is the run so far, and
-///     that is the thing worth looking at: one checkpoint lost is a mistake, three in a row is
-///     the wrong line. So the rows stay.
-///     The list is always as long as the level has checkpoints, plus the finish, from the moment
-///     the lights go out. Rows are filled in as they are driven rather than appended, because a
-///     row appearing pushes every row under it down - and the one being read is always the last
-///     one written.
-///     No colours here and nothing from Unity: this is arithmetic on two lists of doubles, which
-///     is what makes it something a test can state exactly. What green means is
-///     <see cref="Screens.SplitsOverlay" />'s business.
+///     The split list as text: one row per checkpoint plus the finish, always full length.
+///     Rows are filled in as they are driven rather than appended, so nothing shifts while read.
 /// </summary>
 public static class SplitsTable
 {
@@ -31,12 +15,9 @@ public static class SplitsTable
 
 	private const string _finishLabel = "F";
 
-	public static IReadOnlyList<SplitRow> Build(int checkpoints, SplitSet run, SplitSet best, double running,
+	public static IReadOnlyList<SplitRow> Build(int checkpoints, SplitSet driven, SplitSet reference, double running,
 		double finishTime, double bestTime)
 	{
-		SplitSet driven = run ?? SplitSet.Empty;
-		SplitSet reference = best ?? SplitSet.Empty;
-
 		List<SplitRow> rows = [];
 
 		for (int i = 0; i < checkpoints; i++)
@@ -50,10 +31,8 @@ public static class SplitsTable
 	}
 
 	/// <summary>
-	///     A checkpoint that has been driven says what it cost, for good: the row freezes the moment
-	///     the car goes through and the next one takes over. Before that, the one being driven at
-	///     counts up against its own reference, which is the same question the ticker asks about the
-	///     medal and the same answer a row further down would be too late to give.
+	///     A driven checkpoint freezes its row; the one being driven at counts up against its
+	///     own reference.
 	/// </summary>
 	private static SplitRow Checkpoint(int index, SplitSet run, SplitSet best, double running)
 	{

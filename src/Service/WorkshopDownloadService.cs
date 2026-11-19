@@ -1,3 +1,4 @@
+using AuthorTimeHunting.Util;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -13,28 +14,9 @@ using Object = UnityEngine.Object;
 namespace AuthorTimeHunting.Service;
 
 /// <summary>
-///     Keeps the next level in the playlist downloaded before the game needs it.
-///     Left alone, the download starts when the lobby switches to the level - which happens
-///     during the podium, so the podium sits there waiting for Steam. The lobby announces its
-///     next level long before that, so the download can run while the player is still
-///     driving.
-///     The anchor is ZeepkistLobby.NextPlaylistIndex, which the host maintains and which
-///     already accounts for random playlists and wrapping around the end. That makes this
-///     work for a plain lobby playlist just as well as for ATH's own random levels - it never
-///     has to know who put the level there.
-///     It talks to Steam directly instead of going through WorkshopManager, and that is the
-///     whole point. WorkshopManager.DownloadWorkshopLevel puts the item into a dictionary of
-///     tracked downloads and only takes it out again once Steam reports it installed. While it
-///     sits in there, the game's own ZeepkistNetwork.LoadLevelToSendToServer - which the server
-///     triggers to have this client upload the level - calls TrackItemManually, an unguarded
-///     Dictionary.Add on the same key. It throws, the upload sends an empty level data packet,
-///     and the lobby skips the level. Prefetching the next level is exactly the case where both
-///     happen to the same id at the same time, so the pre-download was reliably breaking the
-///     level it was meant to speed up.
-///     Steam does the deduplicating itself, so nothing is lost by not being tracked: an item
-///     already installed and current returns immediately, and OnItemInstalled still fires, which
-///     is what gets the level into LevelManager.
-///     Downloading is not subscribing - this never subscribes the player to anything.
+///     Downloads the lobby's next level (ZeepkistLobby.NextPlaylistIndex) while the player still drives.
+///     Talks to Steam directly: WorkshopManager's tracking throws on the game's own upload of the
+///     same id, and the lobby then skips the level. Never subscribes the player to anything.
 /// </summary>
 public class WorkshopDownloadService
 {
@@ -42,16 +24,12 @@ public class WorkshopDownloadService
 
 	private readonly Dictionary<ulong, Task<bool>> _downloads = new();
 
-	private PrefetchBehaviour _behaviour;
+	private TickBehaviour _behaviour;
 	private string _lastPrefetchedUid;
 
 	public WorkshopDownloadService()
 	{
-		GameObject host = new(nameof(WorkshopDownloadService)) { hideFlags = HideFlags.HideAndDontSave };
-
-		Object.DontDestroyOnLoad(host);
-		_behaviour = host.AddComponent<PrefetchBehaviour>();
-		_behaviour.Bind(this);
+		_behaviour = TickBehaviour.Create(nameof(WorkshopDownloadService), PrefetchNextLevel);
 	}
 
 	public void EnsureDownloaded(OnlineZeeplevel level)
@@ -120,6 +98,17 @@ public class WorkshopDownloadService
 		EnsureDownloaded(next);
 	}
 
+	public void Dispose()
+	{
+		if (_behaviour == null)
+		{
+			return;
+		}
+
+		Object.Destroy(_behaviour.gameObject);
+		_behaviour = null;
+	}
+
 	private static OnlineZeeplevel GetNextLevel()
 	{
 		ZeepkistLobby lobby = ZeepkistNetwork.CurrentLobby;
@@ -180,16 +169,5 @@ public class WorkshopDownloadService
 
 			return false;
 		}
-	}
-
-	public void Dispose()
-	{
-		if (_behaviour == null)
-		{
-			return;
-		}
-
-		Object.Destroy(_behaviour.gameObject);
-		_behaviour = null;
 	}
 }

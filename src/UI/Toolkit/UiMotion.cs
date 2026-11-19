@@ -3,16 +3,8 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     How far a control is into being hovered, and into being held: 0 for neither, 1 for all the
-///     way there, and the frames in between.
-///     Imui redraws everything every frame and keeps nothing, so a button that is supposed to
-///     take a tenth of a second to light up has nowhere to remember how far along it is. This is
-///     that memory, kept per control id rather than per widget, so a widget stays a method with no
-///     state of its own.
-///     Everything is driven off unscaled time. A paused game still has a menu on top of it, and a
-///     button that stops animating when the run pauses reads as a button that stopped working.
-/// </summary>
+/// <summary>How far a control is into being hovered, and into being held: 0 for neither, 1 for all the way there, and
+/// the frames in between.</summary>
 public static class UiMotion
 {
 	private const float _hoverSeconds = 0.12f;
@@ -58,11 +50,7 @@ public static class UiMotion
 		return next;
 	}
 
-	/// <summary>
-	///     Forgets whatever was not drawn last frame. Control ids belong to the screen that drew
-	///     them, so a page nobody has open would otherwise sit in here for the rest of the session -
-	///     and worse, hand its half-lit value to whichever control inherits the id next.
-	/// </summary>
+	/// <summary>Forgets whatever was not drawn last frame.</summary>
 	private static void Prune()
 	{
 		if (_frame == Time.frameCount)

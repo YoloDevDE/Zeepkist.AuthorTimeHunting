@@ -19,11 +19,7 @@ namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
 ///     The developer panel: what the run and the level pool actually think is going on, and the
-///     shortcuts that make testing a change survivable.
-///     ATH is close to untestable by playing it - a single run is an hour, and half the paths
-///     only open on a medal that takes twenty attempts to earn. So the panel hands them out.
-///     Off by default and opened from the top bar's own "ATH Debug" entry, because a button that
-///     awards an author time is the last thing a real hunt needs within reach.
+///     shortcuts that make testing a change survivable, such as handing out medals.
 /// </summary>
 public class DebugPanel : IZeepGUIDrawer
 {
@@ -138,7 +134,7 @@ public class DebugPanel : IZeepGUIDrawer
 		Line(gui, "State", run.CurrentLeafState?.GetType().Name ?? "none");
 		Line(gui, "Gamemode", run.Gamemode.DisplayName);
 		Line(gui, "Paused", ctx.IsPaused.ToString());
-		Line(gui, "Clock", ctx.CurrentLevel is { IsTiming: true } ? "running" : "stopped");
+		Line(gui, "Clock", ctx.CurrentLevel != null && ctx.CurrentLevel.IsTiming ? "running" : "stopped");
 		Line(gui, "Remaining", TimeFormatter.FormatDuration((int)ctx.GetRemainingTime().TotalMilliseconds));
 		Line(gui, "Levels", UiNumbers.Text(ctx.Levels.Count));
 		Line(gui, "AT/Gold/Pen", $"{ctx.AuthorMedals} / {ctx.GoldMedals} / {ctx.Penalties}");
@@ -229,8 +225,7 @@ public class DebugPanel : IZeepGUIDrawer
 
 		level.PersonalBestTime = clamped;
 		run.Ctx.LastRunTime = clamped;
-		run.Ctx.LastRunMedalStatus = clamped <= level.AuthorTime ? LevelStatus.Author :
-			clamped <= level.GoldTime ? LevelStatus.Gold : LevelStatus.Unknown;
+		run.Ctx.LastRunMedalStatus = level.MedalFor(clamped);
 
 		FrogNotification.Info($"Granted {TimeFormatter.FormatTime(clamped)} -> {level.StatusString}");
 	}

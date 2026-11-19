@@ -7,14 +7,8 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     A picture baked into the plugin, loaded once on the first ask and dropped with the
-///     session: the mod's crest, the menu's backdrop.
-///     It used to be loaded and owned by the loading screen alone. The bar wants the same crest,
-///     and two screens each carrying their own copy of the same PNG is one copy too many - so
-///     every picture lives here and is handed out by the composition root, which is also what
-///     stops the second one being a second class that does the same thing.
-/// </summary>
+/// <summary>A picture baked into the plugin, loaded once on the first ask and dropped with the session: the mod's crest,
+/// the menu's backdrop.</summary>
 public class AthImage : IDisposable
 {
 	private readonly string _resource;
@@ -48,11 +42,8 @@ public class AthImage : IDisposable
 		}
 	}
 
-	/// <summary>
-	///     The same image as a Sprite, for the parts of the mod that hang it on one of the game's own
-	///     UI controls rather than drawing it themselves. Imui takes a texture; UnityEngine.UI takes a
-	///     sprite, and one texture can carry both.
-	/// </summary>
+	/// <summary>The same image as a Sprite, for the parts of the mod that hang it on one of the game's own UI controls
+	/// rather than drawing it themselves.</summary>
 	public Sprite Sprite
 	{
 		get

@@ -12,20 +12,8 @@ using ZeepSDK.Chat;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The five things a player does to a running hunt: skip, report the level broken, pause,
-///     restart, stop.
-///     It is not a window any more. It used to own a corner of the screen and hold it all hour
-///     for five buttons that get pressed a handful of times, so it moved into the drawer under
-///     <see cref="RunOverlay" /> and is drawn into whatever rect the bar hands it. That is why
-///     there is no Visible here and no placement: the bar decides when and where, this decides
-///     what.
-///     Each button is its symbol over its word. They were labelled buttons first, which is what
-///     made the panel as wide as it was; then they were symbols alone, which made them five
-///     identical boxes in a row - a shape is only worth a word once it has been learned, and five
-///     presses an hour is not enough to learn one. The tile is both, and it is the smallest thing
-///     that is.
-///     The price of a skip is written above the row. It is the one thing here that changes hour
-///     to hour - free, gold, penalty, fatal - and the one thing no icon can carry.
+///     The five things a player does to a running hunt: skip, report broken, pause, restart, stop.
+///     Drawn into the drawer under <see cref="RunOverlay" />, which decides when and where.
 /// </summary>
 public class ControlPanel
 {
@@ -33,19 +21,9 @@ public class ControlPanel
 
 	private const string _stopLabel = "Stop";
 
-	/// <summary>
-	///     Barely wider than tall. The word underneath the symbol is what sets the width, and the
-	///     tile was wider than that when the symbol was a triangle drawn to fill its box: an icon
-	///     from a set is squared inside the room left over the caption, so a wide tile spends its
-	///     width on air beside a small icon rather than on the icon.
-	/// </summary>
+	/// <summary>Barely wider than tall: the caption under the icon sets the width.</summary>
 	private const float _tileAspect = 1.05f;
 
-	/// <summary>
-	///     Half of what it was. The drawer holds five buttons pressed a handful of times an hour,
-	///     and at its old size it came out over a third of the screen to say so - which is a lot of
-	///     game covered up by a thing whose whole point is that it is not there most of the time.
-	/// </summary>
 	private const float _tileRows = 1.25f;
 
 	/// <summary>The skip price above the row, shrunk with the tiles so the drawer stays one block.</summary>
@@ -54,9 +32,8 @@ public class ControlPanel
 	private float _height;
 
 	/// <summary>
-	///     How far the drawer has to open to show all of this. Taken off the last frame that drew
-	///     it, because the bar has to size the drawer before anything is in it - the guess in rows
-	///     only ever stands until the first measurement.
+	///     How far the drawer has to open to show all of this, measured on the last frame drawn.
+	///     The guess in rows only stands until the first measurement.
 	/// </summary>
 	public float Height(ImGui gui)
 	{
@@ -81,22 +58,9 @@ public class ControlPanel
 		}
 	}
 
-	private static void DrawControls(ImGui gui, AthController run, RunHudView view)
-	{
-		UiText.Centre(gui, view.SkipType, view.SkipColour, UiMetrics.Row(gui, _captionRows),
-			gui.Style.Layout.TextSize * 0.8f);
-
-		Buttons(gui, Strip(gui), run, view, _stopLabel);
-	}
-
 	/// <summary>
-	///     The five buttons themselves, laid into whatever strip they are handed. The main menu puts
-	///     the same five up while a hunt is running, and a second copy of them would be five chances
-	///     for the two to drift apart - one of them keeping a colour the other lost, or still
-	///     sending /fs after the drawer stopped.
-	///     Only the last one is named differently. On the drawer, above a bar that is plainly the
-	///     run, "Stop" is enough; on a menu that also has a Quit on it, the button that ends the hour
-	///     has to say which of the two it is.
+	///     The five buttons, laid into whatever strip they are handed. Shared with the main menu,
+	///     which names the stop button differently because it also has a Quit.
 	/// </summary>
 	public static void Buttons(ImGui gui, ImRect strip, AthController run, RunHudView view, string stopLabel)
 	{
@@ -130,6 +94,24 @@ public class ControlPanel
 		}
 	}
 
+	/// <summary>Five tiles of the given height, centered in the row.</summary>
+	public static ImRect Centred(ImGui gui, ImRect row, float height)
+	{
+		float side = height * _tileAspect;
+		float gap = gui.Style.Layout.InnerSpacing;
+		float width = side * _buttons + gap * (_buttons - 1);
+
+		return new ImRect(row.X + (row.W - width) * 0.5f, row.Y, width, height);
+	}
+
+	private static void DrawControls(ImGui gui, AthController run, RunHudView view)
+	{
+		UiText.Centre(gui, view.SkipType, view.SkipColour, UiMetrics.Row(gui, _captionRows),
+			gui.Style.Layout.TextSize * 0.8f);
+
+		Buttons(gui, Strip(gui), run, view, _stopLabel);
+	}
+
 	private static void TogglePause(AthController run, RunHudView view)
 	{
 		if (view.Paused)
@@ -142,30 +124,12 @@ public class ControlPanel
 		run.PauseRun();
 	}
 
-	/// <summary>
-	///     Five tiles in the middle of the drawer rather than five stretched across it. The bar is
-	///     wide, and a stop button a bar wide is not a button anybody aims at - it is a region you
-	///     fall into.
-	/// </summary>
+	/// <summary>Five tiles in the middle of the drawer rather than stretched across it.</summary>
 	private static ImRect Strip(ImGui gui)
 	{
 		float height = gui.GetRowHeight() * _tileRows;
 
 		return Centred(gui, gui.AddLayoutRectWithSpacing(gui.GetLayoutWidth(), height), height);
-	}
-
-	/// <summary>
-	///     Five tiles of the given height, centred in the row. The menu draws them taller than the
-	///     drawer does - it has the whole screen and the drawer has a strip of it - so the height is
-	///     the caller's to pick and everything else follows from it.
-	/// </summary>
-	public static ImRect Centred(ImGui gui, ImRect row, float height)
-	{
-		float side = height * _tileAspect;
-		float gap = gui.Style.Layout.InnerSpacing;
-		float width = side * _buttons + gap * (_buttons - 1);
-
-		return new ImRect(row.X + (row.W - width) * 0.5f, row.Y, width, height);
 	}
 
 	private static ImRect Tile(ImGui gui, ImRect strip, int index)

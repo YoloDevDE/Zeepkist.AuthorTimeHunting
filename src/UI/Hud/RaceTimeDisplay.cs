@@ -11,54 +11,8 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     Rewrites the game's own running-time display into the only number that decides
-///     anything: how much time is left before the next medal is gone.
-///     <code>
-///     counting down          driving               nothing left to chase
-/// 
-///        ● ● ●
-///      Attempt 3
-///      -00:01.749             00:12.340             00:34.343
-///                            G  -00:02.100
-///     </code>
-///     The time counting up was never the question. Every run is a race against one of two
-///     numbers, and reading a rising clock against a fixed target means doing the subtraction
-///     yourself, every second, while driving. So the subtraction is the display: the medal
-///     still in reach, and the time until it is not. It goes yellow as that time gets short and
-///     flashes red once it is nearly out, and when the last medal is gone it stops pretending:
-///     the row goes away and the clock itself turns red.
-///     Every row is the same width and every line is always written, because a block that
-///     changes shape moves the number the eye came to read. Rows that do not apply right now
-///     are written in a fully transparent colour rather than left out, and so is the sign in
-///     front of a time that has none - a missing minus would slide the digits one glyph left.
-///     The countdown clock is GameMaster's own physics time, which a restart sets to -1.749 and
-///     which reaches zero at the instant the zeepkists are released. That is already the clock
-///     this wants, to the frame, so there is no second one running alongside it - the run's own
-///     ticker cannot serve here because it does not start until the release and the game reads
-///     the finish time straight off it.
-///     A run that is over stops being a race, and the medal row says which way it went: a medal
-///     it had been reddening against turns the colour of a medal taken, and leaving it as the
-///     warning it was while driving reads as a verdict that never came. The game's own finish
-///     panel gets the verdict in words, in place of a time nobody needs twice (see
-///     <see cref="FinishVerdict" />).
-///     The lamps sit above the clock, where a start light belongs: three red, then three amber,
-///     then three green on the release. All three are always on screen and only their colour
-///     changes, because lamps appearing one at a time move the row under the eye that is trying to
-///     read it. Each change gets a beep and the release gets one an octave up (see
-///     <see cref="HudSounds" />), so the start can be taken without looking at all. On a level
-///     whose author time is under two seconds the green light would still be on when the run is
-///     already decided, so it is skipped there.
-///     What it deliberately does not do is copy the light on the start block. That one holds red
-///     for one and a quarter seconds and amber for half of one, which is not a rhythm - it is a
-///     wait and then a surprise, and a start cannot be timed against it. These lamps split the
-///     countdown evenly instead, so red, amber and green are the same distance apart and the
-///     third one is where the second one told you it would be.
-///     No Harmony patch. The game writes this label from ReadyToReset.Update, and Unity runs
-///     every LateUpdate after every Update, so writing from a LateUpdate of our own wins the
-///     frame deterministically. It also means there is nothing to undo: stop writing and the
-///     game's own text is back one frame later.
-/// </summary>
+/// <summary>Rewrites the game's own running-time display into the only number that decides anything: how much time is
+/// left before the next medal is gone.</summary>
 public class RaceTimeDisplay : IDisposable
 {
 	private const string _monoSpace = "0.62em";
@@ -79,27 +33,16 @@ public class RaceTimeDisplay : IDisposable
 	/// <summary>Drawn but not seen: the row keeps its place, the player keeps their eye still.</summary>
 	private const string _hiddenHex = "#00000000";
 
-	/// <summary>
-	///     What GameMaster sets its physics clock to when a level restarts. It ticks up from
-	///     there and the start block releases the moment it hits zero.
-	/// </summary>
+	/// <summary>What GameMaster sets its physics clock to when a level restarts.</summary>
 	private const float _countdownSeconds = 1.749f;
 
-	/// <summary>
-	///     Halfway, which is the whole point: red at the start of the countdown, amber here, green
-	///     on the release puts the same gap between each pair. The game's own TrafficLightCountdown
-	///     goes amber at 1.25s of its 1.75, so its red lasts two and a half times as long as its
-	///     amber, and the two clocks are one clock - so this could have been inherited and is not.
-	/// </summary>
+	/// <summary>Halfway, which is the whole point: red at the start of the countdown, amber here, green on the release
+	/// puts the same gap between each pair.</summary>
 	private const float _amberAt = _countdownSeconds / 2f;
 
 	private const float _greenHoldSeconds = 1f;
 
-	/// <summary>
-	///     The game's label holds one line and grows downwards, and this one holds four. Lifting
-	///     it by all three would put the block where the single line used to be and nothing where
-	///     the eye goes; one line up is the compromise that keeps the clock near its old place.
-	/// </summary>
+	/// <summary>The game's label holds one line and grows downwards, and this one holds four.</summary>
 	private const float _linesUp = 1f;
 
 	private const double _shortestLevelWorthLights = 2d;
@@ -109,11 +52,7 @@ public class RaceTimeDisplay : IDisposable
 
 	private const int _noLights = 0;
 
-	/// <summary>
-	///     The three the light actually has. Filling the lamps in one at a time gave five stages and
-	///     five beeps for one and a half seconds of countdown, which is a drum roll rather than a
-	///     start light - the real one on the start block has three bulbs and lights one at a time.
-	/// </summary>
+	/// <summary>The three the light actually has.</summary>
 	private const int _allRed = 1;
 
 	private const int _allAmber = 2;
@@ -123,31 +62,18 @@ public class RaceTimeDisplay : IDisposable
 	private const double _closeFraction = 0.75;
 	private const double _criticalFraction = 0.92;
 
-	/// <summary>
-	///     How the chase is going, in the three steps the colour already had. Kept as stages rather
-	///     than a flag per sound so each one is announced on its edge, the way the lamps are, and so
-	///     a medal falling away and the next one being picked up walks back down through them.
-	/// </summary>
+	/// <summary>How the chase is going, in the three steps the color already had.</summary>
 	private const int _paceSafe = 0;
 
 	private const int _paceClose = 1;
 
 	private const int _paceCritical = 2;
 
-	/// <summary>
-	///     How often the warning swings from yellow to red and back. Slow enough to read as a
-	///     pulse rather than a strobe - a hard switch between two colours four times a second was
-	///     the loudest thing on the screen at the moment the player most needs to look at the
-	///     track.
-	/// </summary>
+	/// <summary>How often the warning swings from yellow to red and back.</summary>
 	private const float _pulsesPerSecond = 1.2f;
 
 	/// <summary>
-	///     The lamp, in order of preference, from the big filled circle down to a letter every font
-	///     on earth has. The HUD font has none of the good ones and cannot be given them (see
-	///     <see cref="GlyphChoice" />), so it is asked which of these it can draw rather than told.
-	///     The bullet is the one that matters: it is a filled circle, it is small, and a font
-	///     without it does not exist.
+	///     The lamp, in order of preference, from the big filled circle down to a letter every font on earth has.
 	/// </summary>
 	private static readonly string[] _lampGlyphs = ["●", "⬤", "◉", "•", "O"];
 
@@ -155,12 +81,7 @@ public class RaceTimeDisplay : IDisposable
 	private static readonly string _authorHex = Hex(Color.Zeepkist.Medal.Author);
 	private static readonly string _goldHex = Hex(Color.Zeepkist.Medal.Gold);
 
-	/// <summary>
-	///     How the medal being chased is going: comfortable, then tight. Read at a glance out of the
-	///     corner of an eye while driving, so they are the saturated ends of the palette rather than
-	///     the muted ones a panel would use. The last stretch has no colour of its own - it is a
-	///     pulse between two of these, mixed where it is used.
-	/// </summary>
+	/// <summary>How the medal being chased is going: comfortable, then tight.</summary>
 	private static readonly string _safeHex = Hex(Color.Style.Status.Positive);
 
 	private static readonly string _closeHex = Hex(Color.Style.Status.Close);
@@ -172,7 +93,7 @@ public class RaceTimeDisplay : IDisposable
 	/// <summary>The medal is in the bag: nothing left to run out of.</summary>
 	private static readonly string _claimedHex = Hex(Color.Style.Status.Positive);
 
-	/// <summary>Nothing left to chase. Full red, the one colour that cannot be read as anything else.</summary>
+	/// <summary>Nothing left to chase. Full red, the one color that cannot be read as anything else.</summary>
 	private static readonly string _missedHex = Hex(Color.Style.Status.Alert);
 
 	/// <summary>The place a sign takes up on a time that has none.</summary>
@@ -198,8 +119,7 @@ public class RaceTimeDisplay : IDisposable
 	private bool _goldOwned;
 
 	/// <summary>
-	///     The lamp row as it looks at every stage there is, built once the label has said which
-	///     shape it can draw. This is written every frame of every run, and there are only six.
+	///     The lamp row as it looks at every stage there is, built once the label has said which shape it can draw.
 	/// </summary>
 	private string[] _lampRows;
 
@@ -243,11 +163,7 @@ public class RaceTimeDisplay : IDisposable
 
 	private string GoldCell => Cell(MedalSpriteAsset.Gold, _goldLabel, _goldHex, _plainHex);
 
-	/// <summary>
-	///     The attempt is over and its time is on the board. The level's clock is only stopped
-	///     between a scored finish and the next attempt, so a finish the hunt would not score -
-	///     a checkpoint missed - never counts as one.
-	/// </summary>
+	/// <summary>The attempt is over and its time is on the board.</summary>
 	private bool Finished
 	{
 		get
@@ -341,16 +257,7 @@ public class RaceTimeDisplay : IDisposable
 		Judge(player.screenPointer.resultTime);
 	}
 
-	/// <summary>
-	///     A new attempt is a new warning, and the countdown running is what says one has begun.
-	///     Whether gold is already owned is read here rather than off the level while driving,
-	///     because the attempt that claims it sets it the moment it finishes - and a row that
-	///     disappeared on the finish line would take the good news with it.
-	///     The last verdict goes back here too, and unconditionally. It is written to a label the
-	///     game only touches at a finish, so nothing else was going to take it down: the hunt held
-	///     an author time across a respawn and the panel went on saying so through the next attempt.
-	///     The countdown is the moment there is a new attempt to say nothing about yet.
-	/// </summary>
+	/// <summary>A new attempt is a new warning, and the countdown running is what says one has begun.</summary>
 	private void Rearm(float physicsTime)
 	{
 		if (physicsTime >= 0f)
@@ -364,11 +271,7 @@ public class RaceTimeDisplay : IDisposable
 		_goldOwned = ActiveRun?.Ctx.CurrentLevel?.GoldMedalAcquired == true;
 	}
 
-	/// <summary>
-	///     The author time going past, said once. That is the moment the run stops being the run it
-	///     set out to be, and all the display does about it is start counting a different row - a
-	///     sound is what makes it land on a player who is looking at the track.
-	/// </summary>
+	/// <summary>The author time going past, said once.</summary>
 	private void Mourn(double elapsed, double authorTime)
 	{
 		if (_missedAuthor || authorTime <= 0d || elapsed < authorTime || Finished)
@@ -410,9 +313,7 @@ public class RaceTimeDisplay : IDisposable
 	}
 
 	/// <summary>
-	///     The whole block, always written in full: the attempt, the lamps, the clock and the
-	///     medal still in reach. What does not apply right now is painted in
-	///     <see cref="_hiddenHex" /> instead of being left out, so no row ever moves.
+	///     The whole block, always written in full: the attempt, the lamps, the clock and the medal still in reach.
 	/// </summary>
 	private string Compose(int stage, float physicsTime, double elapsed, double goldTime, double authorTime)
 	{
@@ -453,11 +354,8 @@ public class RaceTimeDisplay : IDisposable
 		return countedDown < _amberAt ? _allRed : _allAmber;
 	}
 
-	/// <summary>
-	///     One click per lamp and a different one on the release, played on the edge so a stage
-	///     that lasts half a second does not turn into a drum roll. A sound that will not play is
-	///     not worth losing the display over, so it is caught here rather than upstairs.
-	/// </summary>
+	/// <summary>One click per lamp and a different one on the release, played on the edge so a stage that lasts half a
+	/// second does not turn into a drum roll.</summary>
 	private void Announce(int stage)
 	{
 		if (stage == _lastStage)
@@ -511,7 +409,7 @@ public class RaceTimeDisplay : IDisposable
 		return Centered(_lampRowWidth) + Paint($"{glyph} {glyph} {glyph}", hex);
 	}
 
-	/// <summary>Three red, three amber, three green - the whole light, one colour at a time.</summary>
+	/// <summary>Three red, three amber, three green - the whole light, one color at a time.</summary>
 	private static string LampHex(int stage)
 	{
 		if (stage == _noLights)
@@ -536,10 +434,7 @@ public class RaceTimeDisplay : IDisposable
 	}
 
 	/// <summary>
-	///     The clock itself goes red the moment the last medal is out of reach and stays that way,
-	///     driving or finished. Up to there it is the neutral number the gaps below it are measured
-	///     against; past it there is nothing left to measure, and the run being a write-off is the
-	///     only thing the display still has to say.
+	///     The clock itself goes red the moment the last medal is out of reach and stays that way, driving or finished.
 	/// </summary>
 	private static string ClockRow(bool countingDown, double clock, bool gone)
 	{
@@ -551,15 +446,7 @@ public class RaceTimeDisplay : IDisposable
 		return Row(_emptyCell, _noSign, TimeFormatter.FormatTime(clock), gone ? _missedHex : _plainHex);
 	}
 
-	/// <summary>
-	///     The one medal still in reach, and nothing once there is none.
-	///     A medal that is gone used to keep its row, counting how far past it the clock was. That
-	///     is a number nobody acts on: the run is over either way, and two of them under a red
-	///     clock read as three verdicts on one attempt. The clock going red says it once.
-	///     Gold is only in reach while the level has not got it yet. Once it has, the medal is
-	///     unlocked for good and the row would be counting down to something already owned, so
-	///     the author time is the only thing left to chase and the only thing shown.
-	/// </summary>
+	/// <summary>The one medal still in reach, and nothing once there is none.</summary>
 	private string MedalRows(bool countingDown, bool finished, double elapsed, double goldTime,
 		double authorTime)
 	{
@@ -588,14 +475,8 @@ public class RaceTimeDisplay : IDisposable
 			TimeFormatter.FormatTime(0d), _hiddenHex);
 	}
 
-	/// <summary>
-	///     What a row is labelled with: the medal itself where the game's art and the label are both
-	///     there for it, and the letters it used to say where they are not. A medal is recognised
-	///     where "AT" has to be read, and at the size this is written it is the difference between
-	///     glancing at the row and looking at it.
-	///     The sprite is tinted white rather than the colour the letters carried - white is what
-	///     leaves the medal its own colours, which is the whole reason for using the art.
-	/// </summary>
+	/// <summary>What a row is labelled with: the medal itself where the game's art and the label are both there for it,
+	/// and the letters it used to say where they are not.</summary>
 	private string Cell(int medal, string text, string textHex, string spriteHex)
 	{
 		if (!_sprites)
@@ -633,13 +514,7 @@ public class RaceTimeDisplay : IDisposable
 		return $"<mspace={_monoSpace}>{text}</mspace>";
 	}
 
-	/// <summary>
-	///     The last stretch breathes between the two warning colours rather than sitting on one.
-	///     Colour alone is something the eye stops seeing after a second of it; movement is not, and
-	///     this is the moment the player has to decide whether the run is still worth finishing. It
-	///     is a fade rather than a switch, because a switch is read as a fault light and this is a
-	///     warning - and the number stays fully readable at every point of it either way.
-	/// </summary>
+	/// <summary>The last stretch breathes between the two warning colors rather than sitting on one.</summary>
 	private string PaceHex(double elapsed, double target)
 	{
 		int pace = Pace(elapsed / target);
@@ -669,22 +544,13 @@ public class RaceTimeDisplay : IDisposable
 		return fraction < _criticalFraction ? _paceClose : _paceCritical;
 	}
 
-	/// <summary>
-	///     A sine between 0 and 1. Unscaled, so the rhythm is the same one every time rather than
-	///     one the game's own slowdowns can stretch.
-	/// </summary>
+	/// <summary>A sine between 0 and 1.</summary>
 	private static float Pulse()
 	{
 		return (Mathf.Sin(Time.unscaledTime * _pulsesPerSecond * 2f * Mathf.PI) + 1f) * 0.5f;
 	}
 
-	/// <summary>
-	///     One tone as each step is entered, and none while it lasts. The colour says how long is
-	///     left from then on; a sound repeating that every second would be the mod shouting.
-	///     Stepping back down is silent, which is what lets a medal falling away work: the chase
-	///     moves to the next one, the fraction drops, and that medal gets its own warning later
-	///     instead of inheriting one already spent.
-	/// </summary>
+	/// <summary>One tone as each step is entered, and none while it lasts.</summary>
 	private void Sound(int pace)
 	{
 		if (pace == _lastPace)
@@ -704,11 +570,7 @@ public class RaceTimeDisplay : IDisposable
 		}
 	}
 
-	/// <summary>
-	///     A single beep as the medal gets tight, two as it is about to be gone. One tone for both
-	///     would make the second warning the same news as the first, and the second one is the one
-	///     that decides whether the run is still worth finishing.
-	/// </summary>
+	/// <summary>A single beep as the medal gets tight, two as it is about to be gone.</summary>
 	private void PlayPace(int pace)
 	{
 		if (pace == _paceClose)
@@ -729,28 +591,15 @@ public class RaceTimeDisplay : IDisposable
 		return Color.ToHex(colour);
 	}
 
-	/// <summary>
-	///     Asks for the medals every frame rather than once, and asks on behalf of the label that
-	///     is about to be written rather than on behalf of the session.
-	///     Both halves of that are a bug that was there. The sprites are cut out of the game's own
-	///     art, and the game loads that when it feels like it, so a label borrowed one frame too
-	///     early answers "no medals" - remembering that answer showed "AT" and "G" for the rest of
-	///     the session. Remembering the opposite answer was worse: every level load builds a new
-	///     label, and one already-dressed label was taken as all of them, so from the second level
-	///     on the medal tags were written against whatever sprite asset the game keeps on the new
-	///     one. Asking per label costs a reference comparison, which is what
-	///     <see cref="MedalSpriteAsset.Install" /> does before it assigns anything.
-	/// </summary>
+	/// <summary>Asks for the medals every frame rather than once, and asks on behalf of the label that is about to be
+	/// written rather than on behalf of the session.</summary>
 	private void Dress(TMP_Text label)
 	{
 		_sprites = _medals.Install(label);
 	}
 
-	/// <summary>
-	///     Taking the label and then dressing it, in that order: what the label had is written down
-	///     first, or the sprite asset put on it a moment later is what <see cref="Restore" /> would
-	///     hand back to the game.
-	/// </summary>
+	/// <summary>Taking the label and then dressing it, in that order: what the label had is written down first, or the
+	/// sprite asset put on it a moment later is what <see cref="Restore" /> would hand back to the game.</summary>
 	private void Borrow(TMP_Text label)
 	{
 		Adopt(label);
@@ -780,12 +629,8 @@ public class RaceTimeDisplay : IDisposable
 		transform.anchoredPosition += new Vector2(0f, label.fontSize * _linesUp);
 	}
 
-	/// <summary>
-	///     Handing the labels back includes handing back their sprite assets, so the next run has
-	///     to be dressed again from scratch. Leaving <see cref="_sprites" /> set was the same bug
-	///     the medals already had once, one run later: the display would go on writing sprite tags
-	///     against whatever sprite asset the game keeps on that label.
-	/// </summary>
+	/// <summary>Handing the labels back includes handing back their sprite assets, so the next run has to be dressed
+	/// again from scratch.</summary>
 	private void Restore()
 	{
 		_verdict.Restore();

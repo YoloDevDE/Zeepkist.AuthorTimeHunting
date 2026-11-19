@@ -11,6 +11,7 @@ using ZeepSDK.UI;
 
 namespace AuthorTimeHunting;
 
+/// <summary>The BepInEx entry point that wires up the mod.</summary>
 [BepInPlugin(MyPluginInfo.PLUGIN_GUID, MyPluginInfo.PLUGIN_NAME, MyPluginInfo.PLUGIN_VERSION)]
 [BepInDependency("ZeepSDK")]
 public class Plugin : BaseUnityPlugin
@@ -64,25 +65,7 @@ public class Plugin : BaseUnityPlugin
 
 	private void OnDestroy()
 	{
-		if (Services != null)
-		{
-			CommandAth.CommandTrigger -= Services.Menu.Toggle;
-			Services.PlayMenu.Dispose();
-			UIApi.RemoveZeepGUIDrawer(Services.RunOverlay);
-			UIApi.RemoveZeepGUIDrawer(Services.Leaderboard);
-			UIApi.RemoveZeepGUIDrawer(Services.Splits);
-			UIApi.RemoveZeepGUIDrawer(Services.LevelSummary);
-			UIApi.RemoveZeepGUIDrawer(Services.Results);
-			UIApi.RemoveZeepGUIDrawer(Services.Help);
-			UIApi.RemoveZeepGUIDrawer(Services.Welcome);
-			UIApi.RemoveZeepGUIDrawer(Services.Menu);
-			UIApi.RemoveZeepGUIDrawer(Services.Status);
-			UIApi.RemoveZeepGUIDrawer(Services.Debug);
-			UIApi.RemoveZeepGUIDrawer(Services.Loading);
-			UIApi.RemoveToolbarDrawer(Services.Toolbar);
-			UIApi.RemoveToolbarDrawer(Services.DebugToolbar);
-		}
-
+		RemoveDrawers();
 		Services?.RaceTime.Dispose();
 		Services?.Loading.Dispose();
 		Services?.Thumbnail.Dispose();
@@ -94,6 +77,30 @@ public class Plugin : BaseUnityPlugin
 		Services?.WorkshopDownloads.Dispose();
 		_harmony?.UnpatchSelf();
 		_harmony = null;
+	}
+
+	private void RemoveDrawers()
+	{
+		if (Services == null)
+		{
+			return;
+		}
+
+		CommandAth.CommandTrigger -= Services.Menu.Toggle;
+		Services.PlayMenu.Dispose();
+		UIApi.RemoveZeepGUIDrawer(Services.RunOverlay);
+		UIApi.RemoveZeepGUIDrawer(Services.Leaderboard);
+		UIApi.RemoveZeepGUIDrawer(Services.Splits);
+		UIApi.RemoveZeepGUIDrawer(Services.LevelSummary);
+		UIApi.RemoveZeepGUIDrawer(Services.Results);
+		UIApi.RemoveZeepGUIDrawer(Services.Help);
+		UIApi.RemoveZeepGUIDrawer(Services.Welcome);
+		UIApi.RemoveZeepGUIDrawer(Services.Menu);
+		UIApi.RemoveZeepGUIDrawer(Services.Status);
+		UIApi.RemoveZeepGUIDrawer(Services.Debug);
+		UIApi.RemoveZeepGUIDrawer(Services.Loading);
+		UIApi.RemoveToolbarDrawer(Services.Toolbar);
+		UIApi.RemoveToolbarDrawer(Services.DebugToolbar);
 	}
 
 	private void InitializeConfig()

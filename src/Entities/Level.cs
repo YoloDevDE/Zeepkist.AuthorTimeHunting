@@ -45,14 +45,11 @@ public class Level
 				return LevelStatus.Broken;
 			}
 
-			if (PersonalBestTime <= AuthorTime && PersonalBestTime >= 0)
-			{
-				return LevelStatus.Author;
-			}
+			LevelStatus medal = PersonalBestTime >= 0 ? MedalFor(PersonalBestTime) : LevelStatus.Unknown;
 
-			if (PersonalBestTime <= GoldTime && PersonalBestTime >= 0)
+			if (medal != LevelStatus.Unknown)
 			{
-				return LevelStatus.Gold;
+				return medal;
 			}
 
 			if (FreeSkipped)
@@ -65,9 +62,7 @@ public class Level
 				return LevelStatus.Failed;
 			}
 
-			{
-				return LevelStatus.Unknown;
-			}
+			return LevelStatus.Unknown;
 		}
 	}
 
@@ -89,11 +84,7 @@ public class Level
 
 	/// <summary>
 	///     The best each checkpoint has been driven, which is what an attempt is measured against.
-	///     It used to be the splits of the best finished run, and that made it worth nothing for
-	///     most of a hunt: a level is respawned out of far more often than it is finished, and until
-	///     the first clean run there was no reference at all - so the column the panel exists for
-	///     was empty exactly while it was being needed. Kept per checkpoint it survives every
-	///     respawn, and <see cref="SplitSet.Best" /> says what "better" means.
+	///     Kept per checkpoint so it survives every respawn; <see cref="SplitSet.Best" /> says what "better" means.
 	/// </summary>
 	public SplitSet BestSplits { get; private set; } = SplitSet.Empty;
 
@@ -104,10 +95,23 @@ public class Level
 	/// </summary>
 	private SplitSet AttemptSplits { get; set; } = SplitSet.Empty;
 
-	public TimeSpan TimeWasted =>
-		LevelBroken ? TimeSpan.Zero
-		: AuthorTimeAcquired ? GetPlayDuration() - TimeSpan.FromSeconds(PersonalBestTime)
-		: GetPlayDuration();
+	public TimeSpan TimeWasted
+	{
+		get
+		{
+			if (LevelBroken)
+			{
+				return TimeSpan.Zero;
+			}
+
+			if (AuthorTimeAcquired)
+			{
+				return GetPlayDuration() - TimeSpan.FromSeconds(PersonalBestTime);
+			}
+
+			return GetPlayDuration();
+		}
+	}
 
 	public string StatusString
 	{
@@ -137,20 +141,35 @@ public class Level
 
 	public bool IsTiming => TimeStamps.Count % 2 == 1;
 
+	/// <summary>The medal a run of <paramref name="time" /> earns on this level.</summary>
+	public LevelStatus MedalFor(float time)
+	{
+		if (time <= AuthorTime)
+		{
+			return LevelStatus.Author;
+		}
+
+		return time <= GoldTime ? LevelStatus.Gold : LevelStatus.Unknown;
+	}
+
 	public void PauseTiming()
 	{
-		if (TimeStamps.Count % 2 == 1)
+		if (TimeStamps.Count % 2 == 0)
 		{
-			TimeStamps.Add(DateTime.Now);
+			return;
 		}
+
+		TimeStamps.Add(DateTime.Now);
 	}
 
 	public void ResumeTiming()
 	{
-		if (TimeStamps.Count % 2 == 0)
+		if (TimeStamps.Count % 2 == 1)
 		{
-			TimeStamps.Add(DateTime.Now);
+			return;
 		}
+
+		TimeStamps.Add(DateTime.Now);
 	}
 
 	/// <summary>
@@ -166,7 +185,7 @@ public class Level
 	/// <summary>Where the attempt being driven has got to, as the game last reported it.</summary>
 	public void TrackSplits(SplitSet splits)
 	{
-		AttemptSplits = splits ?? SplitSet.Empty;
+		AttemptSplits = splits;
 	}
 
 	/// <summary>
@@ -240,10 +259,12 @@ public class Level
 
 			TimeSpan sessionDuration = endTime - startTime;
 
-			if (sessionDuration > TimeSpan.Zero)
+			if (sessionDuration <= TimeSpan.Zero)
 			{
-				result += sessionDuration;
+				continue;
 			}
+
+			result += sessionDuration;
 		}
 
 		if (TimeStamps.Count % 2 == 1)
@@ -256,12 +277,14 @@ public class Level
 
 	public override bool Equals(object obj)
 	{
-		if (obj is Level other)
+		Level other = obj as Level;
+
+		if (other == null)
 		{
-			return LevelUid == other.LevelUid;
+			return false;
 		}
 
-		return false;
+		return LevelUid == other.LevelUid;
 	}
 
 	public override int GetHashCode()

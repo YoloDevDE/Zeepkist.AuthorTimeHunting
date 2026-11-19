@@ -3,12 +3,8 @@ using UnityEngine;
 namespace AuthorTimeHunting.Util;
 
 /// <summary>
-///     Every colour the mod draws, in one place, hung off <see cref="Color" /> itself so a call
-///     site reads as one chain: <c>Color.Style.Status.Danger</c>, <c>Color.Zeepkist.Medal.Author</c>.
-///     Groups are picked by what a thing means, the way a document picks Heading over
-///     "bold, 18pt".
-///     This file breaks the repo's rules on purpose: nested types and many types in one file are
-///     what keeps the whole palette readable as a single table. It is the only such exception.
+///     Every color the mod draws, hung off <see cref="Color" />: <c>Color.Style.Status.Danger</c>.
+///     Nested types on purpose - the palette reads as one table. The only such exception.
 /// </summary>
 public static class ColorExtensions
 {
@@ -45,18 +41,16 @@ public static class ColorExtensions
 		}
 
 		/// <summary>
-		///     The other direction, in the form a TextMeshPro tag wants: <c>#RRGGBB</c>. The alpha is
-		///     left off because a tag that carries one is a tag that can hide its own text, and every
-		///     hidden thing the mod writes says so with a colour of its own.
+		///     <c>#RRGGBB</c> for a TextMeshPro tag. Alpha is left off so a tag cannot hide its own text.
 		/// </summary>
-		public static string ToHex(Color32 colour)
+		public static string ToHex(Color32 color)
 		{
-			return $"#{colour.r:X2}{colour.g:X2}{colour.b:X2}";
+			return $"#{color.r:X2}{color.g:X2}{color.b:X2}";
 		}
 	}
 
 	/// <summary>The mod's own palette.</summary>
-	public sealed class StyleColors
+	public class StyleColors
 	{
 		public TextColors Text { get; } = new();
 
@@ -67,8 +61,8 @@ public static class ColorExtensions
 		public SurfaceColors Surface { get; } = new();
 	}
 
-	/// <summary>What written text is worth: body, aside, heading, and the words that carry their own colour.</summary>
-	public sealed class TextColors
+	/// <summary>What written text is worth: body, aside, heading, and the words that carry their own color.</summary>
+	public class TextColors
 	{
 		public Color32 Default { get; } = new(230, 230, 230, 255);
 
@@ -82,12 +76,12 @@ public static class ColorExtensions
 
 		public Color32 AuthorName { get; } = new(255, 215, 0, 255);
 
-		/// <summary>The little word between two names, coloured so that both of them read as names.</summary>
+		/// <summary>The little word between two names, colored so that both of them read as names.</summary>
 		public Color32 Joiner { get; } = new(255, 150, 60, 255);
 	}
 
 	/// <summary>How a value or an outcome stands: fine, worth a look, or lost.</summary>
-	public sealed class StatusColors
+	public class StatusColors
 	{
 		public Color32 Good { get; } = new(66, 179, 54, 255);
 
@@ -114,7 +108,7 @@ public static class ColorExtensions
 	}
 
 	/// <summary>The accent a button carries, so the same action always looks the same.</summary>
-	public sealed class ActionColors
+	public class ActionColors
 	{
 		public Color32 Skip { get; } = new(46, 104, 168, 255);
 
@@ -130,7 +124,7 @@ public static class ColorExtensions
 	}
 
 	/// <summary>What is drawn behind the text: panel backgrounds, bar tracks, unlit things, plain white.</summary>
-	public sealed class SurfaceColors
+	public class SurfaceColors
 	{
 		public Color32 Panel { get; } = new(12, 14, 18, 214);
 
@@ -142,14 +136,12 @@ public static class ColorExtensions
 		public Color32 Backdrop { get; } = new(8, 9, 12, 242);
 
 		/// <summary>
-		///     The same, thinned until a picture behind it is still a picture. Anything darker and
-		///     the backdrop might as well be flat; anything lighter and the words stop being words.
+		///     The backdrop thinned until a picture behind it is still a picture.
 		/// </summary>
 		public Color32 Veil { get; } = new(8, 9, 12, 176);
 
 		/// <summary>
-		///     The same, for a screen the player still has to see past - the podium behind the level
-		///     summary is where "press Y" is written, and covering that up would strand them.
+		///     The backdrop for a screen the player still has to see past, like the podium's "press Y".
 		/// </summary>
 		public Color32 Shade { get; } = new(8, 9, 12, 208);
 
@@ -159,11 +151,7 @@ public static class ColorExtensions
 		public Color32 TileHovered { get; } = new(255, 255, 255, 48);
 
 		/// <summary>
-		///     A button that is a button: opaque, so the picture behind the menu stops showing
-		///     through the thing you are supposed to press. The tile colours above are a wash over
-		///     whatever is behind them, which is right for a panel and wrong for a menu over art -
-		///     six translucent rectangles over a photograph read as six lighter patches of
-		///     photograph.
+		///     An opaque button, so the art behind the menu does not show through it.
 		/// </summary>
 		public Color32 Button { get; } = new(30, 33, 40, 255);
 
@@ -178,14 +166,14 @@ public static class ColorExtensions
 		public Color32 Unlit { get; } = new(64, 64, 64, 255);
 	}
 
-	/// <summary>Everything the game itself gives a colour to.</summary>
-	public sealed class ZeepkistColors
+	/// <summary>Everything the game itself gives a color to.</summary>
+	public class ZeepkistColors
 	{
 		public MedalColors Medal { get; } = new();
 	}
 
-	/// <summary>The colours the game gives its medals.</summary>
-	public sealed class MedalColors
+	/// <summary>The colors the game gives its medals.</summary>
+	public class MedalColors
 	{
 		public Color32 Author { get; } = new(134, 56, 147, 255);
 

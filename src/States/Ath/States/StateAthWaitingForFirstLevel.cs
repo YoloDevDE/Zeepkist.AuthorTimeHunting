@@ -8,11 +8,7 @@ using ZeepkistNetworking;
 namespace AuthorTimeHunting.States.Ath.States;
 
 /// <summary>
-///     Nothing here waits on a clock. A run used to sit through five silent seconds before
-///     skipping to its first level, which was a guess at how long the playlist takes to reach
-///     the server. Instead it waits for the level itself to be on disk, so the skip goes out
-///     the moment it can - and the player, who has just watched a ten second countdown on the
-///     welcome screen, gets the level they were counting down to.
+///     Waits for the first level to be on disk, then skips to it the moment it can.
 /// </summary>
 public class StateAthWaitingForFirstLevel(AthStartingController phase, OnlineZeeplevel level)
 	: AthState(phase, phase.Ath)

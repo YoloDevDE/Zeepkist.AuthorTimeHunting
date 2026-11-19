@@ -15,15 +15,8 @@ using Object = UnityEngine.Object;
 namespace AuthorTimeHunting.States.Master.States;
 
 /// <summary>
-///     Opens the lobby the hunt runs in and keeps it out of the room list. A hunt is one player
-///     against the author times, and a room drawing strangers in would hand them a playlist
-///     that skips a level the moment the hunter is done with it.
-///     The lobby is asked to be private at creation and told again once it exists, because the
-///     first is a flag on a packet that may or may not have been honoured and the second is
-///     something that can be read back.
-///     Getting into the lobby is the online menu's job whenever that menu is on screen - it
-///     loads the game scene itself once the server answers. It is only when the lobby was made
-///     from somewhere else that the scene has to be loaded here.
+///     Opens the private lobby the hunt runs in. Privacy is set at creation and again once the
+///     lobby exists; the game scene is only loaded here when the online menu is not on screen.
 /// </summary>
 public class StateMasterCreatingLobby : StateBase
 {
@@ -42,11 +35,7 @@ public class StateMasterCreatingLobby : StateBase
 	private static readonly TimeSpan _levelTimeout = TimeSpan.FromSeconds(60);
 
 	/// <summary>
-	///     A lobby that just opened is not ready to be taken over: the playlist is still the default
-	///     one, the round is running on the server's clock and the host powers have only just
-	///     landed. What says that setup is finished is the round starting, so that is what is waited
-	///     for - a fixed ten seconds was a guess that was either a stall or a race, and usually
-	///     both.
+	///     A fresh lobby is only ready to be taken over once its first round starts.
 	/// </summary>
 	private static readonly TimeSpan _roundTimeout = TimeSpan.FromSeconds(60);
 
@@ -99,10 +88,8 @@ public class StateMasterCreatingLobby : StateBase
 	}
 
 	/// <summary>
-	///     The round the mod set up is running, which is the moment the pretence stops costing
-	///     anything: from here every sound the game makes belongs to the hunt. Leaving is also
-	///     unmuted, in <see cref="Exit" /> - a cancelled start that left the game silent would be
-	///     the worst bug in the mod.
+	///     From the first round on every sound belongs to the hunt, so the game is unmuted here.
+	///     <see cref="Exit" /> unmutes too, so a cancelled start never leaves the game silent.
 	/// </summary>
 	private void OnRoundStarted()
 	{

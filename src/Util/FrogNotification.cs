@@ -43,11 +43,7 @@ public static class FrogNotification
 		Tinted(message, Color.Zeepkist.Medal.Gold, duration);
 	}
 
-	/// <summary>
-	///     The colour goes on the toast, not on its words: a tinted panel with plain text on it reads
-	///     at a glance and from the corner of the eye, which is the only way a toast is ever read
-	///     while driving. Coloured words on a dark panel had to be looked at to be told apart.
-	/// </summary>
+	/// <summary>The color goes on the toast, not its words, so it reads from the corner of the eye.</summary>
 	private static void Tinted(string message, Color32 tint, float duration)
 	{
 		_tagged?.LogCustomColors(message, Color.Style.Surface.Panel, tint, duration);

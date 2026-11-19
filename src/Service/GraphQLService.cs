@@ -10,6 +10,7 @@ using GraphQL.Client.Serializer.Newtonsoft;
 
 namespace AuthorTimeHunting.Service;
 
+/// <summary>Queries the zeepki.st GraphQL backend for levels.</summary>
 public class GraphQLService
 {
 	private GraphQLHttpClient _graphQLClient;
@@ -17,20 +18,6 @@ public class GraphQLService
 	public GraphQLService()
 	{
 		InitializeGraphQLClient();
-	}
-
-	private void InitializeGraphQLClient()
-	{
-		string graphQlUrl = Plugin.Instance.MyConfig.GraphQlUrl.Value;
-		Logger.LogInfo($"Initializing GraphQL client at '{graphQlUrl}'");
-
-		if (_graphQLClient != null)
-		{
-			return;
-		}
-
-		_graphQLClient = new GraphQLHttpClient(graphQlUrl, new NewtonsoftJsonSerializer());
-		Logger.LogInfo("GraphQL client initialized.");
 	}
 
 	/// <summary>
@@ -109,19 +96,6 @@ public class GraphQLService
 					continue;
 				}
 
-				ulong authorId = 0;
-				ulong workshopId = 0;
-
-				if (!string.IsNullOrEmpty(node.AuthorId))
-				{
-					ulong.TryParse(node.AuthorId, out authorId);
-				}
-
-				if (!string.IsNullOrEmpty(node.WorkshopId))
-				{
-					ulong.TryParse(node.WorkshopId, out workshopId);
-				}
-
 				levelItems.Add(new LevelItem
 				{
 					Name = node.Name,
@@ -129,8 +103,8 @@ public class GraphQLService
 					ValidationTimeGold = node.ValidationTimeGold,
 					FileAuthor = node.FileAuthor,
 					FileUid = node.FileUid,
-					AuthorId = authorId,
-					WorkshopId = workshopId
+					AuthorId = ParseId(node.AuthorId),
+					WorkshopId = ParseId(node.WorkshopId)
 				});
 			}
 
@@ -142,5 +116,30 @@ public class GraphQLService
 			Logger.LogError($"GraphQL GetRandomLevelAsync failed: {ex.Message}");
 			throw;
 		}
+	}
+
+	private static ulong ParseId(string id)
+	{
+		if (string.IsNullOrEmpty(id))
+		{
+			return 0;
+		}
+
+		ulong.TryParse(id, out ulong parsed);
+		return parsed;
+	}
+
+	private void InitializeGraphQLClient()
+	{
+		string graphQlUrl = Plugin.Instance.MyConfig.GraphQlUrl.Value;
+		Logger.LogInfo($"Initializing GraphQL client at '{graphQlUrl}'");
+
+		if (_graphQLClient != null)
+		{
+			return;
+		}
+
+		_graphQLClient = new GraphQLHttpClient(graphQlUrl, new NewtonsoftJsonSerializer());
+		Logger.LogInfo("GraphQL client initialized.");
 	}
 }

@@ -8,11 +8,8 @@ using ZeepkistNetworking;
 namespace AuthorTimeHunting.States.Ath.States;
 
 /// <summary>
-///     The level is being driven. The clock runs here and nowhere else.
-///     A finish only ends the state when it is one the game would score - every checkpoint
-///     passed. Crossing the line short of that is a dnf, and a dnf costs the same as never
-///     having reached the finish at all: the level's clock keeps running and the player gets
-///     another attempt.
+///     The level is being driven; the clock runs here and nowhere else. Only a finish with every
+///     checkpoint passed ends the state - anything short of that keeps the clock running.
 /// </summary>
 public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(phase, phase.Ath)
 {
@@ -62,7 +59,7 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 		LevelStatus previousStatus = currentLevel.Status;
 
 		currentLevel.RecordRun(currentResult.Time);
-		LevelStatus runMedalStatus = ResolveRunMedalStatus(currentResult.Time, currentLevel);
+		LevelStatus runMedalStatus = currentLevel.MedalFor(currentResult.Time);
 
 		AthController.Ctx.LastRunTime = currentResult.Time;
 		AthController.Ctx.LastRunMedalStatus = runMedalStatus;
@@ -83,18 +80,6 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 		Update();
 	}
 
-	/// <summary>
-	///     One attempt ends where the next one begins, which is here whichever way the last one
-	///     went - finished, reset, or crashed out. The checkpoints it drove are folded into the
-	///     level's reference first, because from now on the game's own split list belongs to the
-	///     attempt that is starting.
-	/// </summary>
-	private void BeginAttempt()
-	{
-		AthController.Ctx.CurrentLevel.SealAttempt();
-		AthController.Ctx.CurrentLevel.Attempt++;
-	}
-
 	public override void Update()
 	{
 		AthController.Ctx.CurrentLevel.TrackSplits(GameStateObserver.CurrentSplits);
@@ -111,6 +96,16 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 		}
 	}
 
+	/// <summary>
+	///     Seals the last attempt's splits into the level's reference before the game's split list
+	///     starts belonging to the new attempt.
+	/// </summary>
+	private void BeginAttempt()
+	{
+		AthController.Ctx.CurrentLevel.SealAttempt();
+		AthController.Ctx.CurrentLevel.Attempt++;
+	}
+
 	private static int GetMedalRank(LevelStatus status)
 	{
 		return status switch
@@ -119,20 +114,5 @@ public class StateAthWaitingForFinish(AthPlayingController phase) : AthState(pha
 			LevelStatus.Gold => 1,
 			_ => 0
 		};
-	}
-
-	private static LevelStatus ResolveRunMedalStatus(float runTime, Level level)
-	{
-		if (runTime <= level.AuthorTime)
-		{
-			return LevelStatus.Author;
-		}
-
-		if (runTime <= level.GoldTime)
-		{
-			return LevelStatus.Gold;
-		}
-
-		return LevelStatus.Unknown;
 	}
 }

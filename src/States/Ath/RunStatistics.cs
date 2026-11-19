@@ -6,11 +6,7 @@ using AuthorTimeHunting.Entities;
 namespace AuthorTimeHunting.States.Ath;
 
 /// <summary>
-///     The numbers behind the end-of-run summary, derived purely from the levels a run
-///     played. Holds no state of its own and never mutates the list it reads, so it can be
-///     built ad hoc wherever it is needed.
-///     Live counters that the HUD needs every frame (author medals, penalties, remaining
-///     time) deliberately stay on <see cref="AthCtx" /> - those are run state, not summary.
+///     The numbers behind the end-of-run summary, derived read-only from the levels a run played.
 /// </summary>
 public class RunStatistics
 {

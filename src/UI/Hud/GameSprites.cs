@@ -2,13 +2,7 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     The game's own medal sprites.
-///     They hang off PlayerManager as plain public fields, loaded with the game rather than
-///     with the mod, so every one of these can be null - in the main menu there is no
-///     PlayerManager at all. Callers are expected to handle that and fall back to text; the
-///     alternative would be shipping copies of Zeepkist's art in the plugin.
-/// </summary>
+/// <summary>The game's own medal sprites.</summary>
 public static class GameSprites
 {
 	public static Sprite AuthorMedal => PlayerManager.Instance == null ? null : PlayerManager.Instance.authorMedal;

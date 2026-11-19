@@ -5,18 +5,7 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     Puts the mod's drawing above everything the game has, for as long as it needs to be there.
-///     The setup screen exists to hide a lobby being built. Half of that lobby being built is the
-///     game's own loading screen, which is a canvas like any other and sorts against ours by
-///     order - and ours, being a mod's, was never given one worth having. The result was the
-///     trick showing through: a flash of the room list, a flash of the loading screen, and the
-///     illusion that ATH is running the show gone with it.
-///     So while the setup screen is up, the canvas Imui draws on is lifted to the top of the sort
-///     order and put back afterwards. It is put back rather than left there because everything
-///     else the mod draws belongs where the game put it - a run panel over the pause menu would
-///     be its own bug.
-/// </summary>
+/// <summary>Puts the mod's drawing above everything the game has, for as long as it needs to be there.</summary>
 public class OverlayLayer
 {
 	/// <summary>As high as a canvas sorts. Nothing in the game asks for this, which is the point.</summary>
@@ -62,11 +51,7 @@ public class OverlayLayer
 		_raised = false;
 	}
 
-	/// <summary>
-	///     The canvas Imui renders into, found through the backend component that draws it. Looked
-	///     up once and kept: it is created with the game and outlives every scene the mod cares
-	///     about.
-	/// </summary>
+	/// <summary>The canvas Imui renders into, found through the backend component that draws it.</summary>
 	private Canvas Find()
 	{
 		if (_searched && _canvas != null)

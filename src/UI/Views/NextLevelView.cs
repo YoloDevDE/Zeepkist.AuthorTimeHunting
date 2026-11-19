@@ -8,10 +8,7 @@ namespace AuthorTimeHunting.UI.Views;
 
 /// <summary>
 ///     The level the lobby is about to load, as much of it as is known before it loads.
-///     The playlist the host pushed carries a uid, a name and an author and nothing else, so the
-///     two times come from the pool the run drew the level from - which has them for everything it
-///     fetched from the API, and has nothing at all for a lobby playing its own playlist. A time
-///     nobody knows yet is a dash: the level is a few seconds away and will say so itself.
+///     The times come from the run's level pool; a time nobody knows yet is a dash.
 /// </summary>
 public class NextLevelView
 {

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AuthorTimeHunting.Gamemodes;
 using AuthorTimeHunting.UI.Toolkit;
 using AuthorTimeHunting.Util;
@@ -13,16 +14,7 @@ namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
 ///     The screen a player meets before they ever press Start: what ATH is, what the gamemode
-///     they are about to play actually asks of them, and the one button in the mod that can be
-///     abused.
-///     Everything here used to be knowledge you either had from somebody else or worked out by
-///     losing a run to it - the clock, the skip penalties, the three minute ceiling on the level
-///     pool. None of it is visible in the HUD, because the HUD shows what a run is doing, not
-///     what its rules are.
-///     Up when /ath opens the mod, and dismissable, rather than a page in a settings menu nobody
-///     opens. That is also the only moment it appears on its own: a player already in a hunt is
-///     not asking what the rules are. The checkbox at the bottom is the way out for good, and the
-///     top bar is the way back in.
+///     asks of them, and the one button in the mod that can be abused.
 /// </summary>
 public class WelcomeWindow : IZeepGUIDrawer
 {
@@ -133,21 +125,26 @@ public class WelcomeWindow : IZeepGUIDrawer
 
 		try
 		{
-			gui.BeginScrollable();
-
-			try
-			{
-				DrawGamemodes(gui);
-				DrawBrokenLevels(gui);
-			}
-			finally
-			{
-				gui.EndScrollable();
-			}
+			DrawScrollable(gui);
 		}
 		finally
 		{
 			gui.Layout.Pop();
+		}
+	}
+
+	private void DrawScrollable(ImGui gui)
+	{
+		gui.BeginScrollable();
+
+		try
+		{
+			DrawGamemodes(gui);
+			DrawBrokenLevels(gui);
+		}
+		finally
+		{
+			gui.EndScrollable();
 		}
 	}
 
@@ -159,21 +156,26 @@ public class WelcomeWindow : IZeepGUIDrawer
 
 		foreach (WelcomeMode mode in _modes)
 		{
-			UiText.Draw(gui, mode.Name, Color.Zeepkist.Medal.Author, UiMetrics.Row(gui, 1.3f), text * 1.15f, 0f);
-			UiText.Paragraph(gui, mode.Description, Color.Style.Text.Default);
-			gui.AddSpacing();
-
-			foreach (string rule in mode.Rules)
-			{
-				UiText.Paragraph(gui, rule, Color.Style.Text.Default);
-			}
-
-			gui.AddSpacing();
+			DrawGamemode(gui, mode, text);
 		}
 
 		UiText.Paragraph(gui,
 			"More modes are on the way. Classic is the one that exists today, and it is the one every "
 			+ "other mode will be measured against.", Color.Style.Text.Muted);
+
+		gui.AddSpacing();
+	}
+
+	private static void DrawGamemode(ImGui gui, WelcomeMode mode, float text)
+	{
+		UiText.Draw(gui, mode.Name, Color.Zeepkist.Medal.Author, UiMetrics.Row(gui, 1.3f), text * 1.15f, 0f);
+		UiText.Paragraph(gui, mode.Description, Color.Style.Text.Default);
+		gui.AddSpacing();
+
+		foreach (string rule in mode.Rules)
+		{
+			UiText.Paragraph(gui, rule, Color.Style.Text.Default);
+		}
 
 		gui.AddSpacing();
 	}
@@ -218,14 +220,6 @@ public class WelcomeWindow : IZeepGUIDrawer
 
 	private static WelcomeMode[] BuildModes()
 	{
-		IReadOnlyList<IGamemode> modes = Plugin.Instance.Services.Gamemodes.All;
-		WelcomeMode[] built = new WelcomeMode[modes.Count];
-
-		for (int i = 0; i < modes.Count; i++)
-		{
-			built[i] = new WelcomeMode(modes[i]);
-		}
-
-		return built;
+		return Plugin.Instance.Services.Gamemodes.All.Select(mode => new WelcomeMode(mode)).ToArray();
 	}
 }

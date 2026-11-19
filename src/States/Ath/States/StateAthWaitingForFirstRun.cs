@@ -23,6 +23,12 @@ public class StateAthWaitingForFirstRun(AthPlayingController phase) : AthState(p
 		}
 	}
 
+	public override void OnRoundStarted()
+	{
+		_ = AddLevelAsync();
+		Controller.TransitionTo(new StateAthWaitingForFinish(phase));
+	}
+
 	private async Task AddLevelAsync()
 	{
 		if (!AthController.Ctx.Settings.RandomPlaylist)
@@ -42,11 +48,5 @@ public class StateAthWaitingForFirstRun(AthPlayingController phase) : AthState(p
 			Logger.LogError($"StateAthWaitingForFirstRun: Could not pre-load the next level: {e.Message}");
 			FrogNotification.Warn("Could not load the next level - the playlist may run out");
 		}
-	}
-
-	public override void OnRoundStarted()
-	{
-		_ = AddLevelAsync();
-		Controller.TransitionTo(new StateAthWaitingForFinish(phase));
 	}
 }

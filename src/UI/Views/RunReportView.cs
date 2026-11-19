@@ -10,10 +10,8 @@ using UnityEngine;
 namespace AuthorTimeHunting.UI.Views;
 
 /// <summary>
-///     The end-of-run report, as data.
-///     A snapshot, deliberately: it is built the moment a run stops and the run's state
-///     machine is torn down immediately afterwards. A view that held on to AthCtx would be
-///     reading a corpse by the time the player got round to looking at it.
+///     The end-of-run report, as data. A snapshot, because the run's state machine is torn down
+///     right after it is built.
 /// </summary>
 public class RunReportView
 {
@@ -87,8 +85,7 @@ public class RunReportView
 		return new RunReportView
 		{
 			Kicker = "MATCH HISTORY",
-			Headline = records.Count == 0 ? "No runs recorded yet" :
-				records.Count == 1 ? "1 run on record" : $"{records.Count} runs on record",
+			Headline = HistoryHeadline(records.Count),
 			PlayerName = Name(playerName),
 			History = BuildHistory(records),
 			AuthorMedals = records.Sum(record => record.AuthorMedals),
@@ -134,6 +131,41 @@ public class RunReportView
 			Records = [],
 			Levels = BuildLevels(levels)
 		};
+	}
+
+	public static LevelRow[] BuildLevels(IReadOnlyList<Level> levels)
+	{
+		LevelRow[] rows = new LevelRow[levels.Count];
+
+		for (int i = 0; i < levels.Count; i++)
+		{
+			rows[i] = ToRow(levels[i], i + 1);
+		}
+
+		return rows;
+	}
+
+	public static Color32 StatusColour(Level level)
+	{
+		return level.Status switch
+		{
+			LevelStatus.Author => Color.Zeepkist.Medal.Author,
+			LevelStatus.Gold => Color.Zeepkist.Medal.Gold,
+			LevelStatus.Free => Color.Style.Status.FreeSkip,
+			LevelStatus.Broken => Color.Style.Status.Warning,
+			LevelStatus.Failed => Color.Style.Status.Penalty,
+			_ => Color.Style.Text.Muted
+		};
+	}
+
+	private static string HistoryHeadline(int count)
+	{
+		if (count == 0)
+		{
+			return "No runs recorded yet";
+		}
+
+		return count == 1 ? "1 run on record" : $"{count} runs on record";
 	}
 
 	private static LevelRow[] BuildLevels(IReadOnlyList<RunLevelRecord> levels)
@@ -232,24 +264,12 @@ public class RunReportView
 
 		(string author, List<Level> levels) = stats.MostBeatenAuthor;
 
-		if (levels is { Count: > 0 })
+		if (levels != null && levels.Count > 0)
 		{
 			rows.Add(new ReportRow("Most Beaten Author", $"{author} ({levels.Count}x)", Color.Style.Text.AuthorName));
 		}
 
 		return rows.ToArray();
-	}
-
-	public static LevelRow[] BuildLevels(IReadOnlyList<Level> levels)
-	{
-		LevelRow[] rows = new LevelRow[levels.Count];
-
-		for (int i = 0; i < levels.Count; i++)
-		{
-			rows[i] = ToRow(levels[i], i + 1);
-		}
-
-		return rows;
 	}
 
 	private static LevelRow ToRow(Level level, int index)
@@ -271,19 +291,6 @@ public class RunReportView
 			finished ? TimeFormatter.FormatDelta(delta) : null,
 			UiNumbers.Text(level.Crashes),
 			UiNumbers.Text(level.WheelsLost));
-	}
-
-	public static Color32 StatusColour(Level level)
-	{
-		return level.Status switch
-		{
-			LevelStatus.Author => Color.Zeepkist.Medal.Author,
-			LevelStatus.Gold => Color.Zeepkist.Medal.Gold,
-			LevelStatus.Free => Color.Style.Status.FreeSkip,
-			LevelStatus.Broken => Color.Style.Status.Warning,
-			LevelStatus.Failed => Color.Style.Status.Penalty,
-			_ => Color.Style.Text.Muted
-		};
 	}
 
 	private static Color32 StatusColour(string status)

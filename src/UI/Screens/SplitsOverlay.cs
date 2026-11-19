@@ -17,36 +17,13 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The run so far, checkpoint by checkpoint, down the left edge of the screen.
-///     <code>
-///     SPLITS
-///     ─────────────────────────
-///     1    00:04.221   -0.113  78
-///     2    00:09.874   +0.042  64
-///     3    --:--.---
-///     ─────────────────────────
-///     F    --:--.---
-///     </code>
-///     The game says the same thing for one second and then takes it away. A popup answers "was
-///     that checkpoint good", which is the small question; the list answers "is this run still
-///     good", which is the one that decides whether to keep driving or reset - and that answer
-///     is three checkpoints wide, so it has to stay on screen.
-///     Left, because the top is taken and the right is the leaderboard. It is also the side a
-///     right-handed track rarely puts anything on, and the eye is already there for the mirror
-///     of the ticker.
-///     It is built the way the bar is: no window frame, a hand-drawn shape with its inward
-///     corners cut, and an arrival from off the edge it is docked to. Those are not decorations
-///     copied across - they are what makes two panels on two edges of the screen read as one mod
-///     rather than as two overlays that happened to install together.
-///     What it is measured against is the best each checkpoint has been driven - see
-///     <see cref="Level.BestSplits" /> - starting from the player's own replay of the level where
-///     there is one. Not the game's live reference: that one is switched by a game setting and
-///     stored on the network player, so it can quietly be somebody else's idea of a personal best.
+///     The run so far, checkpoint by checkpoint, down the left edge of the screen. Measured
+///     against <see cref="Level.BestSplits" />, not the game's live reference, which a setting
+///     can point at somebody else's run.
 /// </summary>
 public class SplitsOverlay : IZeepGUIDrawer
 {
 	private const string _heading = "SPLITS";
-
 
 	private const float _widthFraction = 0.18f;
 	private const float _minWidth = 240f;
@@ -77,7 +54,6 @@ public class SplitsOverlay : IZeepGUIDrawer
 	/// <summary>How far in the panel has come, 0 off the edge of the screen and 1 at rest.</summary>
 	private float _in;
 
-
 	public AthController ActiveRun { get; set; }
 
 	public bool Visible { get; set; } = true;
@@ -105,15 +81,8 @@ public class SplitsOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     Painted straight onto the canvas, with no window anywhere near it. The first version was
-	///     an Imui window with everything that makes one a window styled away, and it never showed
-	///     up in the game at all: a window is registered with the window manager, and one whose
-	///     rect starts off the edge of the screen - which is where this one arrives from - is not a
-	///     window that manager is willing to lay out.
-	///     Nothing here needs a window anyway. There is nothing to click, nothing to drag and
-	///     nothing to scroll; it is a shape and some text, which is exactly what the canvas draws.
-	///     Left at the default order, so the mod's own screens still cover it - a menu with the
-	///     splits showing through it would be the same bug the other way round.
+	///     Painted straight onto the canvas: Imui will not lay out a window whose rect starts off
+	///     screen. Left at the default order, so the mod's own screens still cover it.
 	/// </summary>
 	private void Paint(ImGui gui, AthCtx ctx)
 	{
@@ -141,8 +110,7 @@ public class SplitsOverlay : IZeepGUIDrawer
 
 	/// <summary>
 	///     A rectangle with the two corners facing into the screen cut away - the bar's silhouette
-	///     turned on its side. The edge against the screen is left square, because that is the edge
-	///     the panel came in through and a shape cut on all four sides floats rather than docks.
+	///     turned on its side.
 	/// </summary>
 	private static void Chamfered(ImGui gui, ImRect rect, float cut)
 	{
@@ -156,12 +124,7 @@ public class SplitsOverlay : IZeepGUIDrawer
 		gui.Canvas.ConvexFill(_points, Color.Style.Surface.Panel);
 	}
 
-	/// <summary>
-	///     How far in the panel has come. It arrives from off the left edge rather than appearing
-	///     there, because a block of numbers that is simply on screen one frame later reads as a
-	///     glitch - and because the bar drops in from the top, so the two of them are the same mod
-	///     arriving rather than two things happening.
-	/// </summary>
+	/// <summary>How far in the panel has come, sliding in from off the left edge.</summary>
 	private float Slide()
 	{
 		_in = Mathf.Clamp01(_in + Time.unscaledDeltaTime / _slideSeconds);
@@ -169,10 +132,7 @@ public class SplitsOverlay : IZeepGUIDrawer
 		return _in;
 	}
 
-	/// <summary>
-	///     Rows first, finish last, with a rule between them - the finish is not a checkpoint and
-	///     is not measured against one, so it does not stand in the same column of numbers.
-	/// </summary>
+	/// <summary>Rows first, finish last, with a rule between them - the finish is not a checkpoint.</summary>
 	private static void DrawList(ImGui gui, ImRect area, float line, IReadOnlyList<SplitRow> rows)
 	{
 		UiColumn column = new(area, line);
@@ -193,19 +153,17 @@ public class SplitsOverlay : IZeepGUIDrawer
 	{
 		float size = gui.Style.Layout.TextSize;
 		bool driven = split.Time != SplitsTable.NoTime;
+		Color32 timeColour = driven ? Color.Style.Surface.White : Color.Style.Text.Muted;
 
 		Text(gui, split.Label, Color.Style.Text.Muted, Cell(row, 0), size * 0.9f, 0f);
-		Text(gui, split.Time, driven ? Color.Style.Surface.White : Color.Style.Text.Muted, Cell(row, 1), size,
-			0f);
+		Text(gui, split.Time, timeColour, Cell(row, 1), size, 0f);
 		Text(gui, split.Gap, PaceColour(split.Pace), Cell(row, 2), size, 1f);
 		Text(gui, split.Speed, PaceColour(split.SpeedPace), Cell(row, 3), size * 0.9f, 1f);
 	}
 
 	/// <summary>
-	///     A line of text on the bare canvas. <see cref="UiText" /> writes through the window it is
-	///     inside and there is no window here, so this is the same job done one layer down - down to
-	///     shrinking rather than cutting what does not fit, because a split with its milliseconds
-	///     trimmed off is a split that says nothing.
+	///     A line of text on the bare canvas, shrunk rather than cut to fit. <see cref="UiText" />
+	///     needs a window and there is none here.
 	/// </summary>
 	private static void Text(ImGui gui, string text, Color32 colour, ImRect rect, float size, float alignX)
 	{
@@ -225,22 +183,14 @@ public class SplitsOverlay : IZeepGUIDrawer
 		return UiWidgets.Cell(row, _weights, column);
 	}
 
-	/// <summary>
-	///     Green for ahead and red for behind, and the muted grey where there is nothing to
-	///     compare against - which is the first run on every level of a hunt, so it has to read
-	///     as "no answer yet" rather than as a verdict.
-	/// </summary>
 	private static Color32 PaceColour(SplitPace pace)
 	{
-		switch (pace)
+		return pace switch
 		{
-			case SplitPace.Ahead:
-				return Color.Style.Status.Positive;
-			case SplitPace.Behind:
-				return Color.Style.Status.Bad;
-			default:
-				return Color.Style.Text.Muted;
-		}
+			SplitPace.Ahead => Color.Style.Status.Positive,
+			SplitPace.Behind => Color.Style.Status.Bad,
+			_ => Color.Style.Text.Muted
+		};
 	}
 
 	private static void Rule(ImGui gui, ImRect rect)
@@ -252,9 +202,8 @@ public class SplitsOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     How tall one row is allowed to be. The theme's own height until the list would run off
-	///     the screen, and whatever fits after that - a short row is readable, a row below the
-	///     bottom edge is not.
+	///     How tall one row is allowed to be: the theme's own height until the list would run off
+	///     the screen, and whatever fits after that.
 	/// </summary>
 	private static float Line(ImGui gui, int rows)
 	{
@@ -266,10 +215,8 @@ public class SplitsOverlay : IZeepGUIDrawer
 	}
 
 	/// <summary>
-	///     The time on the board, and only while it is on the board. The level's clock stops
-	///     between a scored finish and the next attempt, which is exactly the window in which the
-	///     finish row has something true to say - the same test <see cref="Hud.RaceTimeDisplay" />
-	///     makes.
+	///     The time on the board, and only while the level's clock is stopped between a scored
+	///     finish and the next attempt - the same test <see cref="Hud.RaceTimeDisplay" /> makes.
 	/// </summary>
 	private static double FinishTime(AthCtx ctx)
 	{

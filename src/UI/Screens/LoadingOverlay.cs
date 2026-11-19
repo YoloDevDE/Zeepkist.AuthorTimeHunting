@@ -17,21 +17,9 @@ using Logger = AuthorTimeHunting.Util.Logger;
 namespace AuthorTimeHunting.UI.Screens;
 
 /// <summary>
-///     The screen while the mod is doing something the player must not interrupt: leaving a
-///     lobby, reaching the lobby server, opening a new one. Three scene loads and two server
-///     round trips happen in there, and the game shows its own menus in between - a room list
-///     the player could click, a lobby browser that means nothing right now.
-///     So the whole screen is painted over. It is drawn last of all the mod's drawers, which in
-///     an immediate mode GUI is the same as being on top, and the mod's own windows are hidden
-///     before it comes up.
-///     The last phase is the welcome: the fresh lobby needs a moment to settle before a hunt
-///     takes it over, and a screen that says nothing for ten seconds is a screen that looks
-///     hung. So the wait is spent on the rules of the run about to start - the ones a player
-///     would otherwise only learn by losing a run to them - and on a countdown that proves the
-///     mod is still there.
-///     Imui draws everything in one font, so the hierarchy here is made of the three things
-///     that are left: size, letter spacing and colour. The title is spaced out because a line
-///     of large letters with air between them reads as a title and not as a sentence.
+///     The full-screen cover while the mod is doing something the player must not interrupt:
+///     leaving a lobby, reaching the server, opening a new one. Ends on the welcome, which shows
+///     the rules of the run about to start and a countdown.
 /// </summary>
 public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 {
@@ -59,19 +47,12 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 	private const float _dotsPerSecond = 2f;
 
 	/// <summary>
-	///     Nothing the mod waits for takes half a minute, and the clock is put back to the top by
-	///     every step that finishes - so this is thirty seconds of no progress at all, not thirty
-	///     seconds of setup. Past that something has gone wrong that nobody wrote a handler for,
-	///     and a screen covering the whole game is the worst possible thing to leave behind.
+	///     Thirty seconds of no progress at all - every finished step resets the clock. Past that
+	///     something has gone wrong, and a screen covering the whole game must not stay behind.
 	/// </summary>
 	private const float _maxSeconds = 30f;
 
-	/// <summary>
-	///     How long the podium runs for. It is the one wait in the whole setup with a fixed length,
-	///     which is what makes it the only one worth counting down instead of dotting at. The number
-	///     is the podium's and nothing depends on it being exact - the screen goes away when the
-	///     game starts loading, whatever this says at the time.
-	/// </summary>
+	/// <summary>How long the podium runs for - the one wait with a fixed length, so it is counted down.</summary>
 	private const float _podiumSeconds = 8f;
 
 	/// <summary>
@@ -99,9 +80,8 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 	private SetupLine[] _lines = [];
 
 	/// <summary>
-	///     Set once the game has started loading the level the hunt will be played on. Only used to
-	///     say so on the checklist - the screen stays up over the game's own loading screen until
-	///     the hunt has the level, which is the whole point of it.
+	///     Set once the game has started loading the level. Only shown on the checklist - the
+	///     screen stays up until the hunt has the level.
 	/// </summary>
 	private bool _loading;
 
@@ -110,8 +90,7 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 
 	/// <summary>
 	///     Set when the round the lobby was opened with ends, which is the podium starting. From
-	///     here the mod knows which level is coming and the screen stops describing the run about to
-	///     start and starts describing the level about to load.
+	///     here the screen describes the level about to load instead of the run.
 	/// </summary>
 	private bool _podium;
 
@@ -129,9 +108,8 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 	public bool Visible { get; private set; }
 
 	/// <summary>
-	///     The hunt this screen is waiting for. It goes away the moment that hunt has a level
-	///     under the wheels - which is after the game's own loading screen, not before it, so the
-	///     player never looks at a lobby they have no business in.
+	///     The hunt this screen is waiting for. It goes away once that hunt has a level under the
+	///     wheels, after the game's own loading screen.
 	/// </summary>
 	public AthController ActiveRun { get; set; }
 
@@ -167,82 +145,6 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 		}
 	}
 
-	/// <summary>
-	///     Three ways this screen ends: the hunt got its level, the player asked for it to go, or
-	///     nothing has happened for long enough that nothing is going to.
-	///     It used to stand down the moment the game loaded a scene, on the reasoning that the
-	///     game's own loading screen had taken over and the mod should get out of the way. What the
-	///     player got out of that was the lobby, the round, the podium and the level load with
-	///     nothing over them - the mod let go at the first of four scene loads and left the player
-	///     looking at a lobby they had no business in for the length of a podium. So the screen now
-	///     holds until the hunt has a level under the wheels, which is the one moment there is
-	///     something else worth looking at.
-	///     Holding it needs the last two exits to be real, because nothing behind this screen can be
-	///     reached while it is up: a setup that gets stuck must still hand the game back.
-	/// </summary>
-	private bool Done()
-	{
-		if (ActiveRun?.Ctx.CurrentLevel != null)
-		{
-			return true;
-		}
-
-		if (Input.GetKeyDown(KeyCode.Escape))
-		{
-			Logger.LogInfo("LoadingOverlay: Dismissed with Escape.");
-
-			return true;
-		}
-
-		return TimedOut();
-	}
-
-	private bool TimedOut()
-	{
-		if (Time.unscaledTime <= _hideAt)
-		{
-			return false;
-		}
-
-		Logger.LogWarning($"LoadingOverlay: '{Message}' has been up for {_maxSeconds:0} seconds. Standing down.");
-
-		return true;
-	}
-
-	/// <summary>
-	///     The scene load after the podium is the level itself starting to load. It is the last
-	///     entry on the checklist and, just as importantly, the last thing that puts the watchdog
-	///     back to the top: a level coming off the workshop can take longer than the wait before it.
-	/// </summary>
-	private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-	{
-		if (!Visible || !_podium || _loading)
-		{
-			return;
-		}
-
-		_loading = true;
-		Step("Loading the level");
-	}
-
-	/// <summary>
-	///     The round ending is the podium starting, and the podium is the last thing between the
-	///     player and their first level. That is the moment the screen stops saying "wait" and
-	///     starts saying how long for - and the moment the lobby's playlist has settled on which
-	///     level that is, so it is also where the screen starts showing it.
-	/// </summary>
-	private void OnRoundEnded()
-	{
-		if (!Visible)
-		{
-			return;
-		}
-
-		_podium = true;
-		Step("Starting in");
-		CountdownTo(_podiumSeconds);
-	}
-
 	public void Show(string message)
 	{
 		Message = message;
@@ -260,12 +162,8 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 	}
 
 	/// <summary>
-	///     Ticks off whatever the mod was doing and says what it is doing now. The player is looking
-	///     at a screen that is hiding a lobby being built for them; a list that grows is the
-	///     difference between that and a screen that has hung.
-	///     A step never puts the screen back up. It used to, which meant that dismissing it with
-	///     Escape only lasted until the setup reached its next step and threw it over the game
-	///     again.
+	///     Ticks off whatever the mod was doing and says what it is doing now. A step never puts
+	///     the screen back up, so Escape stays dismissed.
 	/// </summary>
 	public void Step(string label)
 	{
@@ -302,11 +200,7 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 		_steps[_steps.Count - 1].Done = true;
 	}
 
-	/// <summary>
-	///     The rules of the run about to start, put up beside the checklist rather than instead of
-	///     it. Setting a lobby up takes as long as it takes, and the rules are the one thing worth
-	///     reading while it does - they are otherwise learned by losing a run to them.
-	/// </summary>
+	/// <summary>The rules of the run about to start, put up beside the checklist rather than instead of it.</summary>
 	public void ShowWelcome(IGamemode gamemode)
 	{
 		_tagline = gamemode.Description;
@@ -321,6 +215,70 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 		_steps.Clear();
 		_tagline = "";
 		_next = null;
+	}
+
+	/// <summary>
+	///     Three ways this screen ends: the hunt got its level, the player pressed Escape, or
+	///     nothing has happened for long enough that nothing is going to.
+	/// </summary>
+	private bool Done()
+	{
+		if (ActiveRun?.Ctx.CurrentLevel != null)
+		{
+			return true;
+		}
+
+		if (Input.GetKeyDown(KeyCode.Escape))
+		{
+			Logger.LogInfo("LoadingOverlay: Dismissed with Escape.");
+
+			return true;
+		}
+
+		return TimedOut();
+	}
+
+	private bool TimedOut()
+	{
+		if (Time.unscaledTime <= _hideAt)
+		{
+			return false;
+		}
+
+		Logger.LogWarning($"LoadingOverlay: '{Message}' has been up for {_maxSeconds:0} seconds. Standing down.");
+
+		return true;
+	}
+
+	/// <summary>
+	///     The scene load after the podium is the level itself starting to load - the last step,
+	///     and the last thing that resets the watchdog.
+	/// </summary>
+	private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+	{
+		if (!Visible || !_podium || _loading)
+		{
+			return;
+		}
+
+		_loading = true;
+		Step("Loading the level");
+	}
+
+	/// <summary>
+	///     The round ending is the podium starting: the screen counts down from here, and the
+	///     lobby's playlist has settled on which level is next.
+	/// </summary>
+	private void OnRoundEnded()
+	{
+		if (!Visible)
+		{
+			return;
+		}
+
+		_podium = true;
+		Step("Starting in");
+		CountdownTo(_podiumSeconds);
 	}
 
 	private static SetupLine[] Describe(IGamemode gamemode)
@@ -338,13 +296,8 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 	}
 
 	/// <summary>
-	///     Once the podium is running, the screen has something better to say than the rules of the
-	///     run: which level is coming. It takes over the same three slots the rules were in - the
-	///     picture, the line under the title and the block of rows - because a player who has read
-	///     the rules through a whole lobby setup has read them, and the level is the thing they are
-	///     actually waiting for.
-	///     Resolved once and kept. The lobby only settles on its next level around the time the
-	///     podium starts, so this is asked every frame until it answers and never again.
+	///     Once the podium is running, shows which level is coming in place of the rules. Asked
+	///     every frame until the lobby answers, then kept.
 	/// </summary>
 	private void Preview()
 	{
@@ -489,11 +442,7 @@ public class LoadingOverlay : IZeepGUIDrawer, IDisposable
 		gui.Image(picture, rect, true);
 	}
 
-	/// <summary>
-	///     The level's own picture once the game has loaded one, the mod's logo until then. The
-	///     thumbnail arrives a frame or two after it is first asked for, and the logo in its place
-	///     keeps the screen from being a hole for those frames.
-	/// </summary>
+	/// <summary>The level's own picture once the game has loaded one, the mod's logo until then.</summary>
 	private Texture2D Picture()
 	{
 		Texture2D level = _next == null ? null : LevelThumbnails.Get(_next.LevelUid);

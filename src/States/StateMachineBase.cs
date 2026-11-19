@@ -6,9 +6,6 @@ namespace AuthorTimeHunting.States;
 /// <summary>
 ///     Drives a set of <see cref="StateBase" /> instances: holds the current one, runs the
 ///     transitions and tears the machine down on request.
-///     This used to be an interface whose transition logic sat in C# 8 default interface
-///     members. That worked, but an interface cannot hold fields, which forced CurrentState
-///     to be publicly settable even though nothing outside ever set it.
 /// </summary>
 public abstract class StateMachineBase
 {
@@ -24,18 +21,6 @@ public abstract class StateMachineBase
 	public abstract StateBase InitialState { get; }
 
 	public abstract StateBase FinalState { get; }
-
-	private static StateBase Leaf(StateBase state)
-	{
-		StateBase sub = state?.SubStateMachine?.CurrentState;
-
-		if (sub == null)
-		{
-			return state;
-		}
-
-		return Leaf(sub);
-	}
 
 	public event Action StateMachineFinished;
 
@@ -79,7 +64,7 @@ public abstract class StateMachineBase
 		CurrentState.SubStateMachine.Init();
 	}
 
-	public virtual void Update()
+	public void Update()
 	{
 		if (CurrentState == null)
 		{
@@ -118,6 +103,11 @@ public abstract class StateMachineBase
 		}
 	}
 
+	public void InvokeFinish()
+	{
+		StateMachineFinished?.Invoke();
+	}
+
 	private void TransitionToFinalState()
 	{
 		if (CurrentState == FinalState)
@@ -132,8 +122,15 @@ public abstract class StateMachineBase
 		TransitionTo(FinalState);
 	}
 
-	public void InvokeFinish()
+	private static StateBase Leaf(StateBase state)
 	{
-		StateMachineFinished?.Invoke();
+		StateBase sub = state?.SubStateMachine?.CurrentState;
+
+		if (sub == null)
+		{
+			return state;
+		}
+
+		return Leaf(sub);
 	}
 }

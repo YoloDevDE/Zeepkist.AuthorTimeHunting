@@ -11,15 +11,16 @@ using Random = UnityEngine.Random;
 
 namespace AuthorTimeHunting.Service;
 
+/// <summary>The levels of the player's local playlists, scanned once and drawn from at random.</summary>
 public class LocalLevelCacheService
 {
 	private bool _initialized;
 
 	private int _skippedLocalLevels;
 
-	private List<LevelItem> CachedLevelItems { get; } = new();
-
 	public int LevelCount => CachedLevelItems.Count;
+
+	private List<LevelItem> CachedLevelItems { get; } = new();
 
 	public void EnsureInitialized()
 	{
@@ -30,6 +31,34 @@ public class LocalLevelCacheService
 
 		_initialized = true;
 		ScanLocalPlaylists();
+	}
+
+	public List<LevelItem> GetRandomLevelItems(int count, IEnumerable<string> excludedUids = null)
+	{
+		EnsureInitialized();
+
+		if (CachedLevelItems.Count == 0)
+		{
+			Logger.LogError("LocalLevelCacheService: No levels in cache.");
+			return new List<LevelItem>();
+		}
+
+		HashSet<string> excluded = new(StringComparer.OrdinalIgnoreCase);
+
+		if (excludedUids != null)
+		{
+			excluded.UnionWith(excludedUids);
+		}
+
+		List<LevelItem> available = CachedLevelItems.Where(l => !excluded.Contains(l.FileUid)).ToList();
+
+		if (available.Count == 0)
+		{
+			Logger.LogWarning("LocalLevelCacheService: All levels have been played. Playlist exhausted.");
+			return new List<LevelItem>();
+		}
+
+		return available.OrderBy(_ => Random.value).Take(count).ToList();
 	}
 
 	private void ScanLocalPlaylists()
@@ -74,15 +103,7 @@ public class LocalLevelCacheService
 
 			foreach (PlaylistSaveJSON playlist in playlists)
 			{
-				if (playlist?.levels == null)
-				{
-					continue;
-				}
-
-				foreach (OnlineZeeplevel level in playlist.levels)
-				{
-					AddLevel(seenUids, level.UID, level.WorkshopID, level.Name, level.Author);
-				}
+				AddPlaylist(seenUids, playlist);
 			}
 
 			Logger.LogInfo(
@@ -128,29 +149,12 @@ public class LocalLevelCacheService
 
 			foreach (string file in files)
 			{
-				try
+				if (!TryAddZeeplist(seenUids, file))
 				{
-					string json = File.ReadAllText(file);
-					ZeeplistFile parsed = JsonConvert.DeserializeObject<ZeeplistFile>(json);
-
-					if (parsed?.Levels == null)
-					{
-						continue;
-					}
-
-					foreach (ZeeplistLevel level in parsed.Levels)
-					{
-						ulong.TryParse(level.WorkshopID, out ulong workshopId);
-						AddLevel(seenUids, level.UID, workshopId, level.Name, level.Author);
-					}
-
-					fileCount++;
+					continue;
 				}
-				catch (Exception ex)
-				{
-					Logger.LogWarning(
-						$"LocalLevelCacheService: Failed to parse {Path.GetFileName(file)}: {ex.Message}");
-				}
+
+				fileCount++;
 			}
 
 			Logger.LogInfo(
@@ -162,11 +166,50 @@ public class LocalLevelCacheService
 		}
 	}
 
+	private void AddPlaylist(HashSet<string> seenUids, PlaylistSaveJSON playlist)
+	{
+		if (playlist?.levels == null)
+		{
+			return;
+		}
+
+		foreach (OnlineZeeplevel level in playlist.levels)
+		{
+			AddLevel(seenUids, level.UID, level.WorkshopID, level.Name, level.Author);
+		}
+	}
+
+	/// <summary>Returns whether the file held a level list.</summary>
+	private bool TryAddZeeplist(HashSet<string> seenUids, string file)
+	{
+		try
+		{
+			string json = File.ReadAllText(file);
+			ZeeplistFile parsed = JsonConvert.DeserializeObject<ZeeplistFile>(json);
+
+			if (parsed?.Levels == null)
+			{
+				return false;
+			}
+
+			foreach (ZeeplistLevel level in parsed.Levels)
+			{
+				ulong.TryParse(level.WorkshopID, out ulong workshopId);
+				AddLevel(seenUids, level.UID, workshopId, level.Name, level.Author);
+			}
+
+			return true;
+		}
+		catch (Exception ex)
+		{
+			Logger.LogWarning($"LocalLevelCacheService: Failed to parse {Path.GetFileName(file)}: {ex.Message}");
+			return false;
+		}
+	}
+
 	/// <summary>
-	///     A level without a workshop id cannot be handed to a lobby: the server has no way to
-	///     fetch it, every client sits on the level it already had, and the run walks into an
-	///     endless "restart the level" loop. Those are counted and dropped here rather than
-	///     found out about halfway through a hunt.
+	///     Drops levels without a workshop id: the server cannot fetch them, and the run would
+	///     loop on "restart the level" forever.
 	/// </summary>
 	private void AddLevel(HashSet<string> seenUids, string uid, ulong workshopId, string name, string author)
 	{
@@ -188,31 +231,6 @@ public class LocalLevelCacheService
 		}
 
 		CachedLevelItems.Add(new LevelItem { FileUid = uid, WorkshopId = workshopId, Name = name, FileAuthor = author });
-	}
-
-	public List<LevelItem> GetRandomLevelItems(int count, IEnumerable<string> excludedUids = null)
-	{
-		EnsureInitialized();
-
-		if (CachedLevelItems.Count == 0)
-		{
-			Logger.LogError("LocalLevelCacheService: No levels in cache.");
-			return new List<LevelItem>();
-		}
-
-		HashSet<string> excluded = excludedUids != null ?
-			new HashSet<string>(excludedUids, StringComparer.OrdinalIgnoreCase) :
-			new HashSet<string>();
-
-		List<LevelItem> available = CachedLevelItems.Where(l => !excluded.Contains(l.FileUid)).ToList();
-
-		if (available.Count == 0)
-		{
-			Logger.LogWarning("LocalLevelCacheService: All levels have been played. Playlist exhausted.");
-			return new List<LevelItem>();
-		}
-
-		return available.OrderBy(_ => Random.value).Take(count).ToList();
 	}
 
 	private static void TryNotifySuccess(string message)

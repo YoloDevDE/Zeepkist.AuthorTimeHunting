@@ -1,16 +1,7 @@
 namespace AuthorTimeHunting.Gamemodes;
 
 /// <summary>
-///     The rules of one run, fixed the moment it starts.
-///     This is what separates one gamemode from another. Everything here used to be read
-///     from <see cref="PluginConfig" /> at the point of use, which meant the rules were
-///     scattered across five states and there was exactly one possible set of them - the
-///     player's. A mode hands over its own set instead, and the states stop caring where
-///     the numbers came from.
-///     Deliberately a plain settings object rather than a set of behaviour hooks. The modes
-///     on the roadmap that only change numbers (Custom, Ranked, Duel) need nothing more, and
-///     the ones that change rules outright (Survival's clock, WR hunt's targets) will want
-///     hooks shaped by what they actually do, not by what we guessed today.
+///     The rules of one run, fixed the moment it starts. Each gamemode hands over its own set.
 /// </summary>
 public class RunSettings
 {

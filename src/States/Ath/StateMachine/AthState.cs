@@ -3,16 +3,9 @@ using AuthorTimeHunting.Service;
 namespace AuthorTimeHunting.States.Ath.StateMachine;
 
 /// <summary>
-///     A state of the run. On top of the lifecycle hooks it inherits, it gets one overridable
-///     method per game event ATH listens to.
-///     None of these are abstract: a state overrides the handful of moments it cares about
-///     and stays silent about the rest. The events themselves are subscribed once, centrally,
-///     by <see cref="StateMachine.AthController" /> and forwarded to whichever state is
-///     current - a state never registers or removes a handler and therefore cannot leak one.
-///     A state that has a sub-machine hands every event it does not claim itself down to the
-///     state currently running in there, so a composite does not have to repeat what its
-///     children already listen for. A leaf has no sub-machine, so for it the default is what
-///     it always was: nothing.
+///     A state of the run with one overridable method per game event, forwarded by
+///     <see cref="StateMachine.AthController" />. By default an event is handed down to the
+///     current sub-state, if any.
 /// </summary>
 public abstract class AthState : StateBase
 {

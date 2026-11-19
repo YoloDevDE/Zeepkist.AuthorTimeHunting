@@ -8,11 +8,7 @@ using AuthorTimeHunting.Service;
 namespace AuthorTimeHunting.States.Ath;
 
 /// <summary>
-///     The state of a single run: which levels were played, how much of the time budget is
-///     left, and the scratch values the states hand to each other.
-///     The end-of-run numbers are not among them: <see cref="RunStatistics" /> reads the level
-///     list once, when a run stops, rather than being carried along by every run that never
-///     asks for it.
+///     The state of a single run: played levels, remaining time budget and scratch values the states share.
 /// </summary>
 public class AthCtx
 {
@@ -27,17 +23,11 @@ public class AthCtx
 		AvaiableFreeSkips = settings.FreeSkips;
 	}
 
-	#region Run Settings
-
 	public RunSettings Settings { get; }
 
 	public int Duration { get; }
 
 	public int PenaltyTimeInMilliseconds { get; }
-
-	#endregion
-
-	#region Run State
 
 	public Level CurrentLevel { get; set; }
 
@@ -53,27 +43,15 @@ public class AthCtx
 
 	public bool IsPaused { get; set; }
 
-	#endregion
-
-	#region Last Run Scratch State
-
 	public LevelStatus LastRunMedalStatus { get; set; } = LevelStatus.Unknown;
 	public bool LastRunMedalWasNew { get; set; }
 	public double LastRunTime { get; set; } = -1;
-
-	#endregion
-
-	#region Live Counters
 
 	public int AuthorMedals => Levels.Count(level => level.Status == LevelStatus.Author);
 
 	public int GoldMedals => Levels.Count(level => level.Status == LevelStatus.Gold);
 
 	public int Penalties => Levels.Count(level => level.Status == LevelStatus.Failed);
-
-	#endregion
-
-	#region Time Budget
 
 	public bool IsTimeRunningLow => GetRemainingTime().TotalMilliseconds <= PenaltyTimeInMilliseconds;
 
@@ -114,10 +92,6 @@ public class AthCtx
 		return shouldNotify;
 	}
 
-	#endregion
-
-	#region Level Management
-
 	public void InitializingNewLevel(LevelScriptableObject levelScriptableObject)
 	{
 		Level level = new(levelScriptableObject);
@@ -133,22 +107,17 @@ public class AthCtx
 		SeedSplits(level);
 	}
 
+	public void ResetRetries()
+	{
+		Retries = _retries;
+	}
+
 	/// <summary>
-	///     A level the player has driven before comes with its own splits, off the game's replay
-	///     file. It is the only reference a hunt can have on the first attempt - everything else it
-	///     knows about a level, it learns by driving it - and on a level nobody has driven it is
-	///     empty, which is what an empty reference column already means.
+	///     Seeds splits from the game's replay file - the only reference a hunt has on the first attempt.
 	/// </summary>
 	private static void SeedSplits(Level level)
 	{
 		level.TrackSplits(GameStateObserver.ReplaySplits(level.LevelUid));
 		level.SealAttempt();
 	}
-
-	public void ResetRetries()
-	{
-		Retries = _retries;
-	}
-
-	#endregion
 }

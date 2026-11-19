@@ -16,11 +16,11 @@ namespace AuthorTimeHunting.States.Ath.States;
 /// </summary>
 public class StateAthWaitingForPlaylist(AthStartingController phase) : AthState(phase, phase.Ath)
 {
-	private const int RoundTimeSeconds = 86400;
-	private const int PushDelay = 2500;
-	private const int SettleDelay = 500;
-	private const int RetryDelay = 500;
-	private const int PlaylistAttempts = 3;
+	private const int _roundTimeSeconds = 86400;
+	private const int _pushDelay = 2500;
+	private const int _settleDelay = 500;
+	private const int _retryDelay = 500;
+	private const int _playlistAttempts = 3;
 
 	private CancellationTokenSource _cts;
 
@@ -52,13 +52,13 @@ public class StateAthWaitingForPlaylist(AthStartingController phase) : AthState(
 
 	private async Task PushPlaylist(CancellationToken stopped)
 	{
-		ZeepkistNetwork.CurrentLobby.RoundTime = RoundTimeSeconds;
+		ZeepkistNetwork.CurrentLobby.RoundTime = _roundTimeSeconds;
 
 		if (!AthController.Ctx.Settings.RandomPlaylist)
 		{
-			await Task.Delay(PushDelay, stopped);
+			await Task.Delay(_pushDelay, stopped);
 			MultiplayerApi.UpdateServerPlaylist();
-			await Task.Delay(SettleDelay, stopped);
+			await Task.Delay(_settleDelay, stopped);
 			Controller.InvokeFinish();
 			return;
 		}
@@ -77,7 +77,7 @@ public class StateAthWaitingForPlaylist(AthStartingController phase) : AthState(
 
 	private async Task<OnlineZeeplevel> DrawFirstLevel(CancellationToken stopped)
 	{
-		for (int attempt = 0; attempt < PlaylistAttempts; attempt++)
+		for (int attempt = 0; attempt < _playlistAttempts; attempt++)
 		{
 			OnlineZeeplevel level = await TryStartPlaylist(stopped);
 
@@ -101,7 +101,7 @@ public class StateAthWaitingForPlaylist(AthStartingController phase) : AthState(
 		catch (Exception ex)
 		{
 			Logger.LogError($"Failed to start playlist: {ex.Message}");
-			await Task.Delay(RetryDelay, stopped);
+			await Task.Delay(_retryDelay, stopped);
 			return null;
 		}
 	}

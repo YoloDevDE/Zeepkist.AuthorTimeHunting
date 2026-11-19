@@ -7,21 +7,7 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>
-///     The game's medals, as characters a TMP label can write.
-///     The run ticker labelled its two rows "AT" and "G", which are the right two letters and the
-///     wrong two things: the player already knows what an author medal looks like, and a letter
-///     has to be read where a medal is recognised. TMP can draw a sprite inline with
-///     <c>&lt;sprite index=0&gt;</c>, so the medals go in the text itself rather than beside it.
-///     What TMP wants for that is a sprite asset, and a sprite asset wants one texture holding
-///     every sprite in it. The game's medals are Sprites on whatever atlas the game put them on,
-///     so they are blitted through a render texture into a strip of our own - through the GPU
-///     rather than through <c>GetPixels</c>, because a texture shipped in a build is not readable
-///     and asking it for its pixels throws.
-///     Nothing here sets <c>faceInfo</c>, and that is deliberate: TMP falls back to the metrics of
-///     the font the sprite is written into and scales the sprite to that font's ascent, so a medal
-///     is exactly as tall as the capitals beside it at any font size, on any label.
-/// </summary>
+/// <summary>The game's medals, as characters a TMP label can write.</summary>
 public class MedalSpriteAsset : IDisposable
 {
 	public const int Author = 0;
@@ -30,11 +16,7 @@ public class MedalSpriteAsset : IDisposable
 
 	public const int OhNo = 2;
 
-	/// <summary>
-	///     The side of one cell in the strip. Medals are drawn a few dozen pixels tall in a HUD and
-	///     this is the next power of two up from that, which is all the resolution the strip can
-	///     usefully carry.
-	/// </summary>
+	/// <summary>The side of one cell in the strip.</summary>
 	private const int _cell = 128;
 
 	private TMP_SpriteAsset _asset;
@@ -55,11 +37,7 @@ public class MedalSpriteAsset : IDisposable
 		_asset = null;
 	}
 
-	/// <summary>
-	///     Hands <paramref name="label" /> the sprites and says whether it got them. Everything here
-	///     depends on the game having loaded its own art, so "no" is an ordinary answer and the
-	///     caller is expected to have letters ready for it.
-	/// </summary>
+	/// <summary>Hands <paramref name="label" /> the sprites and says whether it got them.</summary>
 	public bool Install(TMP_Text label)
 	{
 		if (label == null)
@@ -84,21 +62,13 @@ public class MedalSpriteAsset : IDisposable
 		return true;
 	}
 
-	/// <summary>
-	///     The tag for one medal, tinted. <c>tint=1</c> is what makes the colour apply at all, and
-	///     white leaves the medal its own colours - which is the point of using the art.
-	/// </summary>
+	/// <summary>The tag for one medal, tinted.</summary>
 	public static string Tag(int medal, string hex)
 	{
 		return $"<sprite index={medal} tint=1 color={hex}>";
 	}
 
-	/// <summary>
-	///     Whether <paramref name="medal" /> is a picture this asset actually has. Only the two
-	///     medals are certain: they come with the game the mod is standing in. The emoji is off a
-	///     sprite asset that is found rather than loaded - see <see cref="EmojiSprites" /> - so a
-	///     caller that writes it has to be ready to write words instead.
-	/// </summary>
+	/// <summary>Whether <paramref name="medal" /> is a picture this asset actually has.</summary>
 	public bool Has(int medal)
 	{
 		return Asset() != null && medal < _asset.spriteCharacterTable.Count;
@@ -126,9 +96,7 @@ public class MedalSpriteAsset : IDisposable
 	}
 
 	/// <summary>
-	///     The sprites in the order their indices name them, cut short at the first one the game has
-	///     not got. Nothing after a gap could be addressed anyway - an index is a position in the
-	///     strip - and the medals are worth having on their own.
+	///     The sprites in the order their indices name them, cut short at the first one the game has not got.
 	/// </summary>
 	private static Sprite[] Sprites(Sprite author, Sprite gold)
 	{
@@ -156,21 +124,7 @@ public class MedalSpriteAsset : IDisposable
 		}
 	}
 
-	/// <summary>
-	///     The material goes on last, and that ordering is the whole feature.
-	///     TMP_SpriteAsset.UpdateLookupTables opens with
-	///     <c>if (material != null &amp;&amp; string.IsNullOrEmpty(m_Version)) UpgradeSpriteAsset()</c>,
-	///     and an asset built at runtime satisfies both halves the moment it is handed a material:
-	///     the version only ever gets written by that upgrade. UpgradeSpriteAsset then clears both
-	///     tables and walks <c>spriteInfoList</c> - a plain public field with no initializer, so
-	///     null on anything CreateInstance made. That is the NullReferenceException the medals used
-	///     to die of, thrown from the spriteCharacterTable getter, which calls UpdateLookupTables
-	///     itself while the lookups are still empty.
-	///     With no material there is nothing to upgrade, so the tables survive and the lookups get
-	///     built. Every later UpdateLookupTables inside TMP sits behind its own
-	///     <c>if (lookup == null)</c> and never runs again, which is what makes handing the material
-	///     over afterwards safe.
-	/// </summary>
+	/// <summary>The material goes on last, and that ordering is the whole feature.</summary>
 	private static TMP_SpriteAsset Assemble(Sprite[] sprites)
 	{
 		Texture2D strip = Strip(sprites);
@@ -224,10 +178,7 @@ public class MedalSpriteAsset : IDisposable
 		return strip;
 	}
 
-	/// <summary>
-	///     One medal into its cell. The blit's scale and offset cut the sprite out of whatever atlas
-	///     the game keeps it on, and ReadPixels takes the result back off the GPU into the cell.
-	/// </summary>
+	/// <summary>One medal into its cell.</summary>
 	private static void Paint(Texture2D strip, Sprite sprite, int cell)
 	{
 		Rect area = sprite.textureRect;
@@ -261,10 +212,7 @@ public class MedalSpriteAsset : IDisposable
 		return material;
 	}
 
-	/// <summary>
-	///     Taken off TMP's own sprite asset where there is one. A shader nothing in the build
-	///     references can be stripped out of it, and one that is already in use cannot be.
-	/// </summary>
+	/// <summary>Taken off TMP's own sprite asset where there is one.</summary>
 	private static Shader SpriteShader()
 	{
 		TMP_SpriteAsset defaults = TMP_Settings.defaultSpriteAsset;
@@ -277,10 +225,8 @@ public class MedalSpriteAsset : IDisposable
 		return Shader.Find("TextMeshPro/Sprite");
 	}
 
-	/// <summary>
-	///     A square glyph that steps the cursor on by its own width, so a medal takes the room a
-	///     wide letter would and the row after it starts where it started before.
-	/// </summary>
+	/// <summary>A square glyph that steps the cursor on by its own width, so a medal takes the room a wide letter would
+	/// and the row after it starts where it started before.</summary>
 	private static TMP_SpriteGlyph Glyph(int medal)
 	{
 		GlyphMetrics metrics = new(_cell, _cell, 0f, _cell, _cell);
@@ -289,10 +235,8 @@ public class MedalSpriteAsset : IDisposable
 		return new TMP_SpriteGlyph((uint)medal, metrics, rect, 1f, 0);
 	}
 
-	/// <summary>
-	///     0xFFFE is TMP's "this sprite has no character of its own": it is written by index or by
-	///     name, never by typing something.
-	/// </summary>
+	/// <summary>0xFFFE is TMP's "this sprite has no character of its own": it is written by index or by name, never by
+	/// typing something.</summary>
 	private static TMP_SpriteCharacter Character(TMP_SpriteGlyph glyph, string name)
 	{
 		return new TMP_SpriteCharacter(0xFFFE, glyph) { name = name, scale = 1f };

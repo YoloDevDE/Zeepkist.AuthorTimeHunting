@@ -7,19 +7,8 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>
-///     The button icons, as one strip of white on transparent: one square cell per
-///     <see cref="UiIcon" />, in that enum's order.
-///     The icons are Bootstrap Icons, baked into the strip by tools/iconatlas.py and embedded in
-///     the plugin, so there is nothing to install and nothing to download. They were drawn here in
-///     canvas primitives before that - triangles, bars and rectangles - and the trouble with
-///     drawing your own icons is that a square fills its box and a triangle fills half of it, so
-///     five buttons in a row carried five different amounts of ink and looked it. A set drawn as a
-///     set does not have that problem.
-///     Static because <see cref="UiIcons" /> is: an icon is asked for by a dozen widgets from
-///     static draw code, and threading one instance through all of them would be a lot of
-///     plumbing for one texture. The texture is the mod's own, so it is destroyed on the way out.
-/// </summary>
+/// <summary>The button icons, as one strip of white on transparent: one square cell per <see cref="UiIcon" />, in that
+/// enum's order.</summary>
 public static class UiIconAtlas
 {
 	private const string _resource = "AuthorTimeHunting.Icons.png";
@@ -47,10 +36,8 @@ public static class UiIconAtlas
 		}
 	}
 
-	/// <summary>
-	///     Where this icon sits on the strip, in the scale-then-offset form Imui hands the shader:
-	///     the cell's width as a fraction of the strip, and its left edge in the same units.
-	/// </summary>
+	/// <summary>Where this icon sits on the strip, in the scale-then-offset form Imui hands the shader: the cell's width
+	/// as a fraction of the strip, and its left edge in the same units.</summary>
 	public static Vector4 Cell(UiIcon icon)
 	{
 		int index = Mathf.Clamp((int)icon - 1, 0, _cells - 1);

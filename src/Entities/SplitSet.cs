@@ -4,12 +4,8 @@ using System.Collections.Generic;
 namespace AuthorTimeHunting.Entities;
 
 /// <summary>
-///     What a run did at every checkpoint it reached: when it got there, and how fast it was
-///     going through. Two lists that are only ever read together and would be a bug the moment
-///     they were not the same length, so they travel as one thing.
-///     A missing entry is -1 rather than an exception. Both callers ask about checkpoints the
-///     run may never have reached - the attempt being driven has not got there yet, and the
-///     reference run may be from a level that has since been rebuilt with more of them.
+///     What a run did at every checkpoint it reached: time and speed. A checkpoint the run never
+///     reached reads as -1 rather than an exception.
 /// </summary>
 public class SplitSet
 {
@@ -17,8 +13,8 @@ public class SplitSet
 
 	public SplitSet(IReadOnlyList<double> times, IReadOnlyList<double> speeds)
 	{
-		Times = times ?? [];
-		Speeds = speeds ?? [];
+		Times = times;
+		Speeds = speeds;
 	}
 
 	public IReadOnlyList<double> Times { get; }
@@ -40,16 +36,12 @@ public class SplitSet
 	}
 
 	/// <summary>
-	///     The better of the two at every checkpoint, each with the speed it was driven at.
-	///     Not the better of the two runs: a reference that only ever came from one attempt is one
-	///     the player has to finish to get, and the whole point of a split is that it is worth
-	///     something on its own. A checkpoint reached faster is a faster checkpoint whatever the
-	///     attempt around it did afterwards, which is also what makes the reference survive the
-	///     respawn that follows a mistake.
+	///     The better of the two at every checkpoint, each with the speed it was driven at -
+	///     per checkpoint, not per run.
 	/// </summary>
 	public SplitSet Best(SplitSet other)
 	{
-		if (other == null || other.Count == 0)
+		if (other.Count == 0)
 		{
 			return this;
 		}
