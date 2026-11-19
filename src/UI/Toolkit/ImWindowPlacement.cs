@@ -15,8 +15,10 @@ public enum ImWindowAnchor
 	BottomRight
 }
 
-/// <summary>Places an Imui window the first time it appears and then gets out of the way, so a window the player dragged
-/// somewhere stays where they put it.</summary>
+/// <summary>
+///     Places an Imui window the first time it appears and then gets out of the way, so a window the player dragged
+///     somewhere stays where they put it.
+/// </summary>
 public static class ImWindowPlacement
 {
 	public static ImRect PlaceAutoSized(ImGui gui, ReadOnlySpan<char> title, float width, float height,

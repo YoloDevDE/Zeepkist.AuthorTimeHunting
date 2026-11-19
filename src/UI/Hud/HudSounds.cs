@@ -9,8 +9,10 @@ using Logger = AuthorTimeHunting.Util.Logger;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>Everything the run ticker says out loud: the start lights counting down, and the three things that can
-/// happen to the medal being chased.</summary>
+/// <summary>
+///     Everything the run ticker says out loud: the start lights counting down, and the three things that can
+///     happen to the medal being chased.
+/// </summary>
 public class HudSounds : IDisposable
 {
 	private const int _sampleRate = 44100;
@@ -127,8 +129,10 @@ public class HudSounds : IDisposable
 		_missed = Clip(_missedNotes);
 	}
 
-	/// <summary>Started paused so the volume is on it before its first sample is heard, which is the difference between
-	/// a beep and a beep with a click in front of it.</summary>
+	/// <summary>
+	///     Started paused so the volume is on it before its first sample is heard, which is the difference between
+	///     a beep and a beep with a click in front of it.
+	/// </summary>
 	private static void Play(Sound sound, float pitch)
 	{
 		if (!sound.hasHandle())
@@ -187,11 +191,7 @@ public class HudSounds : IDisposable
 		byte[] wav = new byte[stream.Length];
 		stream.Read(wav, 0, wav.Length);
 
-		CREATESOUNDEXINFO info = new()
-		{
-			cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)),
-			length = (uint)wav.Length
-		};
+		CREATESOUNDEXINFO info = new() { cbsize = Marshal.SizeOf(typeof(CREATESOUNDEXINFO)), length = (uint)wav.Length };
 
 		MODE mode = MODE.OPENMEMORY | MODE.CREATESAMPLE | MODE.LOOP_OFF;
 
@@ -207,8 +207,12 @@ public class HudSounds : IDisposable
 		return default;
 	}
 
-	/// <summary>Raw PCM handed to FMOD as if it were a file in memory: no header, no decoding, and <see
-	/// cref="FMOD.CREATESOUNDEXINFO" /> saying what the bytes are instead.</summary>
+	/// <summary>
+	///     Raw PCM handed to FMOD as if it were a file in memory: no header, no decoding, and
+	///     <see
+	///         cref="FMOD.CREATESOUNDEXINFO" />
+	///     saying what the bytes are instead.
+	/// </summary>
 	private static Sound Clip(Tone[] notes)
 	{
 		byte[] pcm = Pcm(notes);
@@ -285,8 +289,10 @@ public class HudSounds : IDisposable
 		}
 	}
 
-	/// <summary>Left unnormalized on purpose - <see cref="Normalize" /> scales the finished clip, so dividing by the
-	/// weights here would only be undone a moment later.</summary>
+	/// <summary>
+	///     Left unnormalized on purpose - <see cref="Normalize" /> scales the finished clip, so dividing by the
+	///     weights here would only be undone a moment later.
+	/// </summary>
 	private static float Wave(float frequency, float t)
 	{
 		float phase = 2f * Mathf.PI * frequency * t;
@@ -322,8 +328,10 @@ public class HudSounds : IDisposable
 		Blend(wave, wet);
 	}
 
-	/// <summary>A feedback comb: every sample picks up an attenuated copy of one a delay earlier, which then feeds the
-	/// one after it.</summary>
+	/// <summary>
+	///     A feedback comb: every sample picks up an attenuated copy of one a delay earlier, which then feeds the
+	///     one after it.
+	/// </summary>
 	private static void Comb(float[] dry, float[] wet, int delay)
 	{
 		float[] line = (float[])dry.Clone();

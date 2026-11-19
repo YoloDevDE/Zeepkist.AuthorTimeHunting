@@ -65,8 +65,12 @@ public static class UiText
 		gui.Text(text.AsSpan(), in settings, colour, Fits(gui, rect, fitted));
 	}
 
-	/// <summary>The largest size at or under <paramref name="size" /> that fits <paramref name="text" /> into <paramref
-	/// name="width" />.</summary>
+	/// <summary>
+	///     The largest size at or under <paramref name="size" /> that fits <paramref name="text" /> into
+	///     <paramref
+	///         name="width" />
+	///     .
+	/// </summary>
 	public static float Fit(ImGui gui, string text, float size, float width)
 	{
 		if (width <= 0f || string.IsNullOrEmpty(text))

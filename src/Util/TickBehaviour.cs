@@ -11,6 +11,11 @@ public class TickBehaviour : MonoBehaviour
 {
 	private Action _tick;
 
+	private void Update()
+	{
+		_tick();
+	}
+
 	/// <summary>A hidden host that survives scene loads and calls <paramref name="tick" /> every frame.</summary>
 	public static TickBehaviour Create(string name, Action tick)
 	{
@@ -26,10 +31,5 @@ public class TickBehaviour : MonoBehaviour
 	private void Bind(Action tick)
 	{
 		_tick = tick;
-	}
-
-	private void Update()
-	{
-		_tick();
 	}
 }

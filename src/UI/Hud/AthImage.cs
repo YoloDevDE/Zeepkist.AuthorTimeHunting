@@ -7,8 +7,10 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>A picture baked into the plugin, loaded once on the first ask and dropped with the session: the mod's crest,
-/// the menu's backdrop.</summary>
+/// <summary>
+///     A picture baked into the plugin, loaded once on the first ask and dropped with the session: the mod's crest,
+///     the menu's backdrop.
+/// </summary>
 public class AthImage : IDisposable
 {
 	private readonly string _resource;
@@ -42,8 +44,10 @@ public class AthImage : IDisposable
 		}
 	}
 
-	/// <summary>The same image as a Sprite, for the parts of the mod that hang it on one of the game's own UI controls
-	/// rather than drawing it themselves.</summary>
+	/// <summary>
+	///     The same image as a Sprite, for the parts of the mod that hang it on one of the game's own UI controls
+	///     rather than drawing it themselves.
+	/// </summary>
 	public Sprite Sprite
 	{
 		get

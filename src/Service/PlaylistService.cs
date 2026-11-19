@@ -13,13 +13,13 @@ namespace AuthorTimeHunting.Service;
 public class PlaylistService
 {
 	private static readonly TimeSpan _minUpdateInterval = TimeSpan.FromSeconds(5);
-
-	private readonly WorkshopDownloadService _workshopDownloads;
+	private readonly object _queueLock = new();
 
 	private readonly Queue<Action> _updateQueue = new();
-	private readonly object _queueLock = new();
-	private Task _processingTask;
+
+	private readonly WorkshopDownloadService _workshopDownloads;
 	private DateTime _lastUpdate = DateTime.MinValue;
+	private Task _processingTask;
 
 	public PlaylistService(WorkshopDownloadService workshopDownloads)
 	{

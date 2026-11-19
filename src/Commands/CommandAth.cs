@@ -8,8 +8,6 @@ namespace AuthorTimeHunting.Commands;
 /// </summary>
 public class CommandAth : ILocalChatCommand
 {
-	public static event Action CommandTrigger;
-
 	public string Prefix => "/";
 	public string Command => "ath";
 
@@ -24,6 +22,8 @@ public class CommandAth : ILocalChatCommand
 
 		Raise();
 	}
+
+	public static event Action CommandTrigger;
 
 	public static void Raise()
 	{

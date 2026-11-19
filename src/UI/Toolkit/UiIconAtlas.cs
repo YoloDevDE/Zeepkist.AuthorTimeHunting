@@ -7,8 +7,10 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>The button icons, as one strip of white on transparent: one square cell per <see cref="UiIcon" />, in that
-/// enum's order.</summary>
+/// <summary>
+///     The button icons, as one strip of white on transparent: one square cell per <see cref="UiIcon" />, in that
+///     enum's order.
+/// </summary>
 public static class UiIconAtlas
 {
 	private const string _resource = "AuthorTimeHunting.Icons.png";
@@ -36,8 +38,10 @@ public static class UiIconAtlas
 		}
 	}
 
-	/// <summary>Where this icon sits on the strip, in the scale-then-offset form Imui hands the shader: the cell's width
-	/// as a fraction of the strip, and its left edge in the same units.</summary>
+	/// <summary>
+	///     Where this icon sits on the strip, in the scale-then-offset form Imui hands the shader: the cell's width
+	///     as a fraction of the strip, and its left edge in the same units.
+	/// </summary>
 	public static Vector4 Cell(UiIcon icon)
 	{
 		int index = Mathf.Clamp((int)icon - 1, 0, _cells - 1);

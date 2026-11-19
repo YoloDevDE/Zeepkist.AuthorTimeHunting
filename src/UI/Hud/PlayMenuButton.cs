@@ -58,8 +58,10 @@ public class PlayMenuButton
 		}
 	}
 
-	/// <summary>The play menu is a panel the main menu keeps switched off until somebody picks Play Game, so the screen
-	/// is looked for among the inactive objects as well.</summary>
+	/// <summary>
+	///     The play menu is a panel the main menu keeps switched off until somebody picks Play Game, so the screen
+	///     is looked for among the inactive objects as well.
+	/// </summary>
 	private static void Add()
 	{
 		StartGameUI screen = Object.FindObjectOfType<StartGameUI>(true);
@@ -119,8 +121,10 @@ public class PlayMenuButton
 		return false;
 	}
 
-	/// <summary>The game does not hang its play menu buttons in the panel directly: each one sits by itself in a
-	/// numbered holder, and the panel arranges the holders.</summary>
+	/// <summary>
+	///     The game does not hang its play menu buttons in the panel directly: each one sits by itself in a
+	///     numbered holder, and the panel arranges the holders.
+	/// </summary>
 	private static Transform Slot(Transform button)
 	{
 		Transform slot = button;
@@ -179,8 +183,10 @@ public class PlayMenuButton
 		return rect;
 	}
 
-	/// <summary>The row stands exactly where Online's holder stood, in whatever terms the panel places its rows: anchors
-	/// if the panel places them itself, and a preferred height if a <c>LayoutGroup</c> does.</summary>
+	/// <summary>
+	///     The row stands exactly where Online's holder stood, in whatever terms the panel places its rows: anchors
+	///     if the panel places them itself, and a preferred height if a <c>LayoutGroup</c> does.
+	/// </summary>
 	private static void Fit(RectTransform row, RectTransform slot)
 	{
 		row.anchorMin = slot.anchorMin;
@@ -205,8 +211,10 @@ public class PlayMenuButton
 		mine.flexibleWidth = theirs.flexibleWidth;
 	}
 
-	/// <summary>Two halves, side by side, each as tall as the row and each given the same share of its width once the
-	/// gap between them is taken out.</summary>
+	/// <summary>
+	///     Two halves, side by side, each as tall as the row and each given the same share of its width once the
+	///     gap between them is taken out.
+	/// </summary>
 	private static void Arrange(HorizontalLayoutGroup layout)
 	{
 		layout.spacing = _gap;
@@ -265,8 +273,10 @@ public class PlayMenuButton
 		}
 	}
 
-	/// <summary>A cloned button carries the original's label and, with it, whatever localiser was keeping that label up
-	/// to date.</summary>
+	/// <summary>
+	///     A cloned button carries the original's label and, with it, whatever localiser was keeping that label up
+	///     to date.
+	/// </summary>
 	private static void Rename(GenericButton button)
 	{
 		foreach (TMP_Text label in button.GetComponentsInChildren<TMP_Text>(true))
@@ -322,8 +332,10 @@ public class PlayMenuButton
 		return new Color(color.r, color.g, color.b, 0.5f);
 	}
 
-	/// <summary>The mod's own picture where the Online one was, across the whole button rather than in the little square
-	/// the game uses for a pictogram.</summary>
+	/// <summary>
+	///     The mod's own picture where the Online one was, across the whole button rather than in the little square
+	///     the game uses for a pictogram.
+	/// </summary>
 	private static void Picture(GenericButton button)
 	{
 		Sprite thumbnail = Plugin.Instance.Services.Thumbnail.Sprite;
@@ -360,8 +372,10 @@ public class PlayMenuButton
 		Behind(icon, button.buttonImage);
 	}
 
-	/// <summary>The Online picture is not one picture: it is a stack of them, coins and a hand and a sparkle, each its
-	/// own image.</summary>
+	/// <summary>
+	///     The Online picture is not one picture: it is a stack of them, coins and a hand and a sparkle, each its
+	///     own image.
+	/// </summary>
 	private static void Replace(Image image, Sprite thumbnail)
 	{
 		if (thumbnail == null)

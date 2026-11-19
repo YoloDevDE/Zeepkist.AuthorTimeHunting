@@ -1,9 +1,8 @@
-using AuthorTimeHunting.Util;
 using System;
 using System.Collections.Generic;
 using AuthorTimeHunting.Entities;
 using AuthorTimeHunting.Enums;
-using UnityEngine;
+using AuthorTimeHunting.Util;
 using ZeepkistClient;
 using ZeepSDK.Level;
 using Logger = AuthorTimeHunting.Util.Logger;
@@ -27,12 +26,6 @@ public class GameStateObserver
 	{
 		_behaviour = TickBehaviour.Create(nameof(GameStateObserver), Tick);
 	}
-
-	public event Action<ZeepkistLobbyState?> LobbyStateChanged;
-
-	public event Action BecameRacing;
-
-	public event Action StoppedRacing;
 
 	public static bool IsInOnlineLobby => ZeepkistNetwork.CurrentLobby != null;
 
@@ -166,6 +159,12 @@ public class GameStateObserver
 			return master.playerResults[0].split_times;
 		}
 	}
+
+	public event Action<ZeepkistLobbyState?> LobbyStateChanged;
+
+	public event Action BecameRacing;
+
+	public event Action StoppedRacing;
 
 	/// <summary>
 	///     The checkpoints of the player's best run on a level, from the game's <c>Replays.json</c>.

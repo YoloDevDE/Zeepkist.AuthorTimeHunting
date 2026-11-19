@@ -4,8 +4,10 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>What a screen that takes the whole game over is made of: how wide its content is allowed to be, the rule
-/// under its title, and the order it has to be drawn at.</summary>
+/// <summary>
+///     What a screen that takes the whole game over is made of: how wide its content is allowed to be, the rule
+///     under its title, and the order it has to be drawn at.
+/// </summary>
 public static class UiScreen
 {
 	/// <summary>Above every Imui window, below its popups.</summary>

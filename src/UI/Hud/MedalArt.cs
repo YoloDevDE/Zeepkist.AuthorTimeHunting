@@ -74,8 +74,10 @@ public class MedalArt : IDisposable
 		}
 	}
 
-	/// <summary>The blit's scale and offset cut the sprite out of the atlas it shares, and ReadPixels takes the result
-	/// back off the GPU into a texture the mod owns.</summary>
+	/// <summary>
+	///     The blit's scale and offset cut the sprite out of the atlas it shares, and ReadPixels takes the result
+	///     back off the GPU into a texture the mod owns.
+	/// </summary>
 	private static Texture2D Blit(Sprite sprite)
 	{
 		Rect area = sprite.textureRect;

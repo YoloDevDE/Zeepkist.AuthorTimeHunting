@@ -3,8 +3,10 @@ using UnityEngine;
 
 namespace AuthorTimeHunting.UI.Toolkit;
 
-/// <summary>How far a control is into being hovered, and into being held: 0 for neither, 1 for all the way there, and
-/// the frames in between.</summary>
+/// <summary>
+///     How far a control is into being hovered, and into being held: 0 for neither, 1 for all the way there, and
+///     the frames in between.
+/// </summary>
 public static class UiMotion
 {
 	private const float _hoverSeconds = 0.12f;

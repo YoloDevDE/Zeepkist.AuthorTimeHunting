@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AuthorTimeHunting.UI.Hud;
 using AuthorTimeHunting.UI.Views;
 using AuthorTimeHunting.Util;
 using Imui.Controls;
@@ -58,8 +57,10 @@ public static class UiWidgets
 		}
 	}
 
-	/// <summary>A button that is its symbol over a word: the shape carries it at a glance and the word settles which one
-	/// it was.</summary>
+	/// <summary>
+	///     A button that is its symbol over a word: the shape carries it at a glance and the word settles which one
+	///     it was.
+	/// </summary>
 	public static bool IconTile(ImGui gui, ImRect rect, UiIcon icon, string label, Color32 accent, bool enabled)
 	{
 		if (!enabled)
@@ -90,8 +91,10 @@ public static class UiWidgets
 		UiText.Left(gui, value, valueColour, valueRect);
 	}
 
-	/// <summary>One choice on a fullscreen menu: what it does, and a line saying what that means, on a tile the whole of
-	/// which is the button.</summary>
+	/// <summary>
+	///     One choice on a fullscreen menu: what it does, and a line saying what that means, on a tile the whole of
+	///     which is the button.
+	/// </summary>
 	public static bool Card(ImGui gui, ImRect rect, string title, string caption, Color32 accent, bool enabled)
 	{
 		if (!enabled)

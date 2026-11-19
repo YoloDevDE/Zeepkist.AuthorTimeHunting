@@ -11,8 +11,10 @@ using Object = UnityEngine.Object;
 
 namespace AuthorTimeHunting.UI.Hud;
 
-/// <summary>Rewrites the game's own running-time display into the only number that decides anything: how much time is
-/// left before the next medal is gone.</summary>
+/// <summary>
+///     Rewrites the game's own running-time display into the only number that decides anything: how much time is
+///     left before the next medal is gone.
+/// </summary>
 public class RaceTimeDisplay : IDisposable
 {
 	private const string _monoSpace = "0.62em";
@@ -36,8 +38,10 @@ public class RaceTimeDisplay : IDisposable
 	/// <summary>What GameMaster sets its physics clock to when a level restarts.</summary>
 	private const float _countdownSeconds = 1.749f;
 
-	/// <summary>Halfway, which is the whole point: red at the start of the countdown, amber here, green on the release
-	/// puts the same gap between each pair.</summary>
+	/// <summary>
+	///     Halfway, which is the whole point: red at the start of the countdown, amber here, green on the release
+	///     puts the same gap between each pair.
+	/// </summary>
 	private const float _amberAt = _countdownSeconds / 2f;
 
 	private const float _greenHoldSeconds = 1f;
@@ -354,8 +358,10 @@ public class RaceTimeDisplay : IDisposable
 		return countedDown < _amberAt ? _allRed : _allAmber;
 	}
 
-	/// <summary>One click per lamp and a different one on the release, played on the edge so a stage that lasts half a
-	/// second does not turn into a drum roll.</summary>
+	/// <summary>
+	///     One click per lamp and a different one on the release, played on the edge so a stage that lasts half a
+	///     second does not turn into a drum roll.
+	/// </summary>
 	private void Announce(int stage)
 	{
 		if (stage == _lastStage)
@@ -475,8 +481,10 @@ public class RaceTimeDisplay : IDisposable
 			TimeFormatter.FormatTime(0d), _hiddenHex);
 	}
 
-	/// <summary>What a row is labelled with: the medal itself where the game's art and the label are both there for it,
-	/// and the letters it used to say where they are not.</summary>
+	/// <summary>
+	///     What a row is labelled with: the medal itself where the game's art and the label are both there for it,
+	///     and the letters it used to say where they are not.
+	/// </summary>
 	private string Cell(int medal, string text, string textHex, string spriteHex)
 	{
 		if (!_sprites)
@@ -591,15 +599,19 @@ public class RaceTimeDisplay : IDisposable
 		return Color.ToHex(colour);
 	}
 
-	/// <summary>Asks for the medals every frame rather than once, and asks on behalf of the label that is about to be
-	/// written rather than on behalf of the session.</summary>
+	/// <summary>
+	///     Asks for the medals every frame rather than once, and asks on behalf of the label that is about to be
+	///     written rather than on behalf of the session.
+	/// </summary>
 	private void Dress(TMP_Text label)
 	{
 		_sprites = _medals.Install(label);
 	}
 
-	/// <summary>Taking the label and then dressing it, in that order: what the label had is written down first, or the
-	/// sprite asset put on it a moment later is what <see cref="Restore" /> would hand back to the game.</summary>
+	/// <summary>
+	///     Taking the label and then dressing it, in that order: what the label had is written down first, or the
+	///     sprite asset put on it a moment later is what <see cref="Restore" /> would hand back to the game.
+	/// </summary>
 	private void Borrow(TMP_Text label)
 	{
 		Adopt(label);
@@ -629,8 +641,10 @@ public class RaceTimeDisplay : IDisposable
 		transform.anchoredPosition += new Vector2(0f, label.fontSize * _linesUp);
 	}
 
-	/// <summary>Handing the labels back includes handing back their sprite assets, so the next run has to be dressed
-	/// again from scratch.</summary>
+	/// <summary>
+	///     Handing the labels back includes handing back their sprite assets, so the next run has to be dressed
+	///     again from scratch.
+	/// </summary>
 	private void Restore()
 	{
 		_verdict.Restore();

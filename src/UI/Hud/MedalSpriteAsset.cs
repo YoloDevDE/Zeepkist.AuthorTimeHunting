@@ -225,8 +225,10 @@ public class MedalSpriteAsset : IDisposable
 		return Shader.Find("TextMeshPro/Sprite");
 	}
 
-	/// <summary>A square glyph that steps the cursor on by its own width, so a medal takes the room a wide letter would
-	/// and the row after it starts where it started before.</summary>
+	/// <summary>
+	///     A square glyph that steps the cursor on by its own width, so a medal takes the room a wide letter would
+	///     and the row after it starts where it started before.
+	/// </summary>
 	private static TMP_SpriteGlyph Glyph(int medal)
 	{
 		GlyphMetrics metrics = new(_cell, _cell, 0f, _cell, _cell);
@@ -235,8 +237,10 @@ public class MedalSpriteAsset : IDisposable
 		return new TMP_SpriteGlyph((uint)medal, metrics, rect, 1f, 0);
 	}
 
-	/// <summary>0xFFFE is TMP's "this sprite has no character of its own": it is written by index or by name, never by
-	/// typing something.</summary>
+	/// <summary>
+	///     0xFFFE is TMP's "this sprite has no character of its own": it is written by index or by name, never by
+	///     typing something.
+	/// </summary>
 	private static TMP_SpriteCharacter Character(TMP_SpriteGlyph glyph, string name)
 	{
 		return new TMP_SpriteCharacter(0xFFFE, glyph) { name = name, scale = 1f };

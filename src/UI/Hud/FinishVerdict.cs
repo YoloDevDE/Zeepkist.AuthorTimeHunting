@@ -100,8 +100,10 @@ public class FinishVerdict
 		}
 	}
 
-	/// <summary>How far the run was off the author time, which is the only number left worth reading once the medal has
-	/// been named.</summary>
+	/// <summary>
+	///     How far the run was off the author time, which is the only number left worth reading once the medal has
+	///     been named.
+	/// </summary>
 	private static string Missed(AthCtx ctx)
 	{
 		double authorTime = ctx.CurrentLevel?.AuthorTime ?? 0d;
